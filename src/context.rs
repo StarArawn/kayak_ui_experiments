@@ -105,7 +105,7 @@ fn update_widget(
     bool,
 ) {
     let widget_tree = WidgetTree::new();
-    let mut should_update_children = false;
+    let should_update_children;
     {
         let widget_system = systems.get_mut(widget_type.get_name()).unwrap();
         should_update_children = widget_system.run((widget_tree.clone(), entity), world);
