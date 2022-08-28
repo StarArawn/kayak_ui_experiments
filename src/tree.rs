@@ -6,7 +6,7 @@ use std::{
 use bevy::prelude::Entity;
 use bevy::utils::HashMap;
 
-use crate::Widget;
+use crate::widget::Widget;
 
 pub type Index = Entity;
 
