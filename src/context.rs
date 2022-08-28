@@ -6,7 +6,7 @@ use crate::{widget::Widget, tree::{Index, WidgetTree, Tree, ChildChanges, Change
 pub struct Context {
     tree: Tree,
     widget_types: HashMap<Index, Arc<dyn Widget>>,
-    systems: HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = (bool)>>>,
+    systems: HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
 }
 
 impl Context {
@@ -21,7 +21,7 @@ impl Context {
     pub fn register_widget_system<Params>(
         &mut self,
         type_name: impl Into<String>,
-        system: impl IntoSystem<(WidgetTree, Entity), (bool), Params>,
+        system: impl IntoSystem<(WidgetTree, Entity), bool, Params>,
     ) {
         self.systems
             .insert(type_name.into(), Box::new(IntoSystem::into_system(system)));
@@ -58,7 +58,7 @@ fn update_widgets_sys(world: &mut World) {
 fn update_widgets(
     world: &mut World,
     tree: &mut Tree,
-    systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = (bool)>>>,
+    systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     widgets: Vec<Entity>,
     parent_widget_types: &mut HashMap<Entity, Arc<dyn Widget>>,
 ) {
@@ -92,7 +92,7 @@ fn update_widgets(
 }
 
 fn update_widget(
-    systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = (bool)>>>,
+    systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     tree: &mut Tree,
     parent_widget_types: &mut HashMap<Entity, Arc<dyn Widget>>,
     world: &mut World,
