@@ -1,8 +1,8 @@
-use bevy::prelude::{Component, Query};
+use bevy::prelude::{Component, Query, Entity};
 
 use crate::{
     styles::{Style, StyleProp},
-    tree::Index, render_primitive::RenderPrimitive,
+    render_primitive::RenderPrimitive, layout::LayoutCache,
 };
 
 #[derive(Component, Debug, Clone, Copy)]
@@ -12,9 +12,9 @@ pub struct DirtyNode;
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct Node {
     /// The list of children directly under this node
-    pub children: Vec<Index>,
+    pub children: Vec<WrappedIndex>,
     /// The ID of this node's widget
-    pub id: Index,
+    pub id: WrappedIndex,
     /// The fully resolved styles for this node
     pub resolved_styles: Style,
     /// The raw styles for this node, before style resolution
@@ -27,7 +27,7 @@ pub struct Node {
 
 impl Default for Node {
     fn default() -> Self {
-        Self { children: Default::default(), id: Index::from_raw(0), resolved_styles: Default::default(), raw_styles: Default::default(), primitive: RenderPrimitive::Empty, z: Default::default() }
+        Self { children: Default::default(), id: WrappedIndex(Entity::from_raw(0)), resolved_styles: Default::default(), raw_styles: Default::default(), primitive: RenderPrimitive::Empty, z: Default::default() }
     }
 }
 
@@ -42,7 +42,7 @@ impl NodeBuilder {
         Self {
             node: Node {
                 children: Vec::new(),
-                id: Index::from_raw(0),
+                id: WrappedIndex(Entity::from_raw(0)),
                 resolved_styles: Style::default(),
                 raw_styles: None,
                 primitive: RenderPrimitive::Empty,
@@ -52,7 +52,7 @@ impl NodeBuilder {
     }
 
     /// Defines a node with the given id and styles
-    pub fn new(id: Index, styles: Style) -> Self {
+    pub fn new(id: WrappedIndex, styles: Style) -> Self {
         Self {
             node: Node {
                 children: Vec::new(),
@@ -66,13 +66,13 @@ impl NodeBuilder {
     }
 
     /// Sets the ID of the node being built
-    pub fn with_id(mut self, id: Index) -> Self {
+    pub fn with_id(mut self, id: WrappedIndex) -> Self {
         self.node.id = id;
         self
     }
 
     /// Sets the children of the node being built
-    pub fn with_children(mut self, children: Vec<Index>) -> Self {
+    pub fn with_children(mut self, children: Vec<WrappedIndex>) -> Self {
         self.node.children.extend(children);
         self
     }
@@ -97,10 +97,10 @@ impl NodeBuilder {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct WrappedIndex(pub Index);
+pub struct WrappedIndex(pub Entity);
 
 impl<'a> morphorm::Node<'a> for WrappedIndex {
-    type Data = Query<'a, 'a, &'a Node>;
+    type Data = Query<'a, 'a, &'static Node>;
 
     fn layout_type(&self, store: &'_ Self::Data) -> Option<morphorm::LayoutType> {
         if let Ok(node) = store.get(self.0) {

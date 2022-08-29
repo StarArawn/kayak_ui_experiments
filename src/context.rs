@@ -1,12 +1,22 @@
-use std::sync::Arc;
 use bevy::{ecs::system::CommandQueue, prelude::*, utils::HashMap};
+use morphorm::Hierarchy;
+use std::sync::Arc;
 
-use crate::{widget::Widget, tree::{Index, WidgetTree, Tree, ChildChanges, Change, Hierarchy}, prelude::RenderCommand, node::DirtyNode, calculate_nodes::{calculate_nodes, build_nodes_tree}};
+use crate::{
+    calculate_nodes::{build_nodes_tree, calculate_nodes},
+    layout::{DataCache, LayoutCache, Rect},
+    node::{DirtyNode, WrappedIndex},
+    render_primitive::RenderPrimitive,
+    tree::{Change, ChildChanges, Tree, WidgetTree},
+    widget::Widget,
+    WindowSize,
+};
 
 pub struct Context {
     pub(crate) tree: Tree,
     pub(crate) node_tree: Tree,
-    widget_types: HashMap<Index, Arc<dyn Widget>>,
+    pub(crate) layout_cache: LayoutCache,
+    widget_types: HashMap<Entity, Arc<dyn Widget>>,
     systems: HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     pub(crate) current_z: f32,
 }
@@ -16,10 +26,15 @@ impl Context {
         Self {
             tree: Tree::default(),
             node_tree: Tree::default(),
+            layout_cache: LayoutCache::default(),
             widget_types: HashMap::default(),
             systems: HashMap::default(),
             current_z: 0.0,
         }
+    }
+
+    pub(crate) fn get_layout(&self, id: &WrappedIndex) -> Option<&Rect> {
+        self.layout_cache.rect.get(id)
     }
 
     pub fn register_widget_system<Params>(
@@ -33,18 +48,94 @@ impl Context {
 
     pub fn add_widget<T: Widget + Default + 'static>(
         &mut self,
-        parent: Option<Index>,
+        parent: Option<WrappedIndex>,
         entity: Entity,
     ) {
-        self.tree.add(entity, parent);
+        self.tree.add(WrappedIndex(entity), parent);
+        self.layout_cache.add(WrappedIndex(entity));
         self.widget_types.insert(entity, Arc::new(T::default()));
     }
 
-    pub fn render(&self) -> Vec<RenderCommand> {
-        vec![]
+    pub fn build_render_primitives(
+        &self,
+        nodes: &Query<&crate::node::Node>,
+    ) -> Vec<RenderPrimitive> {
+        if self.node_tree.root_node.is_none() {
+            return vec![];
+        }
+
+        recurse_node_tree_to_build_primitives(
+            &self.node_tree,
+            &self.layout_cache,
+            nodes,
+            self.node_tree.root_node.unwrap(),
+            0.0,
+            RenderPrimitive::Empty,
+        )
     }
 }
 
+fn recurse_node_tree_to_build_primitives(
+    node_tree: &Tree,
+    layout_cache: &LayoutCache,
+    nodes: &Query<&crate::node::Node>,
+    current_node: WrappedIndex,
+    mut main_z_index: f32,
+    mut prev_clip: RenderPrimitive,
+) -> Vec<RenderPrimitive> {
+    let mut render_primitives = Vec::new();
+    if let Ok(node) = nodes.get(current_node.0) {
+        if let Some(layout) = layout_cache.rect.get(&current_node) {
+            let mut render_primitive = node.primitive.clone();
+            let mut layout = *layout;
+            let new_z_index = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
+                main_z_index - 0.1
+            } else {
+                main_z_index
+            };
+            layout.z_index = new_z_index;
+            render_primitive.set_layout(layout);
+            render_primitives.push(render_primitive.clone());
+
+            let new_prev_clip = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
+                render_primitive.clone()
+            } else {
+                prev_clip
+            };
+
+            prev_clip = new_prev_clip.clone();
+
+            if node_tree.children.contains_key(&current_node) {
+                for child in node_tree.children.get(&current_node).unwrap() {
+                    main_z_index += 1.0;
+                    render_primitives.extend(recurse_node_tree_to_build_primitives(
+                        node_tree,
+                        layout_cache,
+                        nodes,
+                        *child,
+                        main_z_index,
+                        new_prev_clip.clone(),
+                    ));
+
+                    main_z_index = layout.z_index;
+                    // Between each child node we need to reset the clip.
+                    if matches!(prev_clip, RenderPrimitive::Clip { .. }) {
+                        // main_z_index = new_z_index;
+                        match &mut prev_clip {
+                            RenderPrimitive::Clip { layout } => {
+                                layout.z_index = main_z_index + 0.1;
+                            }
+                            _ => {}
+                        };
+                        render_primitives.push(prev_clip.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    render_primitives
+}
 
 fn update_widgets_sys(world: &mut World) {
     let mut context = world
@@ -56,6 +147,7 @@ fn update_widgets_sys(world: &mut World) {
     update_widgets(
         world,
         &mut context.tree,
+        &mut context.layout_cache,
         &mut context.systems,
         tree_iterator,
         &mut context.widget_types,
@@ -66,12 +158,13 @@ fn update_widgets_sys(world: &mut World) {
 fn update_widgets(
     world: &mut World,
     tree: &mut Tree,
+    layout_cache: &mut LayoutCache,
     systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
-    widgets: Vec<Entity>,
+    widgets: Vec<WrappedIndex>,
     parent_widget_types: &mut HashMap<Entity, Arc<dyn Widget>>,
 ) {
     for entity in widgets.iter() {
-        let widget_type = parent_widget_types.get(entity).cloned();
+        let widget_type = parent_widget_types.get(&entity.0).cloned();
         if let Some(widget_type) = widget_type {
             let (mut widget_tree, mut widget_types, diff, should_update_children) = update_widget(
                 systems,
@@ -82,18 +175,29 @@ fn update_widgets(
                 &widget_type,
             );
 
-            if should_update_children {
-                let children = widget_tree.child_iter(*entity).collect::<Vec<_>>();
-                update_widgets(
-                    world,
-                    &mut widget_tree,
-                    systems,
-                    children,
-                    &mut widget_types,
-                );
-            }
+            // if should_update_children {
+            let children = widget_tree.child_iter(*entity).collect::<Vec<_>>();
+            update_widgets(
+                world,
+                &mut widget_tree,
+                layout_cache,
+                systems,
+                children,
+                &mut widget_types,
+            );
+            // }
 
-            tree.merge(&widget_tree, *entity, diff);
+            // Only merge tree if changes detected.
+            if should_update_children {
+                for (index, child, parent, changes) in diff.changes.iter() {
+                    for change in changes.iter() {
+                        if matches!(change, Change::Inserted) {
+                            layout_cache.add(*child);
+                        }
+                    }
+                }
+                tree.merge(&widget_tree, *entity, diff);
+            }
             parent_widget_types.extend(widget_types);
         }
     }
@@ -104,19 +208,14 @@ fn update_widget(
     tree: &mut Tree,
     parent_widget_types: &mut HashMap<Entity, Arc<dyn Widget>>,
     world: &mut World,
-    entity: Entity,
+    entity: WrappedIndex,
     widget_type: &Arc<dyn Widget>,
-) -> (
-    Tree,
-    HashMap<Entity, Arc<dyn Widget>>,
-    ChildChanges,
-    bool,
-) {
+) -> (Tree, HashMap<Entity, Arc<dyn Widget>>, ChildChanges, bool) {
     let widget_tree = WidgetTree::new();
     let should_update_children;
     {
         let widget_system = systems.get_mut(widget_type.get_name()).unwrap();
-        should_update_children = widget_system.run((widget_tree.clone(), entity), world);
+        should_update_children = widget_system.run((widget_tree.clone(), entity.0), world);
         widget_system.apply_buffers(world);
     }
     let (widget_tree, widget_types) = widget_tree.take();
@@ -126,16 +225,12 @@ fn update_widget(
 
     // Mark node as needing a recalculation of rendering/layout.
     if should_update_children {
-        commands.entity(entity).insert(DirtyNode);
+        commands.entity(entity.0).insert(DirtyNode);
     }
 
     for (_, changed_entity, _, changes) in diff.changes.iter() {
-        if changes
-            .iter()
-            .any(|change| *change == Change::Deleted)
-        {
-            commands.entity(*changed_entity).despawn();
-            parent_widget_types.remove(changed_entity);
+        if changes.iter().any(|change| *change == Change::Deleted) && should_update_children {
+            commands.entity(changed_entity.0).despawn();
         }
     }
     command_queue.apply(world);
@@ -160,11 +255,30 @@ pub struct ContextPlugin;
 
 impl Plugin for ContextPlugin {
     fn build(&self, app: &mut App) {
-        app
+        app.insert_resource(WindowSize::default())
+            .add_plugin(crate::camera::KayakUICameraPlugin)
+            .add_plugin(crate::render::BevyKayakUIRenderPlugin)
             .register_type::<Node>()
             .add_startup_system(init_systems.exclusive_system().at_end())
             .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system())
             .add_system(calculate_nodes.label("calc_nodes"))
-            .add_system(build_nodes_tree.after("calc_nodes"));
+            .add_system(
+                build_nodes_tree
+                    .label("build_nodes_tree")
+                    .after("calc_nodes"),
+            )
+            .add_system(build_layout.after("build_nodes_tree"))
+            .add_system(crate::window_size::update_window_size);
+    }
+}
+
+fn build_layout(mut context: ResMut<Option<Context>>, nodes: Query<&'static crate::node::Node>) {
+    if let Some(context) = context.as_mut() {
+        let mut data_cache = DataCache {
+            cache: &mut context.layout_cache,
+            query: &nodes,
+        };
+
+        morphorm::layout(&mut data_cache, &context.node_tree, &nodes);
     }
 }

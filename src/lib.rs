@@ -8,11 +8,20 @@ mod layout;
 mod node;
 mod render_primitive;
 mod calculate_nodes;
+mod camera;
+pub(crate) mod render;
+mod window_size;
+
+pub use window_size::WindowSize;
+
+pub use camera::*;
 
 /// The default font name used by Kayak
 pub const DEFAULT_FONT: &str = "Kayak-Default";
 
 pub mod prelude {
+    pub use crate::render::font::FontMapping;
+    pub use crate::camera::UICameraBundle;
     pub use crate::tree::*;
     pub use crate::context::*;
     pub use crate::widget::*;

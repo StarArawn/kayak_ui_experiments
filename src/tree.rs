@@ -5,16 +5,17 @@ use std::{
 
 use bevy::prelude::Entity;
 use bevy::utils::HashMap;
+use morphorm::Hierarchy;
 
+use crate::node::WrappedIndex;
 use crate::widget::Widget;
 
-pub type Index = Entity;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Tree {
-    pub children: HashMap<Index, Vec<Index>>,
-    pub parents: HashMap<Index, Index>,
-    pub root_node: Option<Index>,
+    pub children: HashMap<WrappedIndex, Vec<WrappedIndex>>,
+    pub parents: HashMap<WrappedIndex, WrappedIndex>,
+    pub root_node: Option<WrappedIndex>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,7 +29,7 @@ pub enum Change {
 
 #[derive(Default, Debug, Clone)]
 pub struct ChildChanges {
-    pub changes: Vec<(usize, Index, Index, Vec<Change>)>,
+    pub changes: Vec<(usize, WrappedIndex, WrappedIndex, Vec<Change>)>,
     pub child_changes: Vec<(usize, ChildChanges)>,
 }
 
@@ -41,8 +42,8 @@ impl ChildChanges {
     }
 }
 
-impl From<Vec<(usize, Index, Index, Vec<Change>)>> for ChildChanges {
-    fn from(changes: Vec<(usize, Index, Index, Vec<Change>)>) -> Self {
+impl From<Vec<(usize, WrappedIndex, WrappedIndex, Vec<Change>)>> for ChildChanges {
+    fn from(changes: Vec<(usize, WrappedIndex, WrappedIndex, Vec<Change>)>) -> Self {
         Self {
             changes,
             child_changes: Vec::new(),
@@ -51,7 +52,7 @@ impl From<Vec<(usize, Index, Index, Vec<Change>)>> for ChildChanges {
 }
 
 impl Tree {
-    pub fn add(&mut self, index: Index, parent: Option<Index>) {
+    pub fn add(&mut self, index: WrappedIndex, parent: Option<WrappedIndex>) {
         if let Some(parent_index) = parent {
             self.parents.insert(index, parent_index);
             if let Some(parent_children) = self.children.get_mut(&parent_index) {
@@ -65,7 +66,7 @@ impl Tree {
     }
 
     /// Remove the given node and recursively removes its descendants
-    pub fn remove(&mut self, index: Index) -> Vec<Index> {
+    pub fn remove(&mut self, index: WrappedIndex) -> Vec<WrappedIndex> {
         let parent = self.parents.remove(&index);
         if let Some(parent) = parent {
             let children = self
@@ -96,7 +97,7 @@ impl Tree {
     /// Children fill at the original index of the removed node amongst its siblings.
     ///
     /// Panics if called on the root node
-    pub fn remove_and_reparent(&mut self, index: Index) {
+    pub fn remove_and_reparent(&mut self, index: WrappedIndex) {
         let parent = self.parents.remove(&index);
         if let Some(parent) = parent {
             let mut insertion_index = 0usize;
@@ -121,7 +122,7 @@ impl Tree {
     }
 
     /// Replace the given node with another, transferring the parent and child relationships over to the replacement node
-    pub fn replace(&mut self, index: Index, replace_with: Index) {
+    pub fn replace(&mut self, index: WrappedIndex, replace_with: WrappedIndex) {
         // === Update Parent === //
         if let Some(parent) = self.parents.remove(&index) {
             self.parents.insert(replace_with, parent);
@@ -143,7 +144,7 @@ impl Tree {
     }
 
     /// Returns true if the given node is in this tree
-    pub fn contains(&self, index: Index) -> bool {
+    pub fn contains(&self, index: WrappedIndex) -> bool {
         Some(index) == self.root_node
             || self.parents.contains_key(&index)
             || self.children.contains_key(&index)
@@ -164,7 +165,7 @@ impl Tree {
     }
 
     /// Returns true if the given node is a descendant of another node
-    pub fn is_descendant(&self, descendant: Index, of_node: Index) -> bool {
+    pub fn is_descendant(&self, descendant: WrappedIndex, of_node: WrappedIndex) -> bool {
         let mut index = descendant;
         while let Some(parent) = self.get_parent(index) {
             index = parent;
@@ -175,7 +176,7 @@ impl Tree {
         false
     }
 
-    pub fn flatten(&self) -> Vec<Index> {
+    pub fn flatten(&self) -> Vec<WrappedIndex> {
         if self.root_node.is_none() {
             return Vec::new();
         }
@@ -183,7 +184,7 @@ impl Tree {
         DownwardIterator::new(&self, Some(self.root_node.unwrap()), true).collect::<Vec<_>>()
     }
 
-    pub fn flatten_node(&self, root_node: Index) -> Vec<Index> {
+    pub fn flatten_node(&self, root_node: WrappedIndex) -> Vec<WrappedIndex> {
         if self.root_node.is_none() {
             return Vec::new();
         }
@@ -191,13 +192,13 @@ impl Tree {
         DownwardIterator::new(&self, Some(root_node), true).collect::<Vec<_>>()
     }
 
-    pub fn get_parent(&self, index: Index) -> Option<Index> {
+    pub fn get_parent(&self, index: WrappedIndex) -> Option<WrappedIndex> {
         self.parents
             .get(&index)
             .map_or(None, |parent| Some(*parent))
     }
 
-    pub fn get_first_child(&self, index: Index) -> Option<Index> {
+    pub fn get_first_child(&self, index: WrappedIndex) -> Option<WrappedIndex> {
         self.children.get(&index).map_or(None, |children| {
             children
                 .first()
@@ -205,13 +206,13 @@ impl Tree {
         })
     }
 
-    pub fn get_last_child(&self, index: Index) -> Option<Index> {
+    pub fn get_last_child(&self, index: WrappedIndex) -> Option<WrappedIndex> {
         self.children.get(&index).map_or(None, |children| {
             children.last().map_or(None, |last_child| Some(*last_child))
         })
     }
 
-    pub fn get_next_sibling(&self, index: Index) -> Option<Index> {
+    pub fn get_next_sibling(&self, index: WrappedIndex) -> Option<WrappedIndex> {
         if let Some(parent_index) = self.get_parent(index) {
             self.children.get(&parent_index).map_or(None, |children| {
                 children
@@ -228,7 +229,7 @@ impl Tree {
         }
     }
 
-    pub fn get_prev_sibling(&self, index: Index) -> Option<Index> {
+    pub fn get_prev_sibling(&self, index: WrappedIndex) -> Option<WrappedIndex> {
         if let Some(parent_index) = self.get_parent(index) {
             self.children.get(&parent_index).map_or(None, |children| {
                 children
@@ -249,7 +250,7 @@ impl Tree {
         }
     }
 
-    pub fn diff_children(&self, other_tree: &Tree, root_node: Index) -> ChildChanges {
+    pub fn diff_children(&self, other_tree: &Tree, root_node: WrappedIndex) -> ChildChanges {
         let children_a = self.children.get(&root_node);
         let children_b = other_tree.children.get(&root_node);
         // Handle both easy cases first..
@@ -284,13 +285,13 @@ impl Tree {
             .into_iter()
             .map(|i| *i)
             .enumerate()
-            .collect::<Vec<(usize, Index)>>();
+            .collect::<Vec<(usize, WrappedIndex)>>();
         let children_b = children_b
             .unwrap()
             .into_iter()
             .map(|i| *i)
             .enumerate()
-            .collect::<Vec<(usize, Index)>>();
+            .collect::<Vec<(usize, WrappedIndex)>>();
 
         let deleted_nodes = children_a
             .iter()
@@ -386,8 +387,8 @@ impl Tree {
     pub fn diff(
         &self,
         other_tree: &Tree,
-        root_node: Index,
-    ) -> Vec<(usize, Index, Index, Vec<Change>)> {
+        root_node: WrappedIndex,
+    ) -> Vec<(usize, WrappedIndex, WrappedIndex, Vec<Change>)> {
         let mut changes = Vec::new();
 
         let mut tree1 = self
@@ -496,7 +497,7 @@ impl Tree {
         flat_tree_diff_nodes
     }
 
-    pub fn merge(&mut self, other: &Tree, root_node: Index, changes: ChildChanges) {
+    pub fn merge(&mut self, other: &Tree, root_node: WrappedIndex, changes: ChildChanges) {
         let has_changes = changes.has_changes();
         let children_a = self.children.get_mut(&root_node);
         let children_b = other.children.get(&root_node);
@@ -525,7 +526,7 @@ impl Tree {
         }
         let children_a = children_a.unwrap();
         let children_b = children_b.unwrap();
-        children_a.resize(children_b.len(), Index::from_raw(0));
+        children_a.resize(children_b.len(), WrappedIndex(Entity::from_raw(0)));
         for (id, node, parent_node, change) in changes.changes.iter() {
             match change.as_slice() {
                 [Change::Inserted] => {
@@ -560,8 +561,8 @@ impl Tree {
 /// from a given node.
 pub struct DownwardIterator<'a> {
     tree: &'a Tree,
-    starting_node: Option<Index>,
-    current_node: Option<Index>,
+    starting_node: Option<WrappedIndex>,
+    current_node: Option<WrappedIndex>,
     include_self: bool,
 }
 
@@ -576,8 +577,8 @@ impl<'a> DownwardIterator<'a> {
     ///
     ///
     /// [tree]: Tree
-    /// [node]: Index
-    pub fn new(tree: &'a Tree, starting_node: Option<Index>, include_self: bool) -> Self {
+    /// [node]: WrappedIndex
+    pub fn new(tree: &'a Tree, starting_node: Option<WrappedIndex>, include_self: bool) -> Self {
         Self {
             tree,
             starting_node,
@@ -588,7 +589,7 @@ impl<'a> DownwardIterator<'a> {
 }
 
 impl<'a> Iterator for DownwardIterator<'a> {
-    type Item = Index;
+    type Item = WrappedIndex;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.include_self {
@@ -638,7 +639,7 @@ impl<'a> Iterator for DownwardIterator<'a> {
 /// from a given node.
 pub struct UpwardIterator<'a> {
     tree: &'a Tree,
-    current_node: Option<Index>,
+    current_node: Option<WrappedIndex>,
     include_self: bool,
 }
 
@@ -653,8 +654,8 @@ impl<'a> UpwardIterator<'a> {
     ///
     ///
     /// [tree]: Tree
-    /// [node]: Index
-    pub fn new(tree: &'a Tree, starting_node: Option<Index>, include_self: bool) -> Self {
+    /// [node]: WrappedIndex
+    pub fn new(tree: &'a Tree, starting_node: Option<WrappedIndex>, include_self: bool) -> Self {
         Self {
             tree,
             current_node: starting_node,
@@ -664,7 +665,7 @@ impl<'a> UpwardIterator<'a> {
 }
 
 impl<'a> Iterator for UpwardIterator<'a> {
-    type Item = Index;
+    type Item = WrappedIndex;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.include_self {
@@ -679,11 +680,11 @@ impl<'a> Iterator for UpwardIterator<'a> {
 
 pub struct ChildIterator<'a> {
     pub tree: &'a Tree,
-    pub current_node: Option<Index>,
+    pub current_node: Option<WrappedIndex>,
 }
 
 impl<'a> Iterator for ChildIterator<'a> {
-    type Item = Index;
+    type Item = WrappedIndex;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(entity) = self.current_node {
             self.current_node = self.tree.get_next_sibling(entity);
@@ -694,37 +695,10 @@ impl<'a> Iterator for ChildIterator<'a> {
     }
 }
 
-/// Describes a visual tree of UI nodes
-pub trait Hierarchy<'a> {
-    /// A type respresenting an iterator that walks up the visual tree
-    type UpIter: Iterator<Item = Index>;
-    /// A type representing an iterator that walks down the visual tree
-    type DownIter: Iterator<Item = Index>;
-    /// A type representing an iterator which iterates through the children of a specified node
-    type ChildIter: Iterator<Item = Index>;
-
-    /// Returns an iterator which walks up the hierarchy
-    fn up_iter(&'a self) -> Self::UpIter;
-
-    /// Returns an iterator which walks down the hierarchy
-    fn down_iter(&'a self) -> Self::DownIter;
-
-    /// Returns an iterator over the child nodes of a specified node
-    fn child_iter(&'a self, node: Index) -> Self::ChildIter;
-
-    /// Get the parent node of the specified node
-    fn parent(&self, node: Index) -> Option<Index>;
-
-    /// Returns true if the specified node is the first child of its parent
-    fn is_first_child(&self, node: Index) -> bool;
-
-    /// Returns true if the specified node is the last child of its parent
-    fn is_last_child(&self, node: Index) -> bool;
-}
-
 impl<'a> Hierarchy<'a> for Tree {
     type DownIter = DownwardIterator<'a>;
-    type UpIter = Rev<std::vec::IntoIter<Index>>;
+    type UpIter = Rev<std::vec::IntoIter<WrappedIndex>>;
+    type Item = WrappedIndex;
     type ChildIter = ChildIterator<'a>;
 
     fn up_iter(&'a self) -> Self::UpIter {
@@ -737,7 +711,7 @@ impl<'a> Hierarchy<'a> for Tree {
         DownwardIterator::new(self, self.root_node, true)
     }
 
-    fn child_iter(&'a self, node: Index) -> Self::ChildIter {
+    fn child_iter(&'a self, node: WrappedIndex) -> Self::ChildIter {
         let first_child = self.get_first_child(node);
         ChildIterator {
             tree: self,
@@ -745,7 +719,7 @@ impl<'a> Hierarchy<'a> for Tree {
         }
     }
 
-    fn parent(&self, node: Index) -> Option<Index> {
+    fn parent(&self, node: WrappedIndex) -> Option<WrappedIndex> {
         if let Some(parent_index) = self.parents.get(&node) {
             return Some(*parent_index);
         }
@@ -753,7 +727,7 @@ impl<'a> Hierarchy<'a> for Tree {
         None
     }
 
-    fn is_first_child(&self, node: Index) -> bool {
+    fn is_first_child(&self, node: WrappedIndex) -> bool {
         if let Some(parent) = self.parent(node) {
             if let Some(first_child) = self.get_first_child(parent) {
                 if first_child == node {
@@ -767,7 +741,7 @@ impl<'a> Hierarchy<'a> for Tree {
         false
     }
 
-    fn is_last_child(&self, node: Index) -> bool {
+    fn is_last_child(&self, node: WrappedIndex) -> bool {
         if let Some(parent) = self.parent(node) {
             if let Some(parent_children) = self.children.get(&parent) {
                 if let Some(last_child) = parent_children.last() {
@@ -783,7 +757,7 @@ impl<'a> Hierarchy<'a> for Tree {
 #[derive(Clone)]
 pub struct WidgetTree {
     tree: Arc<RwLock<Tree>>,
-    widget_types: Arc<RwLock<HashMap<Index, Arc<dyn Widget>>>>,
+    widget_types: Arc<RwLock<HashMap<Entity, Arc<dyn Widget>>>>,
 }
 
 impl WidgetTree {
@@ -794,16 +768,16 @@ impl WidgetTree {
         }
     }
 
-    pub fn add<T: Widget + Default + 'static>(&self, index: Index, parent: Option<Index>) {
+    pub fn add<T: Widget + Default + 'static>(&self, index: Entity, parent: Option<Entity>) {
         if let Ok(mut tree) = self.tree.write() {
             if let Ok(mut widget_types) = self.widget_types.write() {
-                tree.add(index, parent);
+                tree.add(WrappedIndex(index), parent.map(|parent| WrappedIndex(parent)));
                 widget_types.insert(index, Arc::new(T::default()));
             }
         }
     }
 
-    pub fn take(self) -> (Tree, HashMap<Index, Arc<dyn Widget>>) {
+    pub fn take(self) -> (Tree, HashMap<Entity, Arc<dyn Widget>>) {
         (
             Arc::try_unwrap(self.tree).unwrap().into_inner().unwrap(),
             match Arc::try_unwrap(self.widget_types) {
@@ -817,7 +791,8 @@ impl WidgetTree {
 #[cfg(test)]
 mod tests {
     use crate::tree::{DownwardIterator, UpwardIterator};
-    use crate::tree::{Index, Tree};
+    use crate::tree::{WrappedIndex, Tree};
+    use bevy::prelude::Entity;
 
     #[test]
     fn should_descend_tree() {
@@ -829,13 +804,13 @@ mod tests {
         //   D E  F
         //   G
 
-        let a = Index::from_raw(0);
-        let b = Index::from_raw(1);
-        let c = Index::from_raw(2);
-        let d = Index::from_raw(3);
-        let e = Index::from_raw(4);
-        let f = Index::from_raw(5);
-        let g = Index::from_raw(6);
+        let a = WrappedIndex(Entity::from_raw(0));
+        let b = WrappedIndex(Entity::from_raw(1));
+        let c = WrappedIndex(Entity::from_raw(2));
+        let d = WrappedIndex(Entity::from_raw(3));
+        let e = WrappedIndex(Entity::from_raw(4));
+        let f = WrappedIndex(Entity::from_raw(5));
+        let g = WrappedIndex(Entity::from_raw(6));
 
         tree.add(a, None);
         tree.add(b, Some(a));
@@ -891,13 +866,13 @@ mod tests {
         //   D E  F
         //   G
 
-        let a = Index::from_raw(0);
-        let b = Index::from_raw(1);
-        let c = Index::from_raw(2);
-        let d = Index::from_raw(3);
-        let e = Index::from_raw(4);
-        let f = Index::from_raw(5);
-        let g = Index::from_raw(6);
+        let a = WrappedIndex(Entity::from_raw(0));
+        let b = WrappedIndex(Entity::from_raw(1));
+        let c = WrappedIndex(Entity::from_raw(2));
+        let d = WrappedIndex(Entity::from_raw(3));
+        let e = WrappedIndex(Entity::from_raw(4));
+        let f = WrappedIndex(Entity::from_raw(5));
+        let g = WrappedIndex(Entity::from_raw(6));
 
         tree.add(a, None);
         tree.add(b, Some(a));
@@ -948,11 +923,11 @@ mod tests {
     #[test]
     fn should_replace() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child_a = Index::from_raw(1);
-        let child_b = Index::from_raw(2);
-        let grandchild_a = Index::from_raw(3);
-        let grandchild_b = Index::from_raw(4);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child_a = WrappedIndex(Entity::from_raw(1));
+        let child_b = WrappedIndex(Entity::from_raw(2));
+        let grandchild_a = WrappedIndex(Entity::from_raw(3));
+        let grandchild_b = WrappedIndex(Entity::from_raw(4));
         tree.add(root, None);
         tree.add(child_a, Some(root));
         tree.add(child_b, Some(root));
@@ -960,11 +935,11 @@ mod tests {
         tree.add(grandchild_b, Some(child_b));
 
         let mut expected = Tree::default();
-        let expected_root = Index::from_raw(5);
-        let expected_child_a = Index::from_raw(6);
-        let expected_child_b = Index::from_raw(7);
-        let expected_grandchild_a = Index::from_raw(8);
-        let expected_grandchild_b = Index::from_raw(9);
+        let expected_root = WrappedIndex(Entity::from_raw(5));
+        let expected_child_a = WrappedIndex(Entity::from_raw(6));
+        let expected_child_b = WrappedIndex(Entity::from_raw(7));
+        let expected_grandchild_a = WrappedIndex(Entity::from_raw(8));
+        let expected_grandchild_b = WrappedIndex(Entity::from_raw(9));
         expected.add(expected_root, None);
         expected.add(expected_child_a, Some(expected_root));
         expected.add(expected_child_b, Some(expected_root));
@@ -1022,11 +997,11 @@ mod tests {
     #[test]
     fn should_remove() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child_a = Index::from_raw(1);
-        let child_b = Index::from_raw(2);
-        let grandchild_a = Index::from_raw(3);
-        let grandchild_b = Index::from_raw(4);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child_a = WrappedIndex(Entity::from_raw(1));
+        let child_b = WrappedIndex(Entity::from_raw(2));
+        let grandchild_a = WrappedIndex(Entity::from_raw(3));
+        let grandchild_b = WrappedIndex(Entity::from_raw(4));
         tree.add(root, None);
         tree.add(child_a, Some(root));
         tree.add(child_b, Some(root));
@@ -1047,11 +1022,11 @@ mod tests {
     #[test]
     fn should_remove_root() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child_a = Index::from_raw(1);
-        let child_b = Index::from_raw(2);
-        let grandchild_a = Index::from_raw(3);
-        let grandchild_b = Index::from_raw(4);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child_a = WrappedIndex(Entity::from_raw(1));
+        let child_b = WrappedIndex(Entity::from_raw(2));
+        let grandchild_a = WrappedIndex(Entity::from_raw(3));
+        let grandchild_b = WrappedIndex(Entity::from_raw(4));
         tree.add(root, None);
         tree.add(child_a, Some(root));
         tree.add(child_b, Some(root));
@@ -1069,11 +1044,11 @@ mod tests {
     #[test]
     fn should_remove_and_reparent() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child_a = Index::from_raw(1);
-        let child_b = Index::from_raw(2);
-        let grandchild_a = Index::from_raw(3);
-        let grandchild_b = Index::from_raw(4);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child_a = WrappedIndex(Entity::from_raw(1));
+        let child_b = WrappedIndex(Entity::from_raw(2));
+        let grandchild_a = WrappedIndex(Entity::from_raw(3));
+        let grandchild_b = WrappedIndex(Entity::from_raw(4));
         tree.add(root, None);
         tree.add(child_a, Some(root));
         tree.add(child_b, Some(root));
@@ -1097,7 +1072,7 @@ mod tests {
     #[test]
     fn should_contain_root() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
+        let root = WrappedIndex(Entity::from_raw(0));
         tree.add(root, None);
 
         assert!(tree.contains(root));
@@ -1106,8 +1081,8 @@ mod tests {
     #[test]
     fn should_contain_child() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child = Index::from_raw(1);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child = WrappedIndex(Entity::from_raw(1));
         tree.add(root, None);
         tree.add(child, Some(root));
 
@@ -1119,16 +1094,16 @@ mod tests {
     fn should_be_empty() {
         let mut tree = Tree::default();
         assert!(tree.is_empty());
-        tree.add(Index::from_raw(0), None);
+        tree.add(WrappedIndex(Entity::from_raw(0)), None);
         assert!(!tree.is_empty())
     }
 
     #[test]
     fn should_be_descendant() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child = Index::from_raw(1);
-        let grandchild = Index::from_raw(2);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child = WrappedIndex(Entity::from_raw(1));
+        let grandchild = WrappedIndex(Entity::from_raw(2));
         tree.add(root, None);
         tree.add(child, Some(root));
         tree.add(grandchild, Some(child));
@@ -1141,9 +1116,9 @@ mod tests {
     #[test]
     fn should_give_len() {
         let mut tree = Tree::default();
-        let root = Index::from_raw(0);
-        let child = Index::from_raw(1);
-        let grandchild = Index::from_raw(2);
+        let root = WrappedIndex(Entity::from_raw(0));
+        let child = WrappedIndex(Entity::from_raw(1));
+        let grandchild = WrappedIndex(Entity::from_raw(2));
 
         assert_eq!(0, tree.len());
         tree.add(root, None);
