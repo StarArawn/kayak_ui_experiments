@@ -1,20 +1,24 @@
 use std::sync::Arc;
 use bevy::{ecs::system::CommandQueue, prelude::*, utils::HashMap};
 
-use crate::{widget::Widget, tree::{Index, WidgetTree, Tree, ChildChanges, Change, Hierarchy}};
+use crate::{widget::Widget, tree::{Index, WidgetTree, Tree, ChildChanges, Change, Hierarchy}, prelude::RenderCommand, node::DirtyNode, calculate_nodes::{calculate_nodes, build_nodes_tree}};
 
 pub struct Context {
-    tree: Tree,
+    pub(crate) tree: Tree,
+    pub(crate) node_tree: Tree,
     widget_types: HashMap<Index, Arc<dyn Widget>>,
     systems: HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
+    pub(crate) current_z: f32,
 }
 
 impl Context {
     pub fn new() -> Self {
         Self {
             tree: Tree::default(),
+            node_tree: Tree::default(),
             widget_types: HashMap::default(),
             systems: HashMap::default(),
+            current_z: 0.0,
         }
     }
 
@@ -34,6 +38,10 @@ impl Context {
     ) {
         self.tree.add(entity, parent);
         self.widget_types.insert(entity, Arc::new(T::default()));
+    }
+
+    pub fn render(&self) -> Vec<RenderCommand> {
+        vec![]
     }
 }
 
@@ -115,6 +123,12 @@ fn update_widget(
     let diff = tree.diff_children(&widget_tree, entity);
     let mut command_queue = CommandQueue::default();
     let mut commands = Commands::new(&mut command_queue, world);
+
+    // Mark node as needing a recalculation of rendering/layout.
+    if should_update_children {
+        commands.entity(entity).insert(DirtyNode);
+    }
+
     for (_, changed_entity, _, changes) in diff.changes.iter() {
         if changes
             .iter()
@@ -147,7 +161,10 @@ pub struct ContextPlugin;
 impl Plugin for ContextPlugin {
     fn build(&self, app: &mut App) {
         app
+            .register_type::<Node>()
             .add_startup_system(init_systems.exclusive_system().at_end())
-            .add_system(update_widgets_sys.exclusive_system());
+            .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system())
+            .add_system(calculate_nodes.label("calc_nodes"))
+            .add_system(build_nodes_tree.after("calc_nodes"));
     }
 }

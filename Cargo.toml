@@ -1,5 +1,5 @@
 [package]
-name = "bevy_ui"
+name = "kayak_ui"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,8 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.8.1"
+kayak_font = { git = "https://github.com/StarArawn/kayak_ui" }
+morphorm = { git = "https://github.com/geom3trik/morphorm", rev = "1243152d4cebea46fd3e5098df26402c73acae91" }
+
+[dev-dependencies]
+bevy-inspector-egui = "0.12"

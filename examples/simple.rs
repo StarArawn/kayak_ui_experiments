@@ -1,13 +1,7 @@
 #![allow(dead_code)]
 
-mod tree;
-mod context;
-pub mod widget;
-
 use bevy::{prelude::*};
-use context::{Context, ContextPlugin};
-use tree::{WidgetTree};
-use widget::Widget;
+use kayak_ui::prelude::*;
 
 #[derive(Component, Default)]
 pub struct MyWidget2 {
