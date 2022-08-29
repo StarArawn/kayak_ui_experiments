@@ -23,7 +23,7 @@ pub fn calculate_nodes(
     let mut new_nodes = HashMap::<Entity, Node>::default();
     // This is the maximum recursion depth for this method.
     // Recursion involves recalculating layout which should be done sparingly.
-    const MAX_RECURSION_DEPTH: usize = 2;
+    // const MAX_RECURSION_DEPTH: usize = 2;
 
     context.current_z = 0.0;
 
@@ -100,18 +100,18 @@ pub fn calculate_nodes(
 
 }
 
-fn create_primitive(id: Index, styles: &mut Style) -> RenderPrimitive {
-    let mut render_primitive = RenderPrimitive::from(&styles.clone());
-    let mut needs_layout = false;
+fn create_primitive(_id: Index, styles: &mut Style) -> RenderPrimitive {
+    let render_primitive = RenderPrimitive::from(&styles.clone());
+    // let mut needs_layout = false;
 
-    match &mut render_primitive {
-        RenderPrimitive::Text {
-            content,
-            font,
-            properties,
-            text_layout,
-            ..
-        } => {
+    // match &mut render_primitive {
+    //     RenderPrimitive::Text {
+    //         content,
+    //         font,
+    //         properties,
+    //         text_layout,
+    //         ..
+    //     } => {
             // --- Bind to Font Asset --- //
             // let asset = assets.get_asset::<KayakFont, _>(font.clone());
             // self.bind(id, &asset);
@@ -137,9 +137,9 @@ fn create_primitive(id: Index, styles: &mut Style) -> RenderPrimitive {
             //         }
             //     }
             // }
-        }
-        _ => {}
-    }
+    //     }
+    //     _ => {}
+    // }
 
     // if needs_layout {
     //     needs_layout(id);

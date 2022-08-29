@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use kayak_ui::prelude::{Style, *};

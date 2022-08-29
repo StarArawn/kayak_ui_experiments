@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod tree;
 mod context;
 mod widget;

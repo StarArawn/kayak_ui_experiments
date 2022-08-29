@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use bevy::{prelude::*};
 use kayak_ui::prelude::*;
 
