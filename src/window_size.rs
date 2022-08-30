@@ -1,7 +1,7 @@
 use bevy::{prelude::*, window::{WindowResized, WindowCreated}};
 
 /// Tracks the bevy window size.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Resource, Default, Debug, Clone, Copy, PartialEq)]
 pub struct WindowSize(pub f32, pub f32);
 
 pub fn update_window_size(

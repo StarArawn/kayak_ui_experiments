@@ -2,7 +2,7 @@ use bevy::prelude::{Component, Query, Entity};
 
 use crate::{
     styles::{Style, StyleProp},
-    render_primitive::RenderPrimitive, layout::LayoutCache,
+    render_primitive::RenderPrimitive
 };
 
 #[derive(Component, Debug, Clone, Copy)]

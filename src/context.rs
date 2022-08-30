@@ -12,6 +12,7 @@ use crate::{
     WindowSize,
 };
 
+#[derive(Resource)]
 pub struct Context {
     pub(crate) tree: Tree,
     pub(crate) node_tree: Tree,
@@ -37,13 +38,14 @@ impl Context {
         self.layout_cache.rect.get(id)
     }
 
-    pub fn register_widget_system<Params>(
+    pub fn add_widget_system<Params>(
         &mut self,
         type_name: impl Into<String>,
         system: impl IntoSystem<(WidgetTree, Entity), bool, Params>,
     ) {
+        let system = IntoSystem::into_system(system);
         self.systems
-            .insert(type_name.into(), Box::new(IntoSystem::into_system(system)));
+            .insert(type_name.into(), Box::new(system));
     }
 
     pub fn add_widget<T: Widget + Default + 'static>(
@@ -139,11 +141,12 @@ fn recurse_node_tree_to_build_primitives(
 
 fn update_widgets_sys(world: &mut World) {
     let mut context = world
-        .get_resource_mut::<Option<Context>>()
-        .unwrap()
-        .take()
+        .remove_resource::<Context>()
         .unwrap();
     let tree_iterator = context.tree.down_iter().collect::<Vec<_>>();
+    
+    // let change_tick = world.increment_change_tick();
+    
     update_widgets(
         world,
         &mut context.tree,
@@ -152,7 +155,12 @@ fn update_widgets_sys(world: &mut World) {
         tree_iterator,
         &mut context.widget_types,
     );
-    *world.get_resource_mut::<Option<Context>>().unwrap() = Some(context);
+    
+    for system in context.systems.values_mut() {
+        system.set_last_change_tick(world.read_change_tick());
+        // system.apply_buffers(world);
+    }
+    world.insert_resource(context);
 }
 
 fn update_widgets(
@@ -169,7 +177,6 @@ fn update_widgets(
             let (mut widget_tree, mut widget_types, diff, should_update_children) = update_widget(
                 systems,
                 tree,
-                parent_widget_types,
                 world,
                 *entity,
                 &widget_type,
@@ -189,7 +196,7 @@ fn update_widgets(
 
             // Only merge tree if changes detected.
             if should_update_children {
-                for (index, child, parent, changes) in diff.changes.iter() {
+                for (_index, child, _parent, changes) in diff.changes.iter() {
                     for change in changes.iter() {
                         if matches!(change, Change::Inserted) {
                             layout_cache.add(*child);
@@ -206,7 +213,6 @@ fn update_widgets(
 fn update_widget(
     systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     tree: &mut Tree,
-    parent_widget_types: &mut HashMap<Entity, Arc<dyn Widget>>,
     world: &mut World,
     entity: WrappedIndex,
     widget_type: &Arc<dyn Widget>,
@@ -215,7 +221,9 @@ fn update_widget(
     let should_update_children;
     {
         let widget_system = systems.get_mut(widget_type.get_name()).unwrap();
+        let old_tick = widget_system.get_last_change_tick();
         should_update_children = widget_system.run((widget_tree.clone(), entity.0), world);
+        widget_system.set_last_change_tick(old_tick);
         widget_system.apply_buffers(world);
     }
     let (widget_tree, widget_types) = widget_tree.take();
@@ -240,15 +248,14 @@ fn update_widget(
 
 fn init_systems(world: &mut World) {
     let mut context = world
-        .get_resource_mut::<Option<Context>>()
-        .unwrap()
-        .take()
+        .remove_resource::<Context>()
         .unwrap();
     for system in context.systems.values_mut() {
         system.initialize(world);
+        // system.toggle_bypass_change_tick();
     }
 
-    *world.get_resource_mut::<Option<Context>>().unwrap() = Some(context);
+    world.insert_resource(context);
 }
 
 pub struct ContextPlugin;
@@ -272,13 +279,14 @@ impl Plugin for ContextPlugin {
     }
 }
 
-fn build_layout(mut context: ResMut<Option<Context>>, nodes: Query<&'static crate::node::Node>) {
-    if let Some(context) = context.as_mut() {
-        let mut data_cache = DataCache {
-            cache: &mut context.layout_cache,
-            query: &nodes,
-        };
+fn build_layout(mut context: ResMut<Context>, nodes: Query<&'static crate::node::Node>) {
+    let context = context.as_mut();
+    let node_tree = &context.node_tree;
+    let layout_cache = &mut context.layout_cache;
+    let mut data_cache = DataCache {
+        cache: layout_cache,
+        query: &nodes,
+    };
 
-        morphorm::layout(&mut data_cache, &context.node_tree, &nodes);
-    }
+    morphorm::layout(&mut data_cache, node_tree, &nodes);
 }

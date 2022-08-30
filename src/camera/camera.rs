@@ -2,7 +2,7 @@ use bevy::{
     ecs::query::QueryItem,
     prelude::{Bundle, Component, GlobalTransform, Transform, With},
     render::{
-        camera::{Camera, CameraProjection, CameraRenderGraph, DepthCalculation, WindowOrigin},
+        camera::{Camera, CameraProjection, CameraRenderGraph, WindowOrigin},
         extract_component::ExtractComponent,
         primitives::Frustum,
         view::VisibleEntities,
@@ -44,7 +44,6 @@ impl UICameraBundle {
 
         let orthographic_projection = UIOrthographicProjection {
             far,
-            depth_calculation: DepthCalculation::ZDifference,
             window_origin: WindowOrigin::BottomLeft,
             ..Default::default()
         };

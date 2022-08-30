@@ -1,6 +1,6 @@
 use bevy::{
     prelude::{
-        App as BevyApp, Commands, Component, Entity, In, Input, KeyCode, Query, Res, ResMut, With, AssetServer,
+        App as BevyApp, Commands, Component, Entity, In, Input, KeyCode, Query, Res, ResMut, With, AssetServer, Resource,
     },
     DefaultPlugins,
 };
@@ -16,7 +16,7 @@ fn my_widget_1_update(
     my_resource: Res<MyResource>,
     mut query: Query<(&mut MyWidget, &mut Style)>,
 ) -> bool {
-    if my_resource.is_changed() {
+    if my_resource.is_changed() || my_resource.is_added() {
         if let Ok((mut my_widget, mut style)) = query.get_mut(entity) {
             my_widget.foo = my_resource.0;
             dbg!(my_widget.foo);
@@ -32,6 +32,7 @@ fn my_widget_1_update(
 
 impl Widget for MyWidget {}
 
+#[derive(Resource)]
 pub struct MyResource(pub u32);
 
 fn startup(
@@ -44,7 +45,7 @@ fn startup(
     commands.spawn().insert_bundle(UICameraBundle::new());
 
     let mut context = Context::new();
-    context.register_widget_system(MyWidget::default().get_name(), my_widget_1_update);
+    context.add_widget_system(MyWidget::default().get_name(), my_widget_1_update);
     let entity = commands
         .spawn()
         .insert(KayakApp {
@@ -59,7 +60,7 @@ fn startup(
         })
         .id();
     context.add_widget::<KayakApp>(None, entity);
-    commands.insert_resource(Some(context));
+    commands.insert_resource(context);
 }
 
 fn update_resource(keyboard_input: Res<Input<KeyCode>>, mut my_resource: ResMut<MyResource>) {
@@ -71,8 +72,8 @@ fn update_resource(keyboard_input: Res<Input<KeyCode>>, mut my_resource: ResMut<
 fn main() {
     BevyApp::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(KayakWidgets)
         .add_plugin(ContextPlugin)
+        .add_plugin(KayakWidgets)
         .insert_resource(MyResource(1))
         .add_startup_system(startup)
         .add_system(update_resource)

@@ -6,7 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.8.1"
+bevy = { git = "https://github.com/StarArawn/bevy/", rev="06a73ed3d72ee644bb617adfbe93153f7a51ea5c" }
 bytemuck = "1.12"
-kayak_font = { git = "https://github.com/StarArawn/kayak_ui" }
+kayak_font = { path = "./kayak_font" }
 morphorm = { git = "https://github.com/geom3trik/morphorm", rev = "1243152d4cebea46fd3e5098df26402c73acae91" }
+
+[dev-dependencies]
+fastrand = "1.8"

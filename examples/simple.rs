@@ -51,15 +51,16 @@ fn my_widget_1_update(
 
 impl Widget for MyWidget {}
 
+#[derive(Resource)]
 pub struct MyResource(pub u32);
 
 fn startup(mut commands: Commands) {
     let mut context = Context::new();
-    context.register_widget_system(MyWidget::default().get_name(), my_widget_1_update);
-    context.register_widget_system(MyWidget2::default().get_name(), my_widget_2_update);
+    context.add_widget_system(MyWidget::default().get_name(), my_widget_1_update);
+    context.add_widget_system(MyWidget2::default().get_name(), my_widget_2_update);
     let entity = commands.spawn().insert(MyWidget { foo: 0 }).id();
     context.add_widget::<MyWidget>(None, entity);
-    commands.insert_resource(Some(context));
+    commands.insert_resource(context);
 }
 
 fn update_resource(keyboard_input: Res<Input<KeyCode>>, mut my_resource: ResMut<MyResource>) {

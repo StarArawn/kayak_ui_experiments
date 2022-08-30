@@ -15,20 +15,13 @@ use crate::{
 
 pub fn calculate_nodes(
     mut commands: Commands,
-    mut context: ResMut<Option<Context>>,
+    mut context: ResMut<Context>,
     fonts: Res<Assets<KayakFont>>,
     font_mapping: Res<FontMapping>,
     query: Query<Entity, With<DirtyNode>>,
     all_styles_query: Query<&Style>,
     node_query: Query<(Entity, &Node)>,
 ) {
-    if context.is_none() {
-        dbg!("Whoops no context!");
-        return;
-    }
-
-    let mut context = (*context).as_mut().unwrap();
-
     let mut new_nodes = HashMap::<Entity, (Node, bool)>::default();
     // This is the maximum recursion depth for this method.
     // Recursion involves recalculating layout which should be done sparingly.
@@ -90,7 +83,7 @@ pub fn calculate_nodes(
             // Fill in all `inherited` values for any `inherit` property
             styles.inherit(&parent_styles);
 
-            let (primitive, needs_layout) = create_primitive(&mut commands, context, &fonts, &font_mapping, &node_query, dirty_entity, &mut styles);
+            let (primitive, needs_layout) = create_primitive(&mut commands, &context, &fonts, &font_mapping, &node_query, dirty_entity, &mut styles);
 
             let children = context
                 .tree
@@ -177,14 +170,7 @@ fn create_primitive(
     (render_primitive, needs_layout)
 }
 
-pub fn build_nodes_tree(mut context: ResMut<Option<Context>>, node_query: Query<(Entity, &Node)>) {
-    if context.is_none() {
-        dbg!("Whoops no context!");
-        return;
-    }
-
-    let mut context = (*context).as_mut().unwrap();
-
+pub fn build_nodes_tree(mut context: ResMut<Context>, node_query: Query<(Entity, &Node)>) {
     let mut tree = Tree::default();
     tree.root_node = context.tree.root_node;
     tree.children.insert(

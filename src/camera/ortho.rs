@@ -3,7 +3,7 @@ use bevy::prelude::Component;
 use bevy::{
     math::Mat4,
     reflect::Reflect,
-    render::camera::{CameraProjection, DepthCalculation, ScalingMode, WindowOrigin},
+    render::camera::{CameraProjection, ScalingMode, WindowOrigin},
 };
 
 #[derive(Debug, Clone, Component, Reflect)]
@@ -18,7 +18,6 @@ pub struct UIOrthographicProjection {
     pub window_origin: WindowOrigin,
     pub scaling_mode: ScalingMode,
     pub scale: f32,
-    pub depth_calculation: DepthCalculation,
 }
 
 impl CameraProjection for UIOrthographicProjection {
@@ -47,10 +46,6 @@ impl CameraProjection for UIOrthographicProjection {
         }
     }
 
-    fn depth_calculation(&self) -> DepthCalculation {
-        self.depth_calculation
-    }
-
     fn far(&self) -> f32 {
         self.far
     }
@@ -68,7 +63,6 @@ impl Default for UIOrthographicProjection {
             window_origin: WindowOrigin::Center,
             scaling_mode: ScalingMode::WindowSize,
             scale: 1.0,
-            depth_calculation: DepthCalculation::Distance,
         }
     }
 }

@@ -1,12 +1,12 @@
 use bevy::{
-    math::Vec2,
+    // math::Vec2,
     prelude::{Assets, Commands, Plugin, Res, Query},
-    render::{color::Color, texture::Image, Extract, RenderApp, RenderStage},
-    sprite::Rect,
+    render::{Extract, RenderApp, RenderStage},
+    // sprite::Rect,
     window::Windows,
 };
 use crate::{
-    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, context::Context, node::Node, render_primitive::RenderPrimitive,
+    context::Context, node::Node, render_primitive::RenderPrimitive,
 };
 use kayak_font::KayakFont;
 
@@ -27,26 +27,16 @@ impl Plugin for BevyKayakUIExtractPlugin {
 
 pub fn extract(
     mut commands: Commands,
-    context: Extract<Res<Option<Context>>>,
+    context: Extract<Res<Context>>,
     fonts: Extract<Res<Assets<KayakFont>>>,
     font_mapping: Extract<Res<FontMapping>>,
     // image_manager: Extract<Res<ImageManager>>,
     node_query: Extract<Query<&Node>>,
-    images: Extract<Res<Assets<Image>>>,
+    // images: Extract<Res<Assets<Image>>>,
     windows: Extract<Res<Windows>>,
 ) {
-    if context.is_none() {
-        return;
-    }
-
-    let context = (**context).as_ref().unwrap();
-
     let render_primitives = context.build_render_primitives(&node_query);
-
-    // if render_primitives.len() > 0 {
-    //     dbg!(&render_primitives);
-    // }
-
+    
     let dpi = if let Some(window) = windows.get_primary() {
         window.scale_factor() as f32
     } else {

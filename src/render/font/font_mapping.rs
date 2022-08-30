@@ -1,10 +1,10 @@
 use bevy::{
-    prelude::{Assets, Handle, Res},
+    prelude::{Handle, Resource},
     utils::HashMap,
 };
 use kayak_font::KayakFont;
 
-use crate::context::Context;
+// use crate::context::Context;
 
 /// A resource used to manage fonts for use in a `KayakContext`
 ///
@@ -35,6 +35,7 @@ use crate::context::Context;
 ///   # commands.insert_resource(context);
 /// }
 /// ```
+#[derive(Resource)]
 pub struct FontMapping {
     font_ids: HashMap<Handle<KayakFont>, String>,
     font_handles: HashMap<String, Handle<KayakFont>>,

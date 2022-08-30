@@ -1,3 +1,4 @@
+use bevy::prelude::Resource;
 use bevy::render::render_resource::{DynamicUniformBuffer, ShaderType};
 use bevy::utils::FloatOrd;
 use bevy::{
@@ -41,6 +42,7 @@ use super::{Dpi, UNIFIED_SHADER_HANDLE};
 use crate::render::ui_pass::TransparentUI;
 use crate::{WindowSize};
 
+#[derive(Resource)]
 pub struct UnifiedPipeline {
     view_layout: BindGroupLayout,
     types_layout: BindGroupLayout,
@@ -343,6 +345,7 @@ struct QuadType {
     pub _padding_3: i32,
 }
 
+#[derive(Resource)]
 pub struct QuadMeta {
     vertices: BufferVec<QuadVertex>,
     view_bind_group: Option<BindGroup>,
@@ -361,7 +364,7 @@ impl Default for QuadMeta {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct ImageBindGroups {
     values: HashMap<Handle<Image>, BindGroup>,
 }

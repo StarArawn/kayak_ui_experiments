@@ -21,13 +21,13 @@ impl Plugin for TextRendererPlugin {
 
 fn process_loaded_fonts(
     mut font_mapping: ResMut<FontMapping>,
-    fonts: Res<Assets<KayakFont>>,
-    context_resource: Res<Option<Context>>,
+    _fonts: Res<Assets<KayakFont>>,
+    context_resource: Res<Context>,
 ) {
-    if let Some(context) = context_resource.as_ref() {
+    // if let Some(context = context_resource.as_ref() {
         if context_resource.is_added() {
             font_mapping.mark_all_as_new();
         }
         // font_mapping.add_loaded_to_kayak(&fonts, &context);
-    }
+    // }
 }

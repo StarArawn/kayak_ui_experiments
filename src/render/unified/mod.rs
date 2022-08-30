@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Assets, Commands, HandleUntyped, Plugin, Res},
+    prelude::{Assets, Commands, HandleUntyped, Plugin, Res, Resource},
     reflect::TypeUuid,
     render::{
         render_phase::DrawFunctions, render_resource::Shader, Extract, RenderApp, RenderStage,
@@ -53,6 +53,7 @@ impl Plugin for UnifiedRenderPlugin {
     }
 }
 
+#[derive(Resource)]
 pub struct Dpi(f32);
 
 pub fn extract_baseline(

@@ -15,8 +15,6 @@ impl Plugin for KayakWidgets {
     }
 }
 
-fn add_widget_systems(mut context: ResMut<Option<Context>>) {
-    if let Some(context) = (*context).as_mut() { 
-        context.register_widget_system(KayakApp::default().get_name(), app_update);
-    }
+fn add_widget_systems(mut context: ResMut<Context>) {
+    context.add_widget_system(KayakApp::default().get_name(), app_update);
 }
