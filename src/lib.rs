@@ -11,6 +11,8 @@ mod calculate_nodes;
 mod camera;
 pub(crate) mod render;
 mod window_size;
+mod widgets;
+mod children;
 
 pub use window_size::WindowSize;
 
@@ -20,6 +22,8 @@ pub use camera::*;
 pub const DEFAULT_FONT: &str = "Kayak-Default";
 
 pub mod prelude {
+    pub use crate::children::Children;
+    pub use crate::widgets::*;
     pub use crate::render::font::FontMapping;
     pub use crate::camera::UICameraBundle;
     pub use crate::tree::*;

@@ -17,6 +17,7 @@ use self::{ui_pass::TransparentUI, extract::BevyKayakUIExtractPlugin};
 mod ui_pass;
 pub mod unified;
 mod extract;
+pub(crate) mod quad;
 pub(crate) mod font;
 
 pub mod draw_ui_graph {

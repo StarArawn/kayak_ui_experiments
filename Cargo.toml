@@ -10,6 +10,3 @@ bevy = "0.8.1"
 bytemuck = "1.12"
 kayak_font = { git = "https://github.com/StarArawn/kayak_ui" }
 morphorm = { git = "https://github.com/geom3trik/morphorm", rev = "1243152d4cebea46fd3e5098df26402c73acae91" }
-
-[dev-dependencies]
-bevy-inspector-egui = "0.12"

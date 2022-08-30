@@ -259,7 +259,7 @@ impl Plugin for ContextPlugin {
             .add_plugin(crate::camera::KayakUICameraPlugin)
             .add_plugin(crate::render::BevyKayakUIRenderPlugin)
             .register_type::<Node>()
-            .add_startup_system(init_systems.exclusive_system().at_end())
+            .add_startup_system_to_stage(StartupStage::PostStartup, init_systems.exclusive_system().at_end())
             .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system())
             .add_system(calculate_nodes.label("calc_nodes"))
             .add_system(

@@ -1,10 +1,8 @@
-use crate::to_bevy_color;
-use bevy::{math::Vec2, sprite::Rect};
-use bevy_kayak_renderer::{
+use crate::{
     render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
-    Corner,
+    render_primitive::RenderPrimitive, styles::Corner,
 };
-use kayak_core::render_primitive::RenderPrimitive;
+use bevy::{math::Vec2, sprite::Rect};
 
 pub fn extract_quads(render_primitive: &RenderPrimitive, dpi: f32) -> Vec<ExtractQuadBundle> {
     let (background_color, border_color, layout, border_radius, mut border) = match render_primitive
@@ -38,7 +36,7 @@ pub fn extract_quads(render_primitive: &RenderPrimitive, dpi: f32) -> Vec<Extrac
                         layout.posy + (layout.height * dpi),
                     ),
                 },
-                color: to_bevy_color(&border_color),
+                color: border_color,
                 vertex_index: 0,
                 char_id: 0,
                 z_index: layout.z_index,
@@ -65,7 +63,7 @@ pub fn extract_quads(render_primitive: &RenderPrimitive, dpi: f32) -> Vec<Extrac
                         (layout.posy + (layout.height * dpi)) - border.bottom,
                     ),
                 },
-                color: to_bevy_color(&background_color),
+                color: background_color,
                 vertex_index: 0,
                 char_id: 0,
                 z_index: layout.z_index,

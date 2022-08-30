@@ -14,7 +14,6 @@ use super::font::{FontMapping, self};
 
 // pub mod image;
 // mod nine_patch;
-// mod quad;
 // mod texture_atlas;
 
 pub struct BevyKayakUIExtractPlugin;
@@ -65,10 +64,10 @@ pub fn extract(
     //             let image_quads = image::extract_images(&render_primitive, &image_manager, dpi);
     //             extracted_quads.extend(image_quads);
     //         }
-    //         RenderPrimitive::Quad { .. } => {
-    //             let quad_quads = quad::extract_quads(&render_primitive, 1.0);
-    //             extracted_quads.extend(quad_quads);
-    //         }
+            RenderPrimitive::Quad { .. } => {
+                let quad_quads = super::quad::extract_quads(&render_primitive, 1.0);
+                extracted_quads.extend(quad_quads);
+            },
     //         RenderPrimitive::NinePatch { .. } => {
     //             let nine_patch_quads =
     //                 nine_patch::extract_nine_patch(&render_primitive, &image_manager, &images, dpi);
