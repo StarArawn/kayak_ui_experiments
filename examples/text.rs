@@ -1,10 +1,10 @@
 use bevy::{
     prelude::{
-        App as BevyApp, Commands, Component, Entity, In, Input, KeyCode, Query, Res, ResMut, With, AssetServer, Resource,
+        App as BevyApp, Commands, Component, Entity, In, Input, KeyCode, Query, Res, ResMut, AssetServer, Resource,
     },
     DefaultPlugins,
 };
-use kayak_ui::prelude::{Style, *};
+use kayak_ui::prelude::{Style, *, widgets::*};
 
 #[derive(Component, Default)]
 pub struct MyWidget {
@@ -48,12 +48,11 @@ fn startup(
     context.add_widget_system(MyWidget::default().get_name(), my_widget_1_update);
     let entity = commands
         .spawn()
-        .insert(KayakApp {
-            children: Children::new(|parent_id, widget_tree, commands| {
-                let my_widget_entity = commands.spawn().insert(MyWidget { foo: 0 }).insert(Style::default()).id();
-                widget_tree.add::<MyWidget>(my_widget_entity, parent_id);
-            })
-        })
+        .insert(KayakApp)
+        .insert(Children::new(|parent_id, widget_tree, commands| {
+            let my_widget_entity = commands.spawn().insert(MyWidget { foo: 0 }).insert(Style::default()).id();
+            widget_tree.add::<MyWidget>(my_widget_entity, parent_id);
+        }))
         .insert(Style {
             render_command: StyleProp::Value(RenderCommand::Layout),
             ..Style::new_default()

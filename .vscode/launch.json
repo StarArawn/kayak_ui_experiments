@@ -26,6 +26,43 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug example 'quads'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=quads",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "quads",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'quads'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=quads",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "quads",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug example 'simple'",
             "cargo": {
                 "args": [
@@ -54,6 +91,46 @@
                 ],
                 "filter": {
                     "name": "simple",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'simple_state'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=simple_state",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "simple_state",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CARGO_MANIFEST_DIR": "${workspaceFolder}"
+            }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'simple_state'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=simple_state",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "simple_state",
                     "kind": "example"
                 }
             },

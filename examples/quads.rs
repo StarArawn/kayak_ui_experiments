@@ -4,7 +4,7 @@ use bevy::{
     },
     DefaultPlugins, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
 };
-use kayak_ui::prelude::{Style, *};
+use kayak_ui::prelude::{Style, *, widgets::*};
 use morphorm::{Units, PositionType};
 
 #[derive(Component, Default)]
@@ -48,32 +48,31 @@ fn startup(
     context.add_widget_system(MyQuad::default().get_name(), my_quad_update);
     let entity = commands
         .spawn()
-        .insert(KayakApp {
-            children: Children::new(|parent_id, widget_tree, commands| {
-                for _ in 0..1000 {
-                    let pos = Vec2::new(fastrand::i32(0..1280) as f32, fastrand::i32(0..720) as f32);
-                    let my_widget_entity = commands
-                        .spawn()
-                        .insert(MyQuad {
-                            pos,
-                            size: Vec2::new(
-                                fastrand::i32(32..64) as f32,
-                                fastrand::i32(32..64) as f32,
-                            ),
-                            color: Color::rgba(
-                                fastrand::f32(),
-                                fastrand::f32(),
-                                fastrand::f32(),
-                                1.0,
-                            ),
-                        })
-                        .insert(Style::default())
-                        .insert(DirtyNode)
-                        .id();
-                    widget_tree.add::<MyQuad>(my_widget_entity, parent_id);
-                }
-            }),
-        })
+        .insert(KayakApp)
+        .insert(Children::new(|parent_id, widget_tree, commands| {
+            for _ in 0..1000 {
+                let pos = Vec2::new(fastrand::i32(0..1280) as f32, fastrand::i32(0..720) as f32);
+                let my_widget_entity = commands
+                    .spawn()
+                    .insert(MyQuad {
+                        pos,
+                        size: Vec2::new(
+                            fastrand::i32(32..64) as f32,
+                            fastrand::i32(32..64) as f32,
+                        ),
+                        color: Color::rgba(
+                            fastrand::f32(),
+                            fastrand::f32(),
+                            fastrand::f32(),
+                            1.0,
+                        ),
+                    })
+                    .insert(Style::default())
+                    .insert(DirtyNode)
+                    .id();
+                widget_tree.add::<MyQuad>(my_widget_entity, parent_id);
+            }
+        }))
         .insert(Style {
             render_command: StyleProp::Value(RenderCommand::Layout),
             ..Style::new_default()

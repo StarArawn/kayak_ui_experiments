@@ -11,7 +11,7 @@ use crate::node::WrappedIndex;
 use crate::widget::Widget;
 
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Tree {
     pub children: HashMap<WrappedIndex, Vec<WrappedIndex>>,
     pub parents: HashMap<WrappedIndex, WrappedIndex>,
@@ -765,6 +765,12 @@ impl WidgetTree {
         Self {
             tree: Arc::new(RwLock::new(Tree::default())),
             widget_types: Arc::new(RwLock::new(HashMap::default())),
+        }
+    }
+
+    pub(crate) fn store(&self, new_tree: &Tree) {
+        if let Ok(mut tree) = self.tree.write() {
+            *tree = new_tree.clone();
         }
     }
 

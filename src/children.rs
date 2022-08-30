@@ -1,12 +1,12 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use bevy::prelude::{Commands, Entity};
+use bevy::prelude::{Commands, Entity, Component};
 
 use crate::prelude::WidgetTree;
 
 /// A container for a function that generates child widgets
-#[derive(Clone)]
+#[derive(Component, Clone)]
 pub struct Children(Arc<dyn Fn(Option<Entity>, &mut WidgetTree, &mut Commands) + Send + Sync>);
 
 impl Default for Children {

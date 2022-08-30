@@ -1,12 +1,10 @@
-use bevy::{prelude::{Component, Commands, In, Entity, Res, Query}, window::Windows};
+use bevy::{prelude::{Component, Commands, In, Entity, Res, Query, With}, window::Windows};
 use morphorm::Units;
 
 use crate::{styles::{StyleProp, Style}, widget::Widget, children::Children, prelude::WidgetTree};
 
 #[derive(Component, Default)]
-pub struct KayakApp {
-    pub children: Children,
-}
+pub struct KayakApp;
 
 impl Widget for KayakApp {}
 
@@ -15,11 +13,11 @@ pub fn app_update(
     In((mut widget_tree, entity)): In<(WidgetTree, Entity)>,
     mut commands: Commands,
     windows: Res<Windows>,
-    mut query: Query<(&mut Style, &KayakApp)>,
+    mut query: Query<(&mut Style, &Children), With<KayakApp>>,
 ) -> bool {
     let mut has_changed = false;
     let primary_window = windows.get_primary().unwrap();
-    if let Ok((mut app_style, app)) = query.get_mut(entity) {
+    if let Ok((mut app_style, children)) = query.get_mut(entity) {
         if app_style.width != StyleProp::Value(Units::Pixels(primary_window.width())) {
             app_style.width = StyleProp::Value(Units::Pixels(primary_window.width()));
             has_changed = true;
@@ -30,7 +28,7 @@ pub fn app_update(
         }
 
         if has_changed {
-            app.children.build(Some(entity), &mut widget_tree, &mut commands);
+            children.build(Some(entity), &mut widget_tree, &mut commands);
         }
     }
 
