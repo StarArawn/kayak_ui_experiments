@@ -30,7 +30,6 @@ fn current_count_update(
                 },
                 ..Default::default()
             })
-            .insert(DirtyNode)
             .id();
         widget_tree.add::<kayak_ui::prelude::widgets::Text>(text_entity, Some(entity));
 
@@ -79,18 +78,17 @@ fn startup(
                                 },
                                 ..Default::default()
                             })
-                            .insert(DirtyNode)
                             .id();
                         widget_tree.add::<kayak_ui::prelude::widgets::Text>(text_entity, button_id);
                     }),
                     on_event: OnEvent::new(
-                        move |
-                            In((event, _entity)): In<(Event, Entity)>,
-                            mut query: Query<&mut CurrentCount>
-                        | {
+                        move |In((event, _entity)): In<(Event, Entity)>,
+                              mut query: Query<&mut CurrentCount>| {
                             match event.event_type {
                                 EventType::Click(..) => {
-                                    if let Ok(mut current_count) = query.get_mut(current_count_entity) {
+                                    if let Ok(mut current_count) =
+                                        query.get_mut(current_count_entity)
+                                    {
                                         current_count.0 += 1;
                                     }
                                 }
@@ -101,7 +99,6 @@ fn startup(
                     ),
                     ..Default::default()
                 })
-                .insert(DirtyNode)
                 .id();
             widget_tree.add::<Button>(button_entity, app_id);
         }))
@@ -109,7 +106,6 @@ fn startup(
             render_command: StyleProp::Value(RenderCommand::Layout),
             ..Style::new_default()
         })
-        .insert(DirtyNode)
         .id();
     context.add_widget::<KayakApp>(None, entity);
     commands.insert_resource(context);

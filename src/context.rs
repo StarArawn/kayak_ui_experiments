@@ -1,15 +1,21 @@
-use bevy::{ecs::{system::CommandQueue, event::ManualEventReader}, prelude::*, utils::HashMap};
+use bevy::{
+    ecs::{event::ManualEventReader, system::CommandQueue},
+    prelude::*,
+    utils::HashMap,
+};
 use morphorm::Hierarchy;
 use std::sync::Arc;
 
 use crate::{
-    calculate_nodes::{build_nodes_tree, calculate_nodes},
-    layout::{DataCache, LayoutCache, Rect},
+    calculate_nodes::calculate_nodes,
+    event_dispatcher::EventDispatcher,
+    focus_tree::FocusTree,
+    layout::{LayoutCache, Rect},
     node::{DirtyNode, WrappedIndex},
     render_primitive::RenderPrimitive,
     tree::{Change, Tree, WidgetTree},
     widget::Widget,
-    WindowSize, focus_tree::FocusTree, event_dispatcher::EventDispatcher,
+    WindowSize,
 };
 
 #[derive(Resource)]
@@ -48,8 +54,7 @@ impl Context {
         system: impl IntoSystem<(WidgetTree, Entity), bool, Params>,
     ) {
         let system = IntoSystem::into_system(system);
-        self.systems
-            .insert(type_name.into(), Box::new(system));
+        self.systems.insert(type_name.into(), Box::new(system));
     }
 
     pub fn add_widget<T: Widget + Default + 'static>(
@@ -144,13 +149,11 @@ fn recurse_node_tree_to_build_primitives(
 }
 
 fn update_widgets_sys(world: &mut World) {
-    let mut context = world
-        .remove_resource::<Context>()
-        .unwrap();
+    let mut context = world.remove_resource::<Context>().unwrap();
     let tree_iterator = context.tree.down_iter().collect::<Vec<_>>();
-    
+
     // let change_tick = world.increment_change_tick();
-    
+
     update_widgets(
         world,
         &mut context.tree,
@@ -159,7 +162,7 @@ fn update_widgets_sys(world: &mut World) {
         tree_iterator,
         &mut context.widget_types,
     );
-    
+
     for system in context.systems.values_mut() {
         system.set_last_change_tick(world.read_change_tick());
         // system.apply_buffers(world);
@@ -244,7 +247,12 @@ fn update_widget(
     // Mark node as needing a recalculation of rendering/layout.
     if should_update_children {
         // Remove children from previous render.
-        widget_tree.remove_children(previous_children.iter().map(|entity| WrappedIndex(*entity)).collect::<Vec<_>>());
+        widget_tree.remove_children(
+            previous_children
+                .iter()
+                .map(|entity| WrappedIndex(*entity))
+                .collect::<Vec<_>>(),
+        );
         commands.entity(entity.0).insert(DirtyNode);
     }
 
@@ -263,9 +271,7 @@ fn update_widget(
 }
 
 fn init_systems(world: &mut World) {
-    let mut context = world
-        .remove_resource::<Context>()
-        .unwrap();
+    let mut context = world.remove_resource::<Context>().unwrap();
     for system in context.systems.values_mut() {
         system.initialize(world);
     }
@@ -282,17 +288,36 @@ impl Plugin for ContextPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(WindowSize::default())
             .insert_resource(EventDispatcher::new())
-            .insert_resource(CustomEventReader(ManualEventReader::<bevy::window::CursorMoved>::default()))
-            .insert_resource(CustomEventReader(ManualEventReader::<bevy::input::mouse::MouseButtonInput>::default()))
-            .insert_resource(CustomEventReader(ManualEventReader::<bevy::input::mouse::MouseWheel>::default()))
-            .insert_resource(CustomEventReader(ManualEventReader::<bevy::window::ReceivedCharacter>::default()))
-            .insert_resource(CustomEventReader(ManualEventReader::<bevy::input::keyboard::KeyboardInput>::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<
+                bevy::window::CursorMoved,
+            >::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<
+                bevy::input::mouse::MouseButtonInput,
+            >::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<
+                bevy::input::mouse::MouseWheel,
+            >::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<
+                bevy::window::ReceivedCharacter,
+            >::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<
+                bevy::input::keyboard::KeyboardInput,
+            >::default()))
             .add_plugin(crate::camera::KayakUICameraPlugin)
             .add_plugin(crate::render::BevyKayakUIRenderPlugin)
             .register_type::<Node>()
-            .add_startup_system_to_stage(StartupStage::PostStartup, init_systems.exclusive_system().at_end())
-            .add_system_to_stage(CoreStage::Update, crate::input::process_events.exclusive_system())
-            .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system().at_start())
+            .add_startup_system_to_stage(
+                StartupStage::PostStartup,
+                init_systems.exclusive_system().at_end(),
+            )
+            .add_system_to_stage(
+                CoreStage::Update,
+                crate::input::process_events.exclusive_system(),
+            )
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                update_widgets_sys.exclusive_system().at_start(),
+            )
             .add_system_to_stage(CoreStage::PostUpdate, calculate_ui.exclusive_system())
             .add_system(crate::window_size::update_window_size);
     }
@@ -302,7 +327,7 @@ fn calculate_ui(world: &mut World) {
     let mut system = IntoSystem::into_system(calculate_nodes);
     system.initialize(world);
 
-    for _ in 0..5 { 
+    for _ in 0..5 {
         system.run((), world);
         system.apply_buffers(world);
     }
