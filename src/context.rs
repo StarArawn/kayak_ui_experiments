@@ -1,4 +1,4 @@
-use bevy::{ecs::system::CommandQueue, prelude::*, utils::HashMap};
+use bevy::{ecs::{system::CommandQueue, event::ManualEventReader}, prelude::*, utils::HashMap};
 use morphorm::Hierarchy;
 use std::sync::Arc;
 
@@ -9,7 +9,7 @@ use crate::{
     render_primitive::RenderPrimitive,
     tree::{Change, Tree, WidgetTree},
     widget::Widget,
-    WindowSize,
+    WindowSize, focus_tree::FocusTree, event_dispatcher::EventDispatcher,
 };
 
 #[derive(Resource)]
@@ -17,6 +17,8 @@ pub struct Context {
     pub(crate) tree: Tree,
     pub(crate) node_tree: Tree,
     pub(crate) layout_cache: LayoutCache,
+    pub(crate) focus_tree: FocusTree,
+    pub(crate) event_dispatcher: EventDispatcher,
     widget_types: HashMap<Entity, Arc<dyn Widget>>,
     systems: HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     pub(crate) current_z: f32,
@@ -28,6 +30,8 @@ impl Context {
             tree: Tree::default(),
             node_tree: Tree::default(),
             layout_cache: LayoutCache::default(),
+            focus_tree: FocusTree::default(),
+            event_dispatcher: EventDispatcher::new(),
             widget_types: HashMap::default(),
             systems: HashMap::default(),
             current_z: 0.0,
@@ -175,7 +179,7 @@ fn update_widgets(
         let widget_type = parent_widget_types.get(&entity.0).cloned();
         if let Some(widget_type) = widget_type {
             let widget_tree = WidgetTree::new();
-            widget_tree.store(&tree);
+            // widget_tree.store(&tree);
             let (widget_tree, mut widget_types, should_update_children) = update_widget(
                 systems,
                 tree,
@@ -188,7 +192,6 @@ fn update_widgets(
             // Only merge tree if changes detected.
             if should_update_children {
                 let diff = tree.diff_children(&widget_tree, *entity);
-                dbg!(entity, &diff);
                 for (_index, child, _parent, changes) in diff.changes.iter() {
                     for change in changes.iter() {
                         if matches!(change, Change::Inserted) {
@@ -257,7 +260,6 @@ fn init_systems(world: &mut World) {
         .unwrap();
     for system in context.systems.values_mut() {
         system.initialize(world);
-        // system.toggle_bypass_change_tick();
     }
 
     world.insert_resource(context);
@@ -265,21 +267,31 @@ fn init_systems(world: &mut World) {
 
 pub struct ContextPlugin;
 
+#[derive(Resource)]
+pub struct CustomEventReader<T: bevy::ecs::event::Event>(pub ManualEventReader<T>);
+
 impl Plugin for ContextPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(WindowSize::default())
+            .insert_resource(EventDispatcher::new())
+            .insert_resource(CustomEventReader(ManualEventReader::<bevy::window::CursorMoved>::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<bevy::input::mouse::MouseButtonInput>::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<bevy::input::mouse::MouseWheel>::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<bevy::window::ReceivedCharacter>::default()))
+            .insert_resource(CustomEventReader(ManualEventReader::<bevy::input::keyboard::KeyboardInput>::default()))
             .add_plugin(crate::camera::KayakUICameraPlugin)
             .add_plugin(crate::render::BevyKayakUIRenderPlugin)
             .register_type::<Node>()
             .add_startup_system_to_stage(StartupStage::PostStartup, init_systems.exclusive_system().at_end())
-            .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system())
-            .add_system(calculate_nodes.label("calc_nodes"))
-            .add_system(
+            .add_system_to_stage(CoreStage::Update, crate::input::process_events.exclusive_system())
+            .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system().at_start())
+            .add_system_to_stage(CoreStage::PostUpdate, calculate_nodes.label("calc_nodes"))
+            .add_system_to_stage(CoreStage::PostUpdate, 
                 build_nodes_tree
                     .label("build_nodes_tree")
                     .after("calc_nodes"),
             )
-            .add_system(build_layout.after("build_nodes_tree"))
+            .add_system_to_stage(CoreStage::PostUpdate, build_layout.after("build_nodes_tree"))
             .add_system(crate::window_size::update_window_size);
     }
 }

@@ -253,6 +253,7 @@ impl Tree {
     pub fn diff_children(&self, other_tree: &Tree, root_node: WrappedIndex) -> ChildChanges {
         let children_a = self.children.get(&root_node);
         let children_b = other_tree.children.get(&root_node);
+
         // Handle both easy cases first..
         if children_a.is_some() && children_b.is_none() {
             return children_a
@@ -305,8 +306,7 @@ impl Tree {
             .iter()
             .map(|(id, node)| {
                 let old_node = children_a.get(*id);
-                let inserted =
-                    old_node.is_some() && !children_a.iter().any(|(_, old_node)| node == old_node);
+                let inserted = old_node.is_none() || old_node.is_some() && !children_a.iter().any(|(_, old_node)| node == old_node);
 
                 let value_changed = if let Some((_, old_node)) = old_node {
                     node != old_node
@@ -780,6 +780,12 @@ impl WidgetTree {
                 tree.add(WrappedIndex(index), parent.map(|parent| WrappedIndex(parent)));
                 widget_types.insert(index, Arc::new(T::default()));
             }
+        }
+    }
+
+    pub fn dbg_tree(&self) {
+        if let Ok(tree) = self.tree.read() {
+            dbg!(&tree);
         }
     }
 

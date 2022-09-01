@@ -18,7 +18,12 @@ mod event;
 mod cursor;
 mod keyboard_event;
 mod on_event;
+mod event_dispatcher;
+mod input_event;
+mod focus_tree;
+mod input;
 
+use bevy::prelude::Component;
 pub use window_size::WindowSize;
 
 pub use camera::*;
@@ -39,4 +44,11 @@ pub mod prelude {
     pub use crate::styles::*;
     pub use crate::node::DirtyNode;
     pub use crate::flo_binding::*;
+    pub use crate::on_event::OnEvent;
+    pub use crate::input_event::*;
+    pub use crate::keyboard_event::*;
+    pub use crate::event::*;
 }
+
+#[derive(Component)]
+pub struct Focusable;

@@ -6,6 +6,8 @@ use bevy::prelude::Color;
 use bevy::prelude::Component;
 pub use morphorm::{LayoutType, PositionType, Units};
 
+use crate::cursor::PointerEvents;
+
 pub use super::Corner;
 pub use super::Edge;
 // use crate::cursor::PointerEvents;
@@ -334,7 +336,7 @@ define_styles! {
         ///
         /// This can be used to block pointer events on itself and/or its children if needed, allowing
         /// the event to "pass through" to widgets below.
-        /// pub pointer_events: StyleProp<PointerEvents>,
+        pub pointer_events: StyleProp<PointerEvents>,
         /// The position type of the widget relative to its parent
         pub position_type: StyleProp<PositionType>,
         /// The render method for this widget
@@ -383,7 +385,7 @@ impl Style {
             padding_left: StyleProp::Default,
             padding_right: StyleProp::Default,
             padding_top: StyleProp::Default,
-            /// pointer_events: StyleProp::Default,
+            pointer_events: StyleProp::Default,
             position_type: StyleProp::Default,
             render_command: StyleProp::Value(RenderCommand::Empty),
             right: StyleProp::Default,

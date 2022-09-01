@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, RwLock};
-use bevy::prelude::Component;
+use bevy::prelude::{Component, System, Entity, IntoSystem, In, World};
 
 use crate::event::Event;
 
@@ -10,13 +10,14 @@ use crate::event::Event;
 /// from the [`KayakContext`](crate::KayakContext) and gives the [`KayakContextRef`]
 /// as a parameter.
 #[derive(Component, Clone)]
-pub struct OnEvent(
-    Arc<RwLock<dyn FnMut(&mut Event) + Send + Sync + 'static>>,
-);
+pub struct OnEvent {
+    has_initialized: bool,
+    system: Arc<RwLock<dyn System<In = (Event, Entity), Out = Event>>>,
+}
 
 impl Default for OnEvent {
     fn default() -> Self {
-        Self::new(|_e| {})
+        Self::new(|In((event, _entity))| event)
     }
 } 
 
@@ -26,22 +27,28 @@ impl OnEvent {
     /// The handler should be a closure that takes the following arguments:
     /// 1. The current context
     /// 2. The event
-    pub fn new<F: FnMut(&mut Event) + Send + Sync + 'static>(
-        f: F,
+    pub fn new<Params>(
+        system: impl IntoSystem<(Event, Entity), Event, Params>,
     ) -> OnEvent {
-        OnEvent(Arc::new(RwLock::new(f)))
+        Self {
+            has_initialized: false,
+            system: Arc::new(RwLock::new(IntoSystem::into_system(system))),
+        }
     }
 
     /// Call the event handler
     ///
     /// Returns true if the handler was successfully invoked.
-    pub fn try_call(&self, event: &mut Event) -> bool {
-        if let Ok(mut on_event) = self.0.write() {
-            on_event(event);
-            true
-        } else {
-            false
+    pub fn try_call(&mut self, entity: Entity, mut event: Event, world: &mut World) -> Event {
+        if let Ok(mut system) = self.system.try_write() {
+            if !self.has_initialized {
+                system.initialize(world);
+                self.has_initialized = true;
+            }
+            event = system.run((event, entity), world);
+            system.apply_buffers(world);
         }
+        event
     }
 }
 
