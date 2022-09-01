@@ -92,6 +92,12 @@ impl Tree {
         }
     }
 
+    pub fn remove_children(&mut self, children_to_remove: Vec<WrappedIndex>) {
+        for child in children_to_remove.iter() {
+            self.remove(*child);
+        }
+    }
+
     /// Removes the current node and reparents any children to its current parent.
     ///
     /// Children fill at the original index of the removed node amongst its siblings.
@@ -555,6 +561,18 @@ impl Tree {
         //     );
         // }
     }
+
+    /// Copies a specific node and it's children from other_tree to self. 
+    /// Note: Does not deep copy.
+    pub fn copy_from_point(&mut self, other_tree: &Tree, root_node: WrappedIndex) {
+        if let Some(children) = other_tree.children.get(&root_node) {
+            self.children.insert(root_node, children.clone());
+            for child in children.iter() {
+                self.parents.insert(*child, root_node);
+            }       
+        }
+    }
+
 }
 
 /// An iterator that performs a depth-first traversal down a tree starting
@@ -774,17 +792,42 @@ impl WidgetTree {
         }
     }
 
-    pub fn clear_children(&self, index: Entity) {
+    pub(crate) fn copy_from_point(&self, other_tree: &Tree, entity: WrappedIndex) {
         if let Ok(mut tree) = self.tree.write() {
-            tree.children.insert(WrappedIndex(index), vec![]);
+            tree.copy_from_point(other_tree, entity);
         }
     }
 
-    pub fn add<T: Widget + Default + 'static>(&self, index: Entity, parent: Option<Entity>) {
+    pub fn clear_children(&self, entity: Entity) {
+        if let Ok(mut tree) = self.tree.write() {
+            tree.children.insert(WrappedIndex(entity), vec![]);
+        }
+    }
+
+    pub fn get_children(&self, entity: Entity) -> Vec<Entity> {
+        let mut children = vec![];
+        if let Ok(tree) = self.tree.read() {
+            if let Some(existing_children) = tree.children.get(&WrappedIndex(entity)) {
+                children = existing_children.iter().map(|index| index.0).collect::<Vec<_>>();
+            }
+        }
+
+        children
+    }
+
+    pub fn remove_children(&self, children_to_remove: Vec<Entity>) {
+        if let Ok(mut tree) = self.tree.write() {
+            for child in children_to_remove.iter() {
+                tree.remove(WrappedIndex(*child));
+            }
+        }
+    }
+
+    pub fn add<T: Widget + Default + 'static>(&self, entity: Entity, parent: Option<Entity>) {
         if let Ok(mut tree) = self.tree.write() {
             if let Ok(mut widget_types) = self.widget_types.write() {
-                tree.add(WrappedIndex(index), parent.map(|parent| WrappedIndex(parent)));
-                widget_types.insert(index, Arc::new(T::default()));
+                tree.add(WrappedIndex(entity), parent.map(|parent| WrappedIndex(parent)));
+                widget_types.insert(entity, Arc::new(T::default()));
             }
         }
     }

@@ -179,8 +179,9 @@ fn update_widgets(
         let widget_type = parent_widget_types.get(&entity.0).cloned();
         if let Some(widget_type) = widget_type {
             let widget_tree = WidgetTree::new();
-            widget_tree.store(&tree);
-            let (widget_tree, mut widget_types, should_update_children) = update_widget(
+            widget_tree.copy_from_point(&tree, *entity);
+            let children_before = widget_tree.get_children(entity.0);
+            let (mut widget_tree, mut widget_types, should_update_children) = update_widget(
                 systems,
                 tree,
                 world,
@@ -191,6 +192,9 @@ fn update_widgets(
 
             // Only merge tree if changes detected.
             if should_update_children {
+                // Remove children from previous render.
+                widget_tree.remove_children(children_before.iter().map(|entity| WrappedIndex(*entity)).collect::<Vec<_>>());
+
                 let diff = tree.diff_children(&widget_tree, *entity);
                 for (_index, child, _parent, changes) in diff.changes.iter() {
                     for change in changes.iter() {
