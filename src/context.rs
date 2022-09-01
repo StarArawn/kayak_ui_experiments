@@ -181,20 +181,18 @@ fn update_widgets(
             let widget_tree = WidgetTree::new();
             widget_tree.copy_from_point(&tree, *entity);
             let children_before = widget_tree.get_children(entity.0);
-            let (mut widget_tree, mut widget_types, should_update_children) = update_widget(
+            let (widget_tree, mut widget_types, should_update_children) = update_widget(
                 systems,
                 tree,
                 world,
                 *entity,
                 &widget_type,
                 widget_tree,
+                children_before,
             );
 
             // Only merge tree if changes detected.
             if should_update_children {
-                // Remove children from previous render.
-                widget_tree.remove_children(children_before.iter().map(|entity| WrappedIndex(*entity)).collect::<Vec<_>>());
-
                 let diff = tree.diff_children(&widget_tree, *entity);
                 for (_index, child, _parent, changes) in diff.changes.iter() {
                     for change in changes.iter() {
@@ -229,6 +227,7 @@ fn update_widget(
     entity: WrappedIndex,
     widget_type: &Arc<dyn Widget>,
     widget_tree: WidgetTree,
+    previous_children: Vec<Entity>,
 ) -> (Tree, HashMap<Entity, Arc<dyn Widget>>, bool) {
     let should_update_children;
     {
@@ -238,19 +237,24 @@ fn update_widget(
         widget_system.set_last_change_tick(old_tick);
         widget_system.apply_buffers(world);
     }
-    let (widget_tree, widget_types) = widget_tree.take();
-    let diff = tree.diff_children(&widget_tree, entity);
+    let (mut widget_tree, widget_types) = widget_tree.take();
     let mut command_queue = CommandQueue::default();
     let mut commands = Commands::new(&mut command_queue, world);
 
     // Mark node as needing a recalculation of rendering/layout.
     if should_update_children {
+        // Remove children from previous render.
+        widget_tree.remove_children(previous_children.iter().map(|entity| WrappedIndex(*entity)).collect::<Vec<_>>());
         commands.entity(entity.0).insert(DirtyNode);
     }
+
+    let diff = tree.diff_children(&widget_tree, entity);
 
     for (_, changed_entity, _, changes) in diff.changes.iter() {
         if changes.iter().any(|change| *change == Change::Deleted) && should_update_children {
             commands.entity(changed_entity.0).despawn();
+        } else if should_update_children {
+            commands.entity(changed_entity.0).insert(DirtyNode);
         }
     }
     command_queue.apply(world);
@@ -289,25 +293,17 @@ impl Plugin for ContextPlugin {
             .add_startup_system_to_stage(StartupStage::PostStartup, init_systems.exclusive_system().at_end())
             .add_system_to_stage(CoreStage::Update, crate::input::process_events.exclusive_system())
             .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.exclusive_system().at_start())
-            .add_system_to_stage(CoreStage::PostUpdate, calculate_nodes.label("calc_nodes"))
-            .add_system_to_stage(CoreStage::PostUpdate, 
-                build_nodes_tree
-                    .label("build_nodes_tree")
-                    .after("calc_nodes"),
-            )
-            .add_system_to_stage(CoreStage::PostUpdate, build_layout.after("build_nodes_tree"))
+            .add_system_to_stage(CoreStage::PostUpdate, calculate_ui.exclusive_system())
             .add_system(crate::window_size::update_window_size);
     }
 }
 
-fn build_layout(mut context: ResMut<Context>, nodes: Query<&'static crate::node::Node>) {
-    let context = context.as_mut();
-    let node_tree = &context.node_tree;
-    let layout_cache = &mut context.layout_cache;
-    let mut data_cache = DataCache {
-        cache: layout_cache,
-        query: &nodes,
-    };
+fn calculate_ui(world: &mut World) {
+    let mut system = IntoSystem::into_system(calculate_nodes);
+    system.initialize(world);
 
-    morphorm::layout(&mut data_cache, node_tree, &nodes);
+    for _ in 0..5 { 
+        system.run((), world);
+        system.apply_buffers(world);
+    }
 }

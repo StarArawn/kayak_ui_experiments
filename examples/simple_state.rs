@@ -6,6 +6,7 @@ use bevy::{
     DefaultPlugins,
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
+use morphorm::Units;
 
 #[derive(Component, Default)]
 struct CurrentCount(pub u32);
@@ -108,6 +109,7 @@ fn startup(
             render_command: StyleProp::Value(RenderCommand::Layout),
             ..Style::new_default()
         })
+        .insert(DirtyNode)
         .id();
     context.add_widget::<KayakApp>(None, entity);
     commands.insert_resource(context);

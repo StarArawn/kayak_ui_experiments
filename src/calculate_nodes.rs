@@ -10,7 +10,7 @@ use crate::{
     prelude::{Context, RenderCommand, Style, Tree},
     render::font::FontMapping,
     render_primitive::RenderPrimitive,
-    styles::StyleProp,
+    styles::StyleProp, layout::{Rect, DataCache},
 };
 
 pub fn calculate_nodes(
@@ -21,6 +21,7 @@ pub fn calculate_nodes(
     query: Query<Entity, With<DirtyNode>>,
     all_styles_query: Query<&Style>,
     node_query: Query<(Entity, &Node)>,
+    nodes_no_entity_query: Query<&'static Node>,
 ) {
     let mut new_nodes = HashMap::<Entity, (Node, bool)>::default();
     // This is the maximum recursion depth for this method.
@@ -92,16 +93,31 @@ pub fn calculate_nodes(
                 .cloned()
                 .unwrap_or(vec![]);
 
+            let width = styles.width.resolve().value_or(0.0, 0.0);
+            let height = styles.height.resolve().value_or(0.0, 0.0);
+
             let mut node = NodeBuilder::empty()
                 .with_id(dirty_entity)
                 .with_styles(styles, Some(raw_styles))
                 .with_children(children)
                 .with_primitive(primitive)
                 .build();
+            if dirty_entity == context.tree.root_node.unwrap() {
+                context.layout_cache.rect.insert(dirty_entity, Rect {
+                    posx: 0.0,
+                    posy: 0.0,
+                    width,
+                    height,
+                    z_index: 0.0,
+                });
+            } 
             node.z = current_z;
             new_nodes.insert(dirty_entity.0, (node, needs_layout));
         }
     }
+
+    let has_new_nodes = new_nodes.len() > 0;
+
     for (entity, (node, needs_layout)) in new_nodes.drain() {
 
         commands.entity(entity).insert(node);
@@ -109,6 +125,23 @@ pub fn calculate_nodes(
             commands.entity(entity).remove::<DirtyNode>();
         }
     }
+
+    if has_new_nodes {
+        build_nodes_tree(&mut context, &node_query);
+    }
+
+    {
+        let context = context.as_mut();
+        let node_tree = &context.node_tree;
+        let layout_cache = &mut context.layout_cache;
+        let mut data_cache = DataCache {
+            cache: layout_cache,
+            query: &nodes_no_entity_query,
+        };
+
+        morphorm::layout(&mut data_cache, node_tree, &nodes_no_entity_query);
+    }
+    // }
 }
 
 fn create_primitive(
@@ -170,7 +203,7 @@ fn create_primitive(
     (render_primitive, needs_layout)
 }
 
-pub fn build_nodes_tree(mut context: ResMut<Context>, node_query: Query<(Entity, &Node)>) {
+pub fn build_nodes_tree(context: &mut Context, node_query: &Query<(Entity, &Node)>) {
     let mut tree = Tree::default();
     tree.root_node = context.tree.root_node;
     tree.children.insert(

@@ -33,7 +33,7 @@ pub fn extract_texts(
     let font_handle = font_mapping.get_handle(font.clone()).unwrap();
     let font = match fonts.get(&font_handle) {
         Some(font) => font,
-        None => return Vec::new(),
+        None => { return Vec::new(); },
     };
     
     let base_position = Vec2::new(layout.posx, layout.posy + properties.font_size);
