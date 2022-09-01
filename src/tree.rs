@@ -774,6 +774,12 @@ impl WidgetTree {
         }
     }
 
+    pub fn clear_children(&self, index: Entity) {
+        if let Ok(mut tree) = self.tree.write() {
+            tree.children.insert(WrappedIndex(index), vec![]);
+        }
+    }
+
     pub fn add<T: Widget + Default + 'static>(&self, index: Entity, parent: Option<Entity>) {
         if let Ok(mut tree) = self.tree.write() {
             if let Ok(mut widget_types) = self.widget_types.write() {

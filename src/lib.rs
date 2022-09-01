@@ -13,7 +13,6 @@ pub(crate) mod render;
 mod window_size;
 mod widgets;
 mod children;
-mod flo_binding;
 mod event;
 mod cursor;
 mod keyboard_event;
@@ -43,7 +42,6 @@ pub mod prelude {
     pub use crate::widget::*;
     pub use crate::styles::*;
     pub use crate::node::DirtyNode;
-    pub use crate::flo_binding::*;
     pub use crate::on_event::OnEvent;
     pub use crate::input_event::*;
     pub use crate::keyboard_event::*;

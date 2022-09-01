@@ -18,6 +18,7 @@ fn current_count_update(
     query: Query<&CurrentCount, Changed<CurrentCount>>,
 ) -> bool {
     if let Ok(current_count) = query.get(entity) {
+        widget_tree.clear_children(entity);
         let text_entity = commands
             .spawn()
             .insert_bundle(kayak_ui::prelude::widgets::TextBundle {
@@ -89,6 +90,7 @@ fn startup(
                         | {
                             match event.event_type {
                                 EventType::Click(..) => {
+                                    dbg!("Click Occurred!");
                                     if let Ok(mut current_count) = query.get_mut(current_count_entity) {
                                         current_count.0 += 1;
                                     }

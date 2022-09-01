@@ -179,7 +179,7 @@ fn update_widgets(
         let widget_type = parent_widget_types.get(&entity.0).cloned();
         if let Some(widget_type) = widget_type {
             let widget_tree = WidgetTree::new();
-            // widget_tree.store(&tree);
+            widget_tree.store(&tree);
             let (widget_tree, mut widget_types, should_update_children) = update_widget(
                 systems,
                 tree,

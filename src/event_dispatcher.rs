@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Entity, KeyCode, Resource, World},
+    prelude::{KeyCode, Resource, World},
     utils::{HashMap, HashSet},
 };
 
@@ -13,7 +13,6 @@ use crate::{
     layout::Rect,
     node::WrappedIndex,
     on_event::OnEvent,
-    prelude::{Binding, MutableBound},
     styles::{RenderCommand, Style},
     Focusable,
 };
@@ -51,7 +50,7 @@ pub(crate) struct EventDispatcher {
     next_mouse_position: (f32, f32),
     previous_events: EventMap,
     keyboard_modifiers: KeyboardModifiers,
-    pub last_clicked: Binding<WrappedIndex>,
+    // pub last_clicked: Binding<WrappedIndex>,
     contains_cursor: Option<bool>,
     wants_cursor: Option<bool>,
     has_cursor: Option<WrappedIndex>,
@@ -62,7 +61,7 @@ pub(crate) struct EventDispatcher {
 impl EventDispatcher {
     pub fn new() -> Self {
         Self {
-            last_clicked: Binding::new(WrappedIndex(Entity::from_raw(0))),
+            // last_clicked: Binding::new(WrappedIndex(Entity::from_raw(0))),
             is_mouse_pressed: Default::default(),
             next_mouse_pressed: Default::default(),
             current_mouse_position: Default::default(),
@@ -550,7 +549,7 @@ impl EventDispatcher {
                     if ignore_layout || layout.contains(&self.current_mouse_position) {
                         let cursor_event = self.get_cursor_event(self.current_mouse_position);
                         event_stream.push(Event::new(node.0, EventType::MouseUp(cursor_event)));
-                        self.last_clicked.set(node);
+                        // self.last_clicked.set(node);
 
                         if Self::contains_event(
                             &self.previous_events,
@@ -765,7 +764,7 @@ impl EventDispatcher {
     pub fn merge(&mut self, from: EventDispatcher) {
         // Merge only what could be changed internally. External changes (i.e. from Context)
         // should not be touched
-        self.last_clicked = from.last_clicked;
+        // self.last_clicked = from.last_clicked;
         self.is_mouse_pressed = from.is_mouse_pressed;
         self.next_mouse_pressed = from.next_mouse_pressed;
         self.current_mouse_position = from.current_mouse_position;

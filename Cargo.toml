@@ -8,9 +8,6 @@ edition = "2021"
 [dependencies]
 bevy = { git = "https://github.com/StarArawn/bevy/", rev="06a73ed3d72ee644bb617adfbe93153f7a51ea5c" }
 bytemuck = "1.12"
-desync = { version = "0.7" }
-flo_rope = { version = "0.1" }
-futures = { version = "0.3" }
 kayak_font = { path = "./kayak_font" }
 morphorm = { git = "https://github.com/geom3trik/morphorm", rev = "1243152d4cebea46fd3e5098df26402c73acae91" }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
