@@ -24,8 +24,6 @@ pub struct Context {
     pub(crate) node_tree: Tree,
     pub(crate) layout_cache: LayoutCache,
     pub(crate) focus_tree: FocusTree,
-    pub(crate) event_dispatcher: EventDispatcher,
-    widget_types: HashMap<Entity, Arc<dyn Widget>>,
     systems: HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     pub(crate) current_z: f32,
 }
@@ -37,8 +35,6 @@ impl Context {
             node_tree: Tree::default(),
             layout_cache: LayoutCache::default(),
             focus_tree: FocusTree::default(),
-            event_dispatcher: EventDispatcher::new(),
-            widget_types: HashMap::default(),
             systems: HashMap::default(),
             current_z: 0.0,
         }
@@ -57,14 +53,13 @@ impl Context {
         self.systems.insert(type_name.into(), Box::new(system));
     }
 
-    pub fn add_widget<T: Widget + Default + 'static>(
+    pub fn add_widget(
         &mut self,
         parent: Option<WrappedIndex>,
         entity: Entity,
     ) {
         self.tree.add(WrappedIndex(entity), parent);
         self.layout_cache.add(WrappedIndex(entity));
-        self.widget_types.insert(entity, Arc::new(T::default()));
     }
 
     pub fn build_render_primitives(
@@ -107,6 +102,7 @@ fn recurse_node_tree_to_build_primitives(
             layout.z_index = new_z_index;
             render_primitive.set_layout(layout);
             render_primitives.push(render_primitive.clone());
+
 
             let new_prev_clip = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
                 render_primitive.clone()
@@ -160,13 +156,13 @@ fn update_widgets_sys(world: &mut World) {
         &mut context.layout_cache,
         &mut context.systems,
         tree_iterator,
-        &mut context.widget_types,
     );
 
     for system in context.systems.values_mut() {
         system.set_last_change_tick(world.read_change_tick());
         // system.apply_buffers(world);
     }
+
     world.insert_resource(context);
 }
 
@@ -176,49 +172,48 @@ fn update_widgets(
     layout_cache: &mut LayoutCache,
     systems: &mut HashMap<String, Box<dyn System<In = (WidgetTree, Entity), Out = bool>>>,
     widgets: Vec<WrappedIndex>,
-    parent_widget_types: &mut HashMap<Entity, Arc<dyn Widget>>,
 ) {
     for entity in widgets.iter() {
-        let widget_type = parent_widget_types.get(&entity.0).cloned();
-        if let Some(widget_type) = widget_type {
-            let widget_tree = WidgetTree::new();
-            widget_tree.copy_from_point(&tree, *entity);
-            let children_before = widget_tree.get_children(entity.0);
-            let (widget_tree, mut widget_types, should_update_children) = update_widget(
-                systems,
-                tree,
-                world,
-                *entity,
-                &widget_type,
-                widget_tree,
-                children_before,
-            );
+        if let Some(entity_ref) = world.get_entity(entity.0) {
+            if let Some(widget_type) = entity_ref.get::<WidgetName>() {
+                let widget_tree = WidgetTree::new();
+                widget_tree.copy_from_point(&tree, *entity);
+                let children_before = widget_tree.get_children(entity.0);
+                let (widget_tree, should_update_children) = update_widget(
+                    systems,
+                    tree,
+                    world,
+                    *entity,
+                    widget_type.0,
+                    widget_tree,
+                    children_before,
+                );
 
-            // Only merge tree if changes detected.
-            if should_update_children {
-                let diff = tree.diff_children(&widget_tree, *entity);
-                for (_index, child, _parent, changes) in diff.changes.iter() {
-                    for change in changes.iter() {
-                        if matches!(change, Change::Inserted) {
-                            layout_cache.add(*child);
+                // Only merge tree if changes detected.
+                if should_update_children {
+                    let diff = tree.diff_children(&widget_tree, *entity);
+                    for (_index, child, _parent, changes) in diff.changes.iter() {
+                        for change in changes.iter() {
+                            if matches!(change, Change::Inserted) {
+                                layout_cache.add(*child);
+                            }
                         }
                     }
-                }
-                tree.merge(&widget_tree, *entity, diff);
-            }
+                    tree.merge(&widget_tree, *entity, diff);
 
-            // if should_update_children {
-            let children = widget_tree.child_iter(*entity).collect::<Vec<_>>();
-            update_widgets(
-                world,
-                tree,
-                layout_cache,
-                systems,
-                children,
-                &mut widget_types,
-            );
-            // }
-            parent_widget_types.extend(widget_types);
+                }
+
+                // if should_update_children {
+                let children = widget_tree.child_iter(*entity).collect::<Vec<_>>();
+                update_widgets(
+                    world,
+                    tree,
+                    layout_cache,
+                    systems,
+                    children,
+                );
+                // }
+            }
         }
     }
 }
@@ -228,46 +223,44 @@ fn update_widget(
     tree: &mut Tree,
     world: &mut World,
     entity: WrappedIndex,
-    widget_type: &Arc<dyn Widget>,
+    widget_type: &'static str,
     widget_tree: WidgetTree,
     previous_children: Vec<Entity>,
-) -> (Tree, HashMap<Entity, Arc<dyn Widget>>, bool) {
+) -> (Tree, bool) {
     let should_update_children;
     {
-        let widget_system = systems.get_mut(widget_type.get_name()).unwrap();
+        // Remove children from previous render.
+        widget_tree.remove_children(
+            previous_children
+        );
+        let widget_system = systems.get_mut(widget_type).unwrap();
         let old_tick = widget_system.get_last_change_tick();
         should_update_children = widget_system.run((widget_tree.clone(), entity.0), world);
         widget_system.set_last_change_tick(old_tick);
         widget_system.apply_buffers(world);
     }
-    let (mut widget_tree, widget_types) = widget_tree.take();
+    let widget_tree = widget_tree.take();
     let mut command_queue = CommandQueue::default();
     let mut commands = Commands::new(&mut command_queue, world);
 
     // Mark node as needing a recalculation of rendering/layout.
     if should_update_children {
-        // Remove children from previous render.
-        widget_tree.remove_children(
-            previous_children
-                .iter()
-                .map(|entity| WrappedIndex(*entity))
-                .collect::<Vec<_>>(),
-        );
         commands.entity(entity.0).insert(DirtyNode);
     }
 
     let diff = tree.diff_children(&widget_tree, entity);
-
-    for (_, changed_entity, _, changes) in diff.changes.iter() {
-        if changes.iter().any(|change| *change == Change::Deleted) && should_update_children {
-            commands.entity(changed_entity.0).despawn();
-        } else if should_update_children {
-            commands.entity(changed_entity.0).insert(DirtyNode);
+    if should_update_children {
+        for (_, changed_entity, _, changes) in diff.changes.iter() {
+            if changes.iter().any(|change| *change == Change::Deleted) {
+                commands.entity(changed_entity.0).despawn();
+            } else {
+                commands.entity(changed_entity.0).insert(DirtyNode);
+            }
         }
     }
     command_queue.apply(world);
 
-    (widget_tree, widget_types, should_update_children)
+    (widget_tree, should_update_children)
 }
 
 fn init_systems(world: &mut World) {
@@ -332,3 +325,6 @@ fn calculate_ui(world: &mut World) {
         system.apply_buffers(world);
     }
 }
+
+#[derive(Component)]
+pub struct WidgetName(pub &'static str);

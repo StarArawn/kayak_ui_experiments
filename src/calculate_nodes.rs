@@ -3,14 +3,13 @@ use bevy::{
     utils::HashMap,
 };
 use kayak_font::KayakFont;
-use morphorm::Units;
 
 use crate::{
     node::{DirtyNode, Node, NodeBuilder, WrappedIndex},
     prelude::{Context, RenderCommand, Style, Tree},
     render::font::FontMapping,
     render_primitive::RenderPrimitive,
-    styles::StyleProp, layout::{Rect, DataCache},
+    styles::{StyleProp, Units}, layout::{Rect, DataCache},
 };
 
 pub fn calculate_nodes(
@@ -116,19 +115,19 @@ pub fn calculate_nodes(
         }
     }
 
-    let has_new_nodes = new_nodes.len() > 0;
+    // let has_new_nodes = new_nodes.len() > 0;
 
     for (entity, (node, needs_layout)) in new_nodes.drain() {
-
         commands.entity(entity).insert(node);
         if !needs_layout {
             commands.entity(entity).remove::<DirtyNode>();
         }
     }
 
-    if has_new_nodes {
+    // if has_new_nodes {
         build_nodes_tree(&mut context, &node_query);
-    }
+    // }
+
 
     {
         let context = context.as_mut();

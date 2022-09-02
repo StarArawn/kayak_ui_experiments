@@ -7,22 +7,22 @@ use crate::prelude::WidgetTree;
 
 /// A container for a function that generates child widgets
 #[derive(Component, Clone)]
-pub struct Children(Arc<dyn Fn(Option<Entity>, &mut WidgetTree, &mut Commands) + Send + Sync>);
+pub struct Children(Arc<dyn Fn(Option<Entity>, &WidgetTree, &mut Commands, bool) + Send + Sync>);
 
 impl Default for Children {
     fn default() -> Self {
-        Children::new(|_e, _w, _c| {})
+        Children::new(|_e, _w, _c, _b| {})
     }
 }
 
 impl Children {
-    pub fn new<F: Fn(Option<Entity>, &mut WidgetTree, &mut Commands) + Send + Sync + 'static>(
+    pub fn new<F: Fn(Option<Entity>, &WidgetTree, &mut Commands, bool) + Send + Sync + 'static>(
         builder: F,
     ) -> Self {
         Self(Arc::new(builder))
     }
-    pub fn build(&self, id: Option<Entity>, widget_tree: &mut WidgetTree, commands: &mut Commands) {
-        self.0(id, widget_tree, commands);
+    pub fn spawn(&self, id: Option<Entity>, widget_tree: &WidgetTree, commands: &mut Commands, should_spawn: bool) {
+        self.0(id, widget_tree, commands, should_spawn);
     }
 }
 

@@ -3,6 +3,7 @@ use std::sync::{Arc, RwLock};
 use bevy::prelude::{Component, System, Entity, IntoSystem, In, World};
 
 use crate::event::Event;
+use crate::event_dispatcher::EventDispatcherContext;
 
 /// A container for a function that handles events
 ///
@@ -12,12 +13,12 @@ use crate::event::Event;
 #[derive(Component, Clone)]
 pub struct OnEvent {
     has_initialized: bool,
-    system: Arc<RwLock<dyn System<In = (Event, Entity), Out = Event>>>,
+    system: Arc<RwLock<dyn System<In = (EventDispatcherContext, Event, Entity), Out = (EventDispatcherContext, Event)>>>,
 }
 
 impl Default for OnEvent {
     fn default() -> Self {
-        Self::new(|In((event, _entity))| event)
+        Self::new(|In((event_dispatcher_context, event, _entity))| (event_dispatcher_context, event))
     }
 } 
 
@@ -28,7 +29,7 @@ impl OnEvent {
     /// 1. The current context
     /// 2. The event
     pub fn new<Params>(
-        system: impl IntoSystem<(Event, Entity), Event, Params>,
+        system: impl IntoSystem<(EventDispatcherContext, Event, Entity), (EventDispatcherContext, Event), Params>,
     ) -> OnEvent {
         Self {
             has_initialized: false,
@@ -39,16 +40,16 @@ impl OnEvent {
     /// Call the event handler
     ///
     /// Returns true if the handler was successfully invoked.
-    pub fn try_call(&mut self, entity: Entity, mut event: Event, world: &mut World) -> Event {
+    pub fn try_call(&mut self, mut event_dispatcher_context: EventDispatcherContext, entity: Entity, mut event: Event, world: &mut World) -> (EventDispatcherContext, Event) {
         if let Ok(mut system) = self.system.try_write() {
             if !self.has_initialized {
                 system.initialize(world);
                 self.has_initialized = true;
             }
-            event = system.run((event, entity), world);
+            (event_dispatcher_context, event) = system.run((event_dispatcher_context, event, entity), world);
             system.apply_buffers(world);
         }
-        event
+        (event_dispatcher_context, event)
     }
 }
 

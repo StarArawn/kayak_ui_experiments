@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{styles::{Style, StyleProp, RenderCommand}, prelude::WidgetTree, widget::Widget};
+use crate::{styles::{Style, StyleProp, RenderCommand}, prelude::WidgetTree, widget::Widget, context::WidgetName};
 
 #[derive(Component)]
 pub struct Text {
@@ -36,10 +36,17 @@ impl Default for Text {
 
 impl Widget for Text {}
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub struct TextBundle {
     pub text: Text,
     pub styles: Style,
+    pub widget_name: WidgetName,
+}
+
+impl Default for TextBundle {
+    fn default() -> Self {
+        Self { text: Default::default(), styles: Default::default(), widget_name: WidgetName(Text::default().get_name()) }
+    }
 }
 
 pub fn text_update(

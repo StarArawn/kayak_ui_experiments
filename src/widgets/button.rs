@@ -1,17 +1,35 @@
-use bevy::{prelude::{Component, Bundle, In, Entity, Query, Changed, Color, Commands}};
-use morphorm::Units;
+use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Query};
 
-use crate::{styles::{Style, StyleProp, RenderCommand, Corner}, on_event::OnEvent, widget::Widget, prelude::{WidgetTree, Children}};
+use crate::{
+    context::WidgetName,
+    on_event::OnEvent,
+    prelude::{Children, Units, WidgetTree},
+    styles::{Corner, RenderCommand, Style, StyleProp},
+    widget::Widget,
+};
 
 #[derive(Component, Default)]
 pub struct Button;
 
-#[derive(Default, Bundle)]
+#[derive(Bundle)]
 pub struct ButtonBundle {
     pub button: Button,
     pub styles: Style,
     pub on_event: OnEvent,
     pub children: Children,
+    pub widget_name: WidgetName,
+}
+
+impl Default for ButtonBundle {
+    fn default() -> Self {
+        Self {
+            button: Default::default(),
+            styles: Default::default(),
+            on_event: Default::default(),
+            children: Children::default(),
+            widget_name: WidgetName(Button::default().get_name()),
+        }
+    }
 }
 
 impl Widget for Button {}
@@ -21,7 +39,6 @@ pub fn button_update(
     mut commands: Commands,
     mut query: Query<(&mut Style, &Children), Changed<Button>>,
 ) -> bool {
-
     if let Ok((mut style, children)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Quad);
         style.background_color = StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0));
@@ -31,7 +48,7 @@ pub fn button_update(
         style.padding_right = StyleProp::Value(Units::Stretch(1.0));
         // style.cursor = CursorIcon::Hand.into();/
 
-        children.build(Some(entity), &mut widget_tree, &mut commands);
+        children.spawn(Some(entity), &mut widget_tree, &mut commands, true);
 
         return true;
     }

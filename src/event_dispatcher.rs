@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{KeyCode, Resource, World},
+    prelude::{KeyCode, Resource, World, Entity},
     utils::{HashMap, HashSet},
 };
 
@@ -89,9 +89,9 @@ impl EventDispatcher {
     }
 
     /// Captures all cursor events and instead makes the given index the target
-    pub fn capture_cursor(&mut self, index: WrappedIndex) -> Option<WrappedIndex> {
+    pub fn capture_cursor(&mut self, index: Entity) -> Option<WrappedIndex> {
         let old = self.cursor_capture;
-        self.cursor_capture = Some(index);
+        self.cursor_capture = Some(WrappedIndex(index));
         old
     }
 
@@ -104,8 +104,8 @@ impl EventDispatcher {
     ///
     /// This check can be side-stepped if necessary by calling [`force_release_cursor`](Self::force_release_cursor)
     /// instead (or by calling this method with the correct index).
-    pub fn release_cursor(&mut self, index: WrappedIndex) -> bool {
-        if self.cursor_capture == Some(index) {
+    pub fn release_cursor(&mut self, index: Entity) -> bool {
+        if self.cursor_capture == Some(WrappedIndex(index)) {
             self.force_release_cursor();
             true
         } else {
@@ -221,10 +221,16 @@ impl EventDispatcher {
                 Self::insert_event(&mut next_events, &index, node_event.event_type);
 
                 // --- Call Event --- //
-                let on_event = world.entity_mut(index.0).remove::<OnEvent>();
-                if let Some(mut on_event) = on_event {
-                    node_event = on_event.try_call(index.0, node_event, world);
-                    world.entity_mut(index.0).insert(on_event);
+                if let Some(mut entity) = world.get_entity_mut(index.0) {
+                    if let Some(mut on_event) = entity.remove::<OnEvent>() {
+                        let mut event_dispatcher_context = EventDispatcherContext {
+                            cursor_capture: self.cursor_capture,
+                        };
+
+                        (event_dispatcher_context, node_event) = on_event.try_call(event_dispatcher_context, index.0, node_event, world);
+                        world.entity_mut(index.0).insert(on_event);
+                        event_dispatcher_context.merge(self);
+                    }
                 }
 
                 event.default_prevented |= node_event.default_prevented;
@@ -779,4 +785,52 @@ impl EventDispatcher {
         // Do not include:
         // self.cursor_capture = from.cursor_capture;
     }
+}
+
+pub struct EventDispatcherContext {
+    cursor_capture: Option<WrappedIndex>,
+}
+
+impl EventDispatcherContext {
+        /// Captures all cursor events and instead makes the given index the target
+        pub fn capture_cursor(&mut self, index: Entity) -> Option<WrappedIndex> {
+            let old = self.cursor_capture;
+            self.cursor_capture = Some(WrappedIndex(index));
+            old
+        }
+    
+        /// Releases the captured cursor
+        ///
+        /// Returns true if successful.
+        ///
+        /// This will only release the cursor if the given index matches the current captor. This
+        /// prevents other widgets from accidentally releasing against the will of the original captor.
+        ///
+        /// This check can be side-stepped if necessary by calling [`force_release_cursor`](Self::force_release_cursor)
+        /// instead (or by calling this method with the correct index).
+        pub fn release_cursor(&mut self, index: Entity) -> bool {
+            if self.cursor_capture == Some(WrappedIndex(index)) {
+                self.force_release_cursor();
+                true
+            } else {
+                false
+            }
+        }
+    
+        /// Releases the captured cursor
+        ///
+        /// Returns the index of the previous captor.
+        ///
+        /// This will force the release, regardless of which widget has called it. To safely release,
+        /// use the standard [`release_cursor`](Self::release_cursor) method instead.
+        pub fn force_release_cursor(&mut self) -> Option<WrappedIndex> {
+            let old = self.cursor_capture;
+            self.cursor_capture = None;
+            old
+        }
+
+        pub(crate) fn merge(self, event_dispatcher: &mut EventDispatcher) {
+            event_dispatcher.cursor_capture = self.cursor_capture;
+        }
+    
 }

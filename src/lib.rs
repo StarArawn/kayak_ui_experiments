@@ -46,6 +46,7 @@ pub mod prelude {
     pub use crate::input_event::*;
     pub use crate::keyboard_event::*;
     pub use crate::event::*;
+    pub use crate::event_dispatcher::EventDispatcherContext;
 }
 
 #[derive(Component)]

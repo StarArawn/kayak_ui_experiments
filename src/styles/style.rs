@@ -10,7 +10,6 @@ use crate::cursor::PointerEvents;
 
 pub use super::Corner;
 pub use super::Edge;
-// use crate::cursor::PointerEvents;
 use super::RenderCommand;
 use super::AsRefOption;
 

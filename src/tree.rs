@@ -775,14 +775,12 @@ impl<'a> Hierarchy<'a> for Tree {
 #[derive(Clone)]
 pub struct WidgetTree {
     tree: Arc<RwLock<Tree>>,
-    widget_types: Arc<RwLock<HashMap<Entity, Arc<dyn Widget>>>>,
 }
 
 impl WidgetTree {
     pub fn new() -> Self {
         Self {
             tree: Arc::new(RwLock::new(Tree::default())),
-            widget_types: Arc::new(RwLock::new(HashMap::default())),
         }
     }
 
@@ -823,12 +821,9 @@ impl WidgetTree {
         }
     }
 
-    pub fn add<T: Widget + Default + 'static>(&self, entity: Entity, parent: Option<Entity>) {
+    pub fn add(&self, entity: Entity, parent: Option<Entity>) {
         if let Ok(mut tree) = self.tree.write() {
-            if let Ok(mut widget_types) = self.widget_types.write() {
-                tree.add(WrappedIndex(entity), parent.map(|parent| WrappedIndex(parent)));
-                widget_types.insert(entity, Arc::new(T::default()));
-            }
+            tree.add(WrappedIndex(entity), parent.map(|parent| WrappedIndex(parent)));
         }
     }
 
@@ -838,14 +833,8 @@ impl WidgetTree {
         }
     }
 
-    pub fn take(self) -> (Tree, HashMap<Entity, Arc<dyn Widget>>) {
-        (
-            Arc::try_unwrap(self.tree).unwrap().into_inner().unwrap(),
-            match Arc::try_unwrap(self.widget_types) {
-                Ok(result) => result.into_inner().unwrap(),
-                Err(_) => panic!("Failed!"),
-            },
-        )
+    pub fn take(self) -> Tree {
+        Arc::try_unwrap(self.tree).unwrap().into_inner().unwrap()
     }
 }
 

@@ -1,12 +1,26 @@
-use bevy::{prelude::{Component, Commands, In, Entity, Res, Query, With}, window::Windows};
+use bevy::{prelude::{Component, Commands, In, Entity, Res, Query, With, Bundle}, window::Windows};
 use morphorm::Units;
 
-use crate::{styles::{StyleProp, Style}, widget::Widget, children::Children, prelude::WidgetTree};
+use crate::{styles::{StyleProp, Style}, widget::Widget, children::Children, prelude::WidgetTree, context::WidgetName};
 
 #[derive(Component, Default)]
 pub struct KayakApp;
 
 impl Widget for KayakApp {}
+
+#[derive(Bundle)]
+pub struct KayakAppBundle {
+    pub app: KayakApp,
+    pub styles: Style,
+    pub children: Children,
+    pub widget_name: WidgetName,
+}
+
+impl Default for KayakAppBundle {
+    fn default() -> Self {
+        Self { app: Default::default(), styles: Default::default(), children: Default::default(), widget_name: WidgetName(KayakApp::default().get_name()) }
+    }
+}
 
 /// TODO: USE CAMERA INSTEAD OF WINDOW!!
 pub fn app_update(
@@ -28,7 +42,7 @@ pub fn app_update(
         }
 
         if has_changed {
-            children.build(Some(entity), &mut widget_tree, &mut commands);
+            children.spawn(Some(entity), &mut widget_tree, &mut commands, true);
         }
     }
 
