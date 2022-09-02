@@ -101,7 +101,7 @@ pub fn window_update(
                         padding_left: StyleProp::Value(Units::Pixels(5.0)),
                         ..Style::default()
                     },
-                    children: Children::new(move |entity, widget_tree, commands, _| {
+                    children: Children::new(move |entity, widget_tree, commands| {
                         let title_entity = commands
                             .spawn()
                             .insert_bundle(TextBundle {
@@ -169,8 +169,8 @@ pub fn window_update(
             let children = children.clone();
 
             let mut clip_bundle = ClipBundle {
-                children: Children::new(move |entity, widget_tree, commands, new_spawn| {
-                    children.spawn(entity, &widget_tree, commands, new_spawn);
+                children: Children::new(move |entity, widget_tree, commands| {
+                    children.spawn(entity, &widget_tree, commands);
                 }),
                 ..ClipBundle::default()
             };

@@ -4,7 +4,6 @@ use bevy::{
     utils::HashMap,
 };
 use morphorm::Hierarchy;
-use std::sync::Arc;
 
 use crate::{
     calculate_nodes::calculate_nodes,
@@ -14,7 +13,6 @@ use crate::{
     node::{DirtyNode, WrappedIndex},
     render_primitive::RenderPrimitive,
     tree::{Change, Tree, WidgetTree},
-    widget::Widget,
     WindowSize,
 };
 

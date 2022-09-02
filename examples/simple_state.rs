@@ -1,5 +1,4 @@
 use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::{
         App as BevyApp, AssetServer, Changed, Commands, Component, Entity, In, Query, Res, ResMut, Vec2,
     },
@@ -53,7 +52,7 @@ fn startup(
     let entity = commands
         .spawn()
         .insert_bundle(KayakAppBundle {
-            children: Children::new(|app_id, widget_tree, commands, _should_spawn| {
+            children: Children::new(|app_id, widget_tree, commands| {
                 let window_entity = commands.spawn().insert_bundle(WindowBundle {
                     window: Window {
                         title: "State Example Window".into(),
@@ -62,7 +61,7 @@ fn startup(
                         size: Vec2::new(300.0, 250.0),
                         ..Window::default()
                     },
-                    children: Children::new(|window_id, widget_tree, commands, _| {
+                    children: Children::new(|window_id, widget_tree, commands| {
                         let current_count_entity = commands
                             .spawn()
                             .insert(CurrentCount(0))
@@ -74,7 +73,7 @@ fn startup(
                         let button_entity = commands
                             .spawn()
                             .insert_bundle(ButtonBundle {
-                                children: Children::new(|button_id, widget_tree, commands, _should_spawn| {
+                                children: Children::new(|button_id, widget_tree, commands| {
                                     let text_entity = commands
                                         .spawn()
                                         .insert_bundle(kayak_ui::prelude::widgets::TextBundle {
@@ -128,8 +127,6 @@ fn startup(
 fn main() {
     BevyApp::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(ContextPlugin)
         .add_plugin(KayakWidgets)
         .add_startup_system(startup)

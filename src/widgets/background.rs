@@ -34,7 +34,7 @@ pub fn update_background(
     mut query: Query<(&mut Style, &Children), (Changed<Style>, With<Background>)>,
 ) -> bool {
     if let Ok((_, children)) = query.get_mut(entity) {
-        children.spawn(Some(entity), &mut widget_tree, &mut commands, true);
+        children.spawn(Some(entity), &mut widget_tree, &mut commands);
         return true;
     }
     false

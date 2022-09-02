@@ -8,8 +8,6 @@ use bevy::utils::HashMap;
 use morphorm::Hierarchy;
 
 use crate::node::WrappedIndex;
-use crate::widget::Widget;
-
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Tree {

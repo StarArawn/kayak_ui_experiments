@@ -48,7 +48,7 @@ pub fn button_update(
         style.padding_right = StyleProp::Value(Units::Stretch(1.0));
         // style.cursor = CursorIcon::Hand.into();/
 
-        children.spawn(Some(entity), &mut widget_tree, &mut commands, true);
+        children.spawn(Some(entity), &mut widget_tree, &mut commands);
 
         return true;
     }

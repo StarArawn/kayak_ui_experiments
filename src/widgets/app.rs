@@ -42,7 +42,7 @@ pub fn app_update(
         }
 
         if has_changed {
-            children.spawn(Some(entity), &mut widget_tree, &mut commands, true);
+            children.spawn(Some(entity), &mut widget_tree, &mut commands);
         }
     }
 

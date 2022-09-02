@@ -39,8 +39,8 @@ fn my_widget_1_update(
                 bar: my_widget.foo,
             };
             let should_update = my_widget.foo == my_child.bar;
-            let child_id = commands.spawn().insert(my_child).id();
-            widget_tree.add::<MyWidget2>(child_id, Some(entity));
+            let child_id = commands.spawn().insert(my_child).insert(WidgetName(MyWidget2::default().get_name())).id();
+            widget_tree.add(child_id, Some(entity));
 
             return should_update;
         }
@@ -58,8 +58,8 @@ fn startup(mut commands: Commands) {
     let mut context = Context::new();
     context.add_widget_system(MyWidget::default().get_name(), my_widget_1_update);
     context.add_widget_system(MyWidget2::default().get_name(), my_widget_2_update);
-    let entity = commands.spawn().insert(MyWidget { foo: 0 }).id();
-    context.add_widget::<MyWidget>(None, entity);
+    let entity = commands.spawn().insert(MyWidget { foo: 0 }).insert(WidgetName(MyWidget::default().get_name())).id();
+    context.add_widget(None, entity);
     commands.insert_resource(context);
 }
 

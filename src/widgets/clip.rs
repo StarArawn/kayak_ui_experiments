@@ -37,7 +37,7 @@ pub fn update_clip(
     mut query: Query<(&Style, &Children), (Changed<Style>, With<Clip>)>,
 ) -> bool {
     if let Ok((_, children)) = query.get_mut(entity) {
-        children.spawn(Some(entity), &mut widget_tree, &mut commands, true);
+        children.spawn(Some(entity), &mut widget_tree, &mut commands);
         return true;
     }
     false
