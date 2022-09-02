@@ -1,15 +1,8 @@
-use bevy::{math::Vec2, prelude::Res, render::color::Color, sprite::Rect};
-use kayak_core::render_primitive::RenderPrimitive;
-
-use crate::ImageManager;
-use bevy_kayak_renderer::{
-    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
-    Corner,
-};
+use bevy::{math::Vec2, render::color::Color, sprite::Rect};
+use crate::{render_primitive::RenderPrimitive, render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, styles::Corner};
 
 pub fn extract_images(
     render_command: &RenderPrimitive,
-    image_manager: &Res<ImageManager>,
     dpi: f32,
 ) -> Vec<ExtractQuadBundle> {
     let (border_radius, layout, handle) = match render_command {
@@ -40,9 +33,7 @@ pub fn extract_images(
                 bottom_left: border_radius.bottom_left,
                 bottom_right: border_radius.bottom_right,
             },
-            image: image_manager
-                .get_handle(handle)
-                .and_then(|a| Some(a.clone_weak())),
+            image: Some(handle.clone_weak()),
             uv_max: None,
             uv_min: None,
         },

@@ -19,6 +19,7 @@ pub mod unified;
 mod extract;
 pub(crate) mod quad;
 pub(crate) mod font;
+pub(crate) mod image;
 
 pub mod draw_ui_graph {
     pub const NAME: &str = "kayak_draw_ui";

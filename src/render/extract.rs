@@ -10,10 +10,9 @@ use kayak_font::KayakFont;
 
 use super::{
     font::{self, FontMapping},
-    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
+    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, image,
 };
 
-// pub mod image;
 // mod nine_patch;
 // mod texture_atlas;
 
@@ -51,10 +50,10 @@ pub fn extract(
                 let text_quads = font::extract_texts(&render_primitive, &fonts, &font_mapping, dpi);
                 extracted_quads.extend(text_quads);
             }
-            //         RenderPrimitive::Image { .. } => {
-            //             let image_quads = image::extract_images(&render_primitive, &image_manager, dpi);
-            //             extracted_quads.extend(image_quads);
-            //         }
+            RenderPrimitive::Image { .. } => {
+                let image_quads = image::extract_images(&render_primitive, dpi);
+                extracted_quads.extend(image_quads);
+            }
             RenderPrimitive::Quad { .. } => {
                 let quad_quads = super::quad::extract_quads(&render_primitive, 1.0);
                 extracted_quads.extend(quad_quads);
@@ -98,6 +97,7 @@ pub fn extract(
             _ => {}
         }
     }
+
     // dbg!(&extracted_quads);
     commands.spawn_batch(extracted_quads);
 }

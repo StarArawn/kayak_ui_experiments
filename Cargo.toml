@@ -10,10 +10,6 @@ bevy = { git = "https://github.com/StarArawn/bevy/", rev="06a73ed3d72ee644bb617a
 bytemuck = "1.12"
 kayak_font = { path = "./kayak_font" }
 morphorm = { git = "https://github.com/geom3trik/morphorm", rev = "1243152d4cebea46fd3e5098df26402c73acae91" }
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-uuid = { version = "0.8", features = ["v4"] }
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-uuid = { version = "0.8", features = ["v4", "wasm-bindgen"] }
 
 [dev-dependencies]
 fastrand = "1.8"
