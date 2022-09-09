@@ -21,6 +21,8 @@ mod event_dispatcher;
 mod input_event;
 mod focus_tree;
 mod input;
+mod context_entities;
+mod widget_context;
 
 use bevy::prelude::Component;
 pub use window_size::WindowSize;
@@ -47,6 +49,8 @@ pub mod prelude {
     pub use crate::keyboard_event::*;
     pub use crate::event::*;
     pub use crate::event_dispatcher::EventDispatcherContext;
+    pub use kayak_font::Alignment;
+    pub use crate::widget_context::*;
 }
 
 #[derive(Component)]

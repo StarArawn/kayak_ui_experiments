@@ -1,4 +1,4 @@
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, Rect};
 use bevy::render::render_resource::{DynamicUniformBuffer, ShaderType};
 use bevy::utils::FloatOrd;
 use bevy::{
@@ -28,7 +28,6 @@ use bevy::{
         texture::{BevyDefault, GpuImage, Image},
         view::{ViewUniformOffset, ViewUniforms},
     },
-    sprite::Rect,
     utils::HashMap,
 };
 use bytemuck::{Pod, Zeroable};

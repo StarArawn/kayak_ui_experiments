@@ -1,6 +1,6 @@
 use bevy::prelude::{Handle, In, Entity, Query, Changed, Bundle, Component};
 
-use crate::{widget::Widget, prelude::WidgetTree, styles::{Style, RenderCommand, StyleProp}, context::WidgetName};
+use crate::{widget::Widget, prelude::WidgetContext, styles::{Style, RenderCommand, StyleProp}, context::WidgetName};
 
 #[derive(Component, Default)]
 pub struct Image(pub Handle<bevy::prelude::Image>);
@@ -21,7 +21,7 @@ impl Default for ImageBundle {
 }
 
 pub fn update_image(
-    In((_widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     mut query: Query<(&mut Style, &Image), (Changed<Image>, Changed<Style>)>,
 ) -> bool {
     if let Ok((mut style, image)) = query.get_mut(entity) {

@@ -7,6 +7,9 @@ mod window;
 mod background;
 mod clip;
 mod image;
+mod texture_atlas;
+mod nine_patch;
+mod element;
 
 pub use app::{KayakApp, KayakAppBundle};
 pub use button::{Button, ButtonBundle};
@@ -15,6 +18,9 @@ pub use window::{Window, WindowBundle};
 pub use background::{Background, BackgroundBundle};
 pub use clip::{Clip, ClipBundle};
 pub use image::{Image, ImageBundle};
+pub use texture_atlas::{TextureAtlas, TextureAtlasBundle};
+pub use nine_patch::{NinePatch, NinePatchBundle};
+pub use element::{Element, ElementBundle};
 
 use app::app_update;
 use button::button_update;
@@ -23,6 +29,9 @@ use window::window_update;
 use background::update_background;
 use clip::update_clip;
 use image::update_image;
+use texture_atlas::update_texture_atlas;
+use nine_patch::update_nine_patch;
+use element::update_element;
 
 use crate::{context::Context, widget::Widget};
 
@@ -42,4 +51,7 @@ fn add_widget_systems(mut context: ResMut<Context>) {
     context.add_widget_system(Background::default().get_name(), update_background);
     context.add_widget_system(Clip::default().get_name(), update_clip);
     context.add_widget_system(Image::default().get_name(), update_image);
+    context.add_widget_system(TextureAtlas::default().get_name(), update_texture_atlas);
+    context.add_widget_system(NinePatch::default().get_name(), update_nine_patch);
+    context.add_widget_system(Element::default().get_name(), update_element);
 }

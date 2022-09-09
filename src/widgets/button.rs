@@ -3,7 +3,7 @@ use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Que
 use crate::{
     context::WidgetName,
     on_event::OnEvent,
-    prelude::{Children, Units, WidgetTree},
+    prelude::{Children, Units, WidgetContext},
     styles::{Corner, RenderCommand, Style, StyleProp},
     widget::Widget,
 };
@@ -35,20 +35,31 @@ impl Default for ButtonBundle {
 impl Widget for Button {}
 
 pub fn button_update(
-    In((mut widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: Query<(&mut Style, &Children), Changed<Button>>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {
-        style.render_command = StyleProp::Value(RenderCommand::Quad);
-        style.background_color = StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0));
-        style.border_radius = StyleProp::Value(Corner::all(5.0));
-        style.height = StyleProp::Value(Units::Pixels(45.0));
-        style.padding_left = StyleProp::Value(Units::Stretch(1.0));
-        style.padding_right = StyleProp::Value(Units::Stretch(1.0));
+        *style = Style::default()
+            .with_style(Style {
+                render_command: StyleProp::Value(RenderCommand::Quad),
+                ..Default::default()
+            })
+            .with_style(style.clone())
+            .with_style(Style {
+            render_command: StyleProp::Value(RenderCommand::Quad),
+                background_color: StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0)),
+                border_radius: StyleProp::Value(Corner::all(5.0)),
+                height: StyleProp::Value(Units::Pixels(45.0)),
+                padding_left: StyleProp::Value(Units::Stretch(1.0)),
+                padding_right: StyleProp::Value(Units::Stretch(1.0)),
+                padding_bottom: StyleProp::Value(Units::Stretch(1.0)),
+                padding_top: StyleProp::Value(Units::Stretch(1.0)),
+                ..Default::default()
+            });
         // style.cursor = CursorIcon::Hand.into();/
 
-        children.spawn(Some(entity), &mut widget_tree, &mut commands);
+        children.spawn(Some(entity), &mut widget_context, &mut commands);
 
         return true;
     }

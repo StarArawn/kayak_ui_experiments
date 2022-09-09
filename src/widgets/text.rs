@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use kayak_font::Alignment;
 
-use crate::{styles::{Style, StyleProp, RenderCommand}, prelude::WidgetTree, widget::Widget, context::WidgetName};
+use crate::{styles::{Style, StyleProp, RenderCommand}, prelude::WidgetContext, widget::Widget, context::WidgetName};
 
 #[derive(Component)]
 pub struct Text {
@@ -20,6 +21,8 @@ pub struct Text {
     ///
     /// Negative values have no effect
     pub size: f32,
+    /// Text alignment.
+    pub alignment: Alignment,
 }
 
 impl Default for Text {
@@ -30,6 +33,7 @@ impl Default for Text {
             line_height: None,
             show_cursor: false,
             size: -1.0,
+            alignment: Alignment::Start,
         }
     }
 }
@@ -50,13 +54,14 @@ impl Default for TextBundle {
 }
 
 pub fn text_update(
-    In((_, entity)): In<(WidgetTree, Entity)>,
+    In((_, entity)): In<(WidgetContext, Entity)>,
     mut query: Query<(&mut Style, &Text), Changed<Text>>,
 ) -> bool {
 
     if let Ok((mut style, text)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Text {
             content: text.content.clone(),
+            alignment: text.alignment,
         });
 
         if let Some(ref font) = text.font {

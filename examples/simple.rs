@@ -7,7 +7,7 @@ pub struct MyWidget2 {
 }
 
 fn my_widget_2_update(
-    In((_widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     query: Query<&MyWidget2, Or<(Added<MyWidget2>, Changed<MyWidget2>)>>,
 ) -> bool  {
     if let Ok(my_widget2) = query.get(entity) {
@@ -25,7 +25,7 @@ pub struct MyWidget {
 }
 
 fn my_widget_1_update(
-    In((widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     my_resource: Res<MyResource>,
     mut query: Query<&mut MyWidget>,
@@ -40,7 +40,7 @@ fn my_widget_1_update(
             };
             let should_update = my_widget.foo == my_child.bar;
             let child_id = commands.spawn().insert(my_child).insert(WidgetName(MyWidget2::default().get_name())).id();
-            widget_tree.add(child_id, Some(entity));
+            widget_context.add(child_id, Some(entity));
 
             return should_update;
         }

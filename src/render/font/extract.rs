@@ -1,7 +1,6 @@
 use bevy::{
     math::Vec2,
-    prelude::{Assets, Res},
-    sprite::Rect,
+    prelude::{Assets, Res, Rect},
 };
 use kayak_font::KayakFont;
 
@@ -29,14 +28,14 @@ pub fn extract_texts(
         } => (color, text_layout, layout, font, *properties),
         _ => panic!(""),
     };
-    
+
     let font_handle = font_mapping.get_handle(font.clone()).unwrap();
     let font = match fonts.get(&font_handle) {
         Some(font) => font,
         None => { return Vec::new(); },
     };
     
-    let base_position = Vec2::new(layout.posx, layout.posy + properties.font_size);
+    let base_position = Vec2::new(layout.posx, layout.posy + properties.font_size) ;
 
     for glyph_rect in text_layout.glyphs() {
         let mut position = Vec2::from(glyph_rect.position);

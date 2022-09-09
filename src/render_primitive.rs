@@ -2,7 +2,7 @@ use crate::{
     layout::Rect,
     styles::{Corner, Edge, Style, RenderCommand},
 };
-use bevy::prelude::{Handle, Image, Color};
+use bevy::prelude::{Handle, Image, Color, Vec2};
 use kayak_font::{TextLayout, TextProperties};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -32,8 +32,8 @@ pub enum RenderPrimitive {
         handle: Handle<Image>,
     },
     TextureAtlas {
-        size: (f32, f32),
-        position: (f32, f32),
+        size: Vec2,
+        position: Vec2,
         layout: Rect,
         handle: Handle<Image>,
     },
@@ -87,7 +87,7 @@ impl From<&Style> for RenderPrimitive {
                 border: style.border.resolve(),
                 layout: Rect::default(),
             },
-            RenderCommand::Text { content } => Self::Text {
+            RenderCommand::Text { content, alignment } => Self::Text {
                 color: style.color.resolve(),
                 content,
                 font,
@@ -96,6 +96,7 @@ impl From<&Style> for RenderPrimitive {
                 properties: TextProperties {
                     font_size,
                     line_height,
+                    alignment,
                     ..Default::default()
                 },
             },

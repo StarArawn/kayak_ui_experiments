@@ -6,7 +6,7 @@ use crate::{
     event::{Event, EventType},
     event_dispatcher::EventDispatcherContext,
     on_event::OnEvent,
-    prelude::WidgetTree,
+    prelude::WidgetContext,
     styles::{Corner, Edge, PositionType, RenderCommand, Style, StyleProp, Units},
     widget::Widget,
 };
@@ -56,7 +56,7 @@ impl Default for WindowBundle {
 }
 
 pub fn window_update(
-    In((widget_tree, window_entity)): In<(WidgetTree, Entity)>,
+    In((widget_context, window_entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: Query<(&mut Style, &Children, &mut Window), Changed<Window>>,
 ) -> bool {
@@ -101,7 +101,7 @@ pub fn window_update(
                         padding_left: StyleProp::Value(Units::Pixels(5.0)),
                         ..Style::default()
                     },
-                    children: Children::new(move |entity, widget_tree, commands| {
+                    children: Children::new(move |entity, widget_context, commands| {
                         let title_entity = commands
                             .spawn()
                             .insert_bundle(TextBundle {
@@ -118,7 +118,7 @@ pub fn window_update(
                                 ..Default::default()
                             })
                             .id();
-                        widget_tree.add(title_entity, entity);
+                        widget_context.add(title_entity, entity);
                     }),
                     ..BackgroundBundle::default()
                 })
@@ -164,25 +164,25 @@ pub fn window_update(
                         },
                     ));
             }
-            widget_tree.add(window.title_bar_entity.unwrap(), Some(window_entity));
+            widget_context.add(window.title_bar_entity.unwrap(), Some(window_entity));
 
             let children = children.clone();
 
             let mut clip_bundle = ClipBundle {
-                children: Children::new(move |entity, widget_tree, commands| {
-                    children.spawn(entity, &widget_tree, commands);
+                children: Children::new(move |entity, widget_context, commands| {
+                    children.spawn(entity, &widget_context, commands);
                 }),
                 ..ClipBundle::default()
             };
             clip_bundle.styles.padding = StyleProp::Value(Edge::all(Units::Pixels(10.0)));
 
             let clip_entity = commands.spawn().insert_bundle(clip_bundle).id();
-            widget_tree.add(clip_entity, Some(window_entity));
-            let children = widget_tree.get_children(window_entity);
+            widget_context.add(clip_entity, Some(window_entity));
+            let children = widget_context.get_children(window_entity);
             window.children = children;
         } else {
             for child in window.children.iter() {
-                widget_tree.add(*child, Some(window_entity));
+                widget_context.add(*child, Some(window_entity));
             }
         }
 

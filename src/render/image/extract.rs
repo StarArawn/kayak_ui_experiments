@@ -1,4 +1,4 @@
-use bevy::{math::Vec2, render::color::Color, sprite::Rect};
+use bevy::{math::Vec2, render::color::Color, prelude::Rect};
 use crate::{render_primitive::RenderPrimitive, render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, styles::Corner};
 
 pub fn extract_images(

@@ -20,6 +20,8 @@ mod extract;
 pub(crate) mod quad;
 pub(crate) mod font;
 pub(crate) mod image;
+pub(crate) mod nine_patch;
+pub(crate) mod texture_atlas;
 
 pub mod draw_ui_graph {
     pub const NAME: &str = "kayak_draw_ui";

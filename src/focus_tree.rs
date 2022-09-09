@@ -21,7 +21,7 @@ pub(crate) struct FocusTracker {
 
 impl FocusTree {
     /// Add the given focusable index to the tree
-    pub fn add(&mut self, index: WrappedIndex, widget_tree: &Tree) {
+    pub fn add(&mut self, index: WrappedIndex, widget_context: &Tree) {
         // Cases to handle:
         // 1. Tree empty -> insert root node
         // 2. Tree not empty
@@ -29,7 +29,7 @@ impl FocusTree {
         //   b. Not contains parent -> demote and replace root node
 
         let mut current_index = index;
-        while let Some(parent) = widget_tree.get_parent(current_index) {
+        while let Some(parent) = widget_context.get_parent(current_index) {
             current_index = parent;
             if self.contains(parent) {
                 self.tree.add(index, Some(parent));

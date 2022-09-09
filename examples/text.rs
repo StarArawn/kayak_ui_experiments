@@ -13,7 +13,7 @@ pub struct MyWidget {
 }
 
 fn my_widget_1_update(
-    In((_widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     my_resource: Res<MyResource>,
     mut query: Query<(&mut MyWidget, &mut Style)>,
 ) -> bool {
@@ -23,6 +23,7 @@ fn my_widget_1_update(
             dbg!(my_widget.foo);
             style.render_command = StyleProp::Value(RenderCommand::Text {
                 content: format!("My number is: {}", my_widget.foo).to_string(),
+                alignment: Alignment::Start,
             });
             return true;
         }
@@ -50,14 +51,14 @@ fn startup(
     let entity = commands
         .spawn()
         .insert_bundle(KayakAppBundle {
-            children: Children::new(|parent_id, widget_tree, commands| {
+            children: Children::new(|parent_id, widget_context, commands| {
                 let my_widget_entity = commands
                     .spawn()
                     .insert(MyWidget { foo: 0 })
                     .insert(Style::default())
                     .insert(WidgetName(MyWidget::default().get_name()))
                     .id();
-                widget_tree.add(my_widget_entity, parent_id);
+                widget_context.add(my_widget_entity, parent_id);
             }),
             styles: Style {
                 render_command: StyleProp::Value(RenderCommand::Layout),

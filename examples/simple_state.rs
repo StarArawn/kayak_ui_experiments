@@ -12,7 +12,7 @@ struct CurrentCount(pub u32);
 impl Widget for CurrentCount {}
 
 fn current_count_update(
-    In((widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     query: Query<&CurrentCount, Changed<CurrentCount>>,
 ) -> bool {
@@ -29,7 +29,7 @@ fn current_count_update(
                 ..Default::default()
             })
             .id();
-        widget_tree.add(text_entity, Some(entity));
+        widget_context.add(text_entity, Some(entity));
 
         return true;
     }
@@ -52,7 +52,7 @@ fn startup(
     let entity = commands
         .spawn()
         .insert_bundle(KayakAppBundle {
-            children: Children::new(|app_id, widget_tree, commands| {
+            children: Children::new(|app_id, widget_context, commands| {
                 let window_entity = commands.spawn().insert_bundle(WindowBundle {
                     window: Window {
                         title: "State Example Window".into(),
@@ -61,32 +61,32 @@ fn startup(
                         size: Vec2::new(300.0, 250.0),
                         ..Window::default()
                     },
-                    children: Children::new(|window_id, widget_tree, commands| {
+                    children: Children::new(|window_id, widget_context, commands| {
                         let current_count_entity = commands
                             .spawn()
                             .insert(CurrentCount(0))
                             .insert(Style::default())
                             .insert(WidgetName(CurrentCount::default().get_name()))
                             .id();
-                        widget_tree.add(current_count_entity, window_id);
+                        widget_context.add(current_count_entity, window_id);
 
                         let button_entity = commands
                             .spawn()
                             .insert_bundle(ButtonBundle {
-                                children: Children::new(|button_id, widget_tree, commands| {
+                                children: Children::new(|button_id, widget_context, commands| {
                                     let text_entity = commands
                                         .spawn()
                                         .insert_bundle(kayak_ui::prelude::widgets::TextBundle {
                                             text: kayak_ui::prelude::widgets::Text {
                                                 content: "Click me!".into(),
                                                 size: 16.0,
-                                                line_height: Some(40.0),
+                                                alignment: Alignment::Start,
                                                 ..Default::default()
                                             },
                                             ..Default::default()
                                         })
                                         .id();
-                                    widget_tree.add(text_entity, button_id);
+                                    widget_context.add(text_entity, button_id);
                                 }),
                                 on_event: OnEvent::new(
                                     move |In((event_dispatcher_context, event, _entity)): In<(EventDispatcherContext, Event, Entity)>,
@@ -107,11 +107,11 @@ fn startup(
                                 ..Default::default()
                             })
                             .id();
-                        widget_tree.add(button_entity, window_id);
+                        widget_context.add(button_entity, window_id);
                     }),
                     ..WindowBundle::default()
                 }).id();
-                widget_tree.add(window_entity, app_id);
+                widget_context.add(window_entity, app_id);
             }),
             styles: Style {
                 render_command: StyleProp::Value(RenderCommand::Layout),

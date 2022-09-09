@@ -26,6 +26,154 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug example 'clipping'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=clipping",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "clipping",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'clipping'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=clipping",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "clipping",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'context'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=context",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "context",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'context'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=context",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "context",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'image'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=image",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "image",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'image'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=image",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "image",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'nine_patch'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=nine_patch",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "nine_patch",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'nine_patch'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=nine_patch",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "nine_patch",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug example 'quads'",
             "cargo": {
                 "args": [
@@ -113,10 +261,7 @@
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "CARGO_MANIFEST_DIR": "${workspaceFolder}"
-            }
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
@@ -168,6 +313,43 @@
                 ],
                 "filter": {
                     "name": "text",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'texture_atlas'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=texture_atlas",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "texture_atlas",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'texture_atlas'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=texture_atlas",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "texture_atlas",
                     "kind": "example"
                 }
             },

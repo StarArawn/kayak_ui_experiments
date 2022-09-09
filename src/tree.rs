@@ -1,8 +1,4 @@
 use std::iter::Rev;
-use std::{
-    sync::{Arc, RwLock},
-};
-
 use bevy::prelude::Entity;
 use bevy::utils::HashMap;
 use morphorm::Hierarchy;
@@ -196,6 +192,14 @@ impl Tree {
         DownwardIterator::new(&self, Some(root_node), true).collect::<Vec<_>>()
     }
 
+    pub fn flatten_node_up(&self, root_node: WrappedIndex) -> Vec<WrappedIndex> {
+        if self.root_node.is_none() {
+            return Vec::new();
+        }
+
+        UpwardIterator::new(&self, Some(root_node), true).collect::<Vec<_>>()
+    }
+
     pub fn get_parent(&self, index: WrappedIndex) -> Option<WrappedIndex> {
         self.parents
             .get(&index)
@@ -254,7 +258,7 @@ impl Tree {
         }
     }
 
-    pub fn diff_children(&self, other_tree: &Tree, root_node: WrappedIndex) -> ChildChanges {
+    pub fn diff_children(&self, other_tree: &Tree, root_node: WrappedIndex, depth: u32) -> ChildChanges {
         let children_a = self.children.get(&root_node);
         let children_b = other_tree.children.get(&root_node);
 
@@ -377,13 +381,15 @@ impl Tree {
             .collect::<Vec<_>>();
         child_changes.changes = flat_tree_diff_nodes;
 
-        // for (child_id, child_node) in children_a.iter() {
-        //     // Add children of child changes.
-        //     let children_of_child_changes = self.diff_children(other_tree, *child_node);
-        //     child_changes
-        //         .child_changes
-        //         .push((*child_id, children_of_child_changes));
-        // }
+        if depth > 0 {
+            for (child_id, child_node) in children_a.iter() {
+                // Add children of child changes.
+                let children_of_child_changes = self.diff_children(other_tree, *child_node, depth - 1);
+                child_changes
+                    .child_changes
+                    .push((*child_id, children_of_child_changes));
+            }
+        }
 
         child_changes
     }
@@ -501,7 +507,7 @@ impl Tree {
         flat_tree_diff_nodes
     }
 
-    pub fn merge(&mut self, other: &Tree, root_node: WrappedIndex, changes: ChildChanges) {
+    pub fn merge(&mut self, other: &Tree, root_node: WrappedIndex, changes: ChildChanges, depth: u32) {
         let has_changes = changes.has_changes();
         let children_a = self.children.get_mut(&root_node);
         let children_b = other.children.get(&root_node);
@@ -551,13 +557,16 @@ impl Tree {
             }
         }
 
-        // for (child_id, children_of_child_changes) in changes.child_changes {
-        //     self.merge(
-        //         other,
-        //         changes.changes[child_id].1,
-        //         children_of_child_changes,
-        //     );
-        // }
+        if depth > 0 {
+            for (child_id, children_of_child_changes) in changes.child_changes {
+                self.merge(
+                    other,
+                    changes.changes[child_id].1,
+                    children_of_child_changes,
+                    depth - 1
+                );
+            }
+        }
     }
 
     /// Copies a specific node and it's children from other_tree to self. 
@@ -767,72 +776,6 @@ impl<'a> Hierarchy<'a> for Tree {
         }
 
         false
-    }
-}
-
-#[derive(Clone)]
-pub struct WidgetTree {
-    tree: Arc<RwLock<Tree>>,
-}
-
-impl WidgetTree {
-    pub fn new() -> Self {
-        Self {
-            tree: Arc::new(RwLock::new(Tree::default())),
-        }
-    }
-
-    pub(crate) fn store(&self, new_tree: &Tree) {
-        if let Ok(mut tree) = self.tree.write() {
-            *tree = new_tree.clone();
-        }
-    }
-
-    pub(crate) fn copy_from_point(&self, other_tree: &Tree, entity: WrappedIndex) {
-        if let Ok(mut tree) = self.tree.write() {
-            tree.copy_from_point(other_tree, entity);
-        }
-    }
-
-    pub fn clear_children(&self, entity: Entity) {
-        if let Ok(mut tree) = self.tree.write() {
-            tree.children.insert(WrappedIndex(entity), vec![]);
-        }
-    }
-
-    pub fn get_children(&self, entity: Entity) -> Vec<Entity> {
-        let mut children = vec![];
-        if let Ok(tree) = self.tree.read() {
-            if let Some(existing_children) = tree.children.get(&WrappedIndex(entity)) {
-                children = existing_children.iter().map(|index| index.0).collect::<Vec<_>>();
-            }
-        }
-
-        children
-    }
-
-    pub fn remove_children(&self, children_to_remove: Vec<Entity>) {
-        if let Ok(mut tree) = self.tree.write() {
-            for child in children_to_remove.iter() {
-                tree.remove(WrappedIndex(*child));
-            }
-        }
-    }
-
-    pub fn add(&self, entity: Entity, parent: Option<Entity>) {
-        if let Ok(mut tree) = self.tree.write() {
-            tree.add(WrappedIndex(entity), parent.map(|parent| WrappedIndex(parent)));
-        }
-    }
-
-    pub fn dbg_tree(&self) {
-        if let Ok(tree) = self.tree.read() {
-            dbg!(&tree);
-        }
-    }
-
-    pub fn take(self) -> Tree {
-        Arc::try_unwrap(self.tree).unwrap().into_inner().unwrap()
     }
 }
 

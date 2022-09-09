@@ -1,6 +1,6 @@
 use bevy::{prelude::{Bundle, Changed, Component, Entity, In, Query, With, Commands}};
 
-use crate::{prelude::WidgetTree, styles::{Style, RenderCommand, StyleProp, Units}, widget::Widget, children::Children, context::WidgetName};
+use crate::{prelude::WidgetContext, styles::{Style, RenderCommand, StyleProp, Units}, widget::Widget, children::Children, context::WidgetName};
 
 #[derive(Component, Default)]
 pub struct Clip;
@@ -32,12 +32,12 @@ impl Default for ClipBundle {
 }
 
 pub fn update_clip(
-    In((mut widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: Query<(&Style, &Children), (Changed<Style>, With<Clip>)>,
 ) -> bool {
     if let Ok((_, children)) = query.get_mut(entity) {
-        children.spawn(Some(entity), &mut widget_tree, &mut commands);
+        children.spawn(Some(entity), &mut widget_context, &mut commands);
         return true;
     }
     false

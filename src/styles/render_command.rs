@@ -1,4 +1,5 @@
-use bevy::prelude::{Handle, Image};
+use bevy::prelude::{Handle, Image, Vec2};
+use kayak_font::Alignment;
 
 use super::Edge;
 
@@ -11,13 +12,14 @@ pub enum RenderCommand {
     Quad,
     Text {
         content: String,
+        alignment: Alignment,
     },
     Image {
         handle: Handle<Image>,
     },
     TextureAtlas {
-        position: (f32, f32),
-        size: (f32, f32),
+        position: Vec2,
+        size: Vec2,
         handle: Handle<Image>,
     },
     NinePatch {

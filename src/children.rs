@@ -3,11 +3,11 @@ use std::sync::Arc;
 
 use bevy::prelude::{Commands, Entity, Component};
 
-use crate::prelude::WidgetTree;
+use crate::prelude::WidgetContext;
 
 /// A container for a function that generates child widgets
 #[derive(Component, Clone)]
-pub struct Children(Arc<dyn Fn(Option<Entity>, &WidgetTree, &mut Commands) + Send + Sync>);
+pub struct Children(Arc<dyn Fn(Option<Entity>, &WidgetContext, &mut Commands) + Send + Sync>);
 
 impl Default for Children {
     fn default() -> Self {
@@ -16,13 +16,13 @@ impl Default for Children {
 }
 
 impl Children {
-    pub fn new<F: Fn(Option<Entity>, &WidgetTree, &mut Commands) + Send + Sync + 'static>(
+    pub fn new<F: Fn(Option<Entity>, &WidgetContext, &mut Commands) + Send + Sync + 'static>(
         builder: F,
     ) -> Self {
         Self(Arc::new(builder))
     }
-    pub fn spawn(&self, id: Option<Entity>, widget_tree: &WidgetTree, commands: &mut Commands) {
-        self.0(id, widget_tree, commands);
+    pub fn spawn(&self, id: Option<Entity>, widget_context: &WidgetContext, commands: &mut Commands) {
+        self.0(id, widget_context, commands);
     }
 }
 

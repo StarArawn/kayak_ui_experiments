@@ -15,7 +15,7 @@ pub struct MyQuad {
 }
 
 fn my_quad_update(
-    In((_widget_tree, entity)): In<(WidgetTree, Entity)>,
+    In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     mut query: Query<(&MyQuad, &mut Style), Changed<MyQuad>>,
 ) -> bool {
     if let Ok((quad, mut style)) = query.get_mut(entity) {
@@ -49,7 +49,7 @@ fn startup(
     let entity = commands
         .spawn()
         .insert_bundle(KayakAppBundle {
-            children: Children::new(|parent_id, widget_tree, commands| {
+            children: Children::new(|parent_id, widget_context, commands| {
                 for _ in 0..1000 {
                     let pos = Vec2::new(fastrand::i32(0..1280) as f32, fastrand::i32(0..720) as f32);
                     let my_widget_entity = commands
@@ -71,7 +71,7 @@ fn startup(
                         .insert(WidgetName(MyQuad::default().get_name()))
                         .insert(DirtyNode)
                         .id();
-                    widget_tree.add(my_widget_entity, parent_id);
+                    widget_context.add(my_widget_entity, parent_id);
                 }
             }),
             styles: Style {

@@ -22,7 +22,7 @@ fn startup(
     let entity = commands
         .spawn()
         .insert_bundle(KayakAppBundle {
-            children: Children::new(move |parent_id, widget_tree, commands| {
+            children: Children::new(move |parent_id, widget_context, commands| {
                 let image_entity = commands.spawn().insert_bundle(ImageBundle {
                     image: Image(image.clone()),
                     style: Style {
@@ -36,7 +36,7 @@ fn startup(
                     },
                     ..Default::default()
                 }).id();
-                widget_tree.add(image_entity, parent_id);
+                widget_context.add(image_entity, parent_id);
             }),
             styles: Style {
                 render_command: StyleProp::Value(RenderCommand::Layout),

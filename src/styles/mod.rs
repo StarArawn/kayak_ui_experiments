@@ -6,6 +6,6 @@ mod render_command;
 
 pub use corner::Corner;
 pub use edge::Edge;
-pub use style::{Style, StyleProp, Units, PositionType};
+pub use style::*;
 pub use options_ref::AsRefOption;
 pub use render_command::RenderCommand;

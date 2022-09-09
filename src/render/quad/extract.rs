@@ -2,7 +2,7 @@ use crate::{
     render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
     render_primitive::RenderPrimitive, styles::Corner,
 };
-use bevy::{math::Vec2, sprite::Rect};
+use bevy::{math::Vec2, prelude::Rect};
 
 pub fn extract_quads(render_primitive: &RenderPrimitive, dpi: f32) -> Vec<ExtractQuadBundle> {
     let (background_color, border_color, layout, border_radius, mut border) = match render_primitive

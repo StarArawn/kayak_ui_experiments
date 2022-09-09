@@ -1,16 +1,15 @@
 use crate::{context::Context, node::Node, render_primitive::RenderPrimitive, styles::Corner};
 use bevy::{
     // math::Vec2,
-    prelude::{Assets, Color, Commands, Plugin, Query, Res, Vec2},
+    prelude::{Assets, Color, Commands, Plugin, Query, Res, Vec2, Image, Rect},
     render::{Extract, RenderApp, RenderStage},
-    sprite::Rect,
     window::Windows,
 };
 use kayak_font::KayakFont;
 
 use super::{
     font::{self, FontMapping},
-    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, image,
+    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, image, nine_patch, texture_atlas,
 };
 
 // mod nine_patch;
@@ -30,9 +29,8 @@ pub fn extract(
     context: Extract<Res<Context>>,
     fonts: Extract<Res<Assets<KayakFont>>>,
     font_mapping: Extract<Res<FontMapping>>,
-    // image_manager: Extract<Res<ImageManager>>,
     node_query: Extract<Query<&Node>>,
-    // images: Extract<Res<Assets<Image>>>,
+    images: Extract<Res<Assets<Image>>>,
     windows: Extract<Res<Windows>>,
 ) {
     let render_primitives = context.build_render_primitives(&node_query);
@@ -42,6 +40,8 @@ pub fn extract(
     } else {
         1.0
     };
+
+    // dbg!(&render_primitives);
 
     let mut extracted_quads = Vec::new();
     for render_primitive in render_primitives {
@@ -58,20 +58,19 @@ pub fn extract(
                 let quad_quads = super::quad::extract_quads(&render_primitive, 1.0);
                 extracted_quads.extend(quad_quads);
             }
-            //         RenderPrimitive::NinePatch { .. } => {
-            //             let nine_patch_quads =
-            //                 nine_patch::extract_nine_patch(&render_primitive, &image_manager, &images, dpi);
-            //             extracted_quads.extend(nine_patch_quads);
-            //         }
-            //         RenderPrimitive::TextureAtlas { .. } => {
-            //             let texture_atlas_quads = texture_atlas::extract_texture_atlas(
-            //                 &render_primitive,
-            //                 &image_manager,
-            //                 &images,
-            //                 dpi,
-            //             );
-            //             extracted_quads.extend(texture_atlas_quads);
-            //         }
+            RenderPrimitive::NinePatch { .. } => {
+                let nine_patch_quads =
+                    nine_patch::extract_nine_patch(&render_primitive, &images, dpi);
+                extracted_quads.extend(nine_patch_quads);
+            }
+            RenderPrimitive::TextureAtlas { .. } => {
+                let texture_atlas_quads = texture_atlas::extract_texture_atlas(
+                    &render_primitive,
+                    &images,
+                    dpi,
+                );
+                extracted_quads.extend(texture_atlas_quads);
+            }
             RenderPrimitive::Clip { layout } => {
                 extracted_quads.push(ExtractQuadBundle {
                     extracted_quad: ExtractedQuad {

@@ -1,19 +1,14 @@
-use crate::ImageManager;
 use bevy::{
     math::Vec2,
-    prelude::{Assets, Res},
+    prelude::{Assets, Res, Rect},
     render::{color::Color, texture::Image},
-    sprite::Rect,
 };
-use bevy_kayak_renderer::{
-    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
-    Corner,
+use crate::{
+    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, render_primitive::RenderPrimitive, styles::Corner,
 };
-use kayak_core::render_primitive::RenderPrimitive;
 
 pub fn extract_nine_patch(
     render_primitive: &RenderPrimitive,
-    image_manager: &Res<ImageManager>,
     images: &Res<Assets<Image>>,
     dpi: f32,
 ) -> Vec<ExtractQuadBundle> {
@@ -28,11 +23,7 @@ pub fn extract_nine_patch(
         _ => panic!(""),
     };
 
-    let image_handle = image_manager
-        .get_handle(handle)
-        .and_then(|a| Some(a.clone_weak()));
-
-    let image = images.get(image_handle.as_ref().unwrap());
+    let image = images.get(handle);
 
     if image.is_none() {
         return vec![];
@@ -61,7 +52,7 @@ pub fn extract_nine_patch(
         quad_type: UIQuadType::Image,
         type_index: 0,
         border_radius: Corner::default(),
-        image: image_handle,
+        image: Some(handle.clone_weak()),
         uv_max: None,
         uv_min: None,
     };
