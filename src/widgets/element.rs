@@ -34,7 +34,7 @@ impl Default for ElementBundle {
 
 pub fn update_element(
     In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut commands: Commands,
+    _: Commands,
     mut query: Query<(&mut Style, &Children), (Changed<Style>, With<Element>)>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {

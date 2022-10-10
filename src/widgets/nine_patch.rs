@@ -39,7 +39,7 @@ impl Default for NinePatchBundle {
 
 pub fn update_nine_patch(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut commands: Commands,
+    _: Commands,
     mut query: Query<(&mut Style, &NinePatch, &Children), (Changed<NinePatch>, Changed<Style>)>,
 ) -> bool {
     if let Ok((mut style, nine_patch, children)) = query.get_mut(entity) {

@@ -38,21 +38,21 @@ impl Parse for Child {
     }
 }
 
-pub fn walk_block_to_variable(block: &syn::Block) -> Option<proc_macro2::TokenStream> {
-    if let Some(statement) = block.stmts.first() {
-        return walk_statement(statement);
-    }
+// pub fn walk_block_to_variable(block: &syn::Block) -> Option<proc_macro2::TokenStream> {
+//     if let Some(statement) = block.stmts.first() {
+//         return walk_statement(statement);
+//     }
 
-    return None;
-}
+//     return None;
+// }
 
-pub fn walk_statement(statement: &syn::Stmt) -> Option<proc_macro2::TokenStream> {
-    match statement {
-        syn::Stmt::Expr(expr) => match expr {
-            syn::Expr::Call(call) => Some(call.args.to_token_stream()),
-            syn::Expr::Path(path) => Some(path.to_token_stream()),
-            _ => None,
-        },
-        _ => None,
-    }
-}
+// pub fn walk_statement(statement: &syn::Stmt) -> Option<proc_macro2::TokenStream> {
+//     match statement {
+//         syn::Stmt::Expr(expr) => match expr {
+//             syn::Expr::Call(call) => Some(call.args.to_token_stream()),
+//             syn::Expr::Path(path) => Some(path.to_token_stream()),
+//             _ => None,
+//         },
+//         _ => None,
+//     }
+// }

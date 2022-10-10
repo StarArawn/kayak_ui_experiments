@@ -1,6 +1,5 @@
 use crate::{
-    attribute::Attribute,
-    child::{walk_block_to_variable, Child},
+    child::{Child},
     widget_builder::build_widget_stream,
 };
 use quote::{quote, ToTokens};
@@ -23,38 +22,38 @@ impl Children {
         })
     }
 
-    pub fn get_clonable_attributes(&self, index: usize) -> Vec<proc_macro2::TokenStream> {
-        let mut tokens = Vec::new();
+    // pub fn get_clonable_attributes(&self, index: usize) -> Vec<proc_macro2::TokenStream> {
+    //     let mut tokens = Vec::new();
 
-        let regular_tokens: Vec<_> = match &self.nodes[index] {
-            Child::Widget(widget) => widget
-                .attributes
-                .attributes
-                .iter()
-                .filter_map(|attr| match attr {
-                    Attribute::WithValue(_, block) => walk_block_to_variable(block),
-                    _ => None,
-                })
-                .collect(),
-            _ => vec![],
-        };
-        tokens.extend(regular_tokens);
+    //     let regular_tokens: Vec<_> = match &self.nodes[index] {
+    //         Child::Widget(widget) => widget
+    //             .attributes
+    //             .attributes
+    //             .iter()
+    //             .filter_map(|attr| match attr {
+    //                 Attribute::WithValue(_, block) => walk_block_to_variable(block),
+    //                 _ => None,
+    //             })
+    //             .collect(),
+    //         _ => vec![],
+    //     };
+    //     tokens.extend(regular_tokens);
 
-        let children_tokens: Vec<proc_macro2::TokenStream> = match &self.nodes[index] {
-            Child::Widget(widget) => (0..widget.children.nodes.len())
-                .into_iter()
-                .map(|child_id| widget.children.get_clonable_attributes(child_id))
-                .flatten()
-                .collect(),
-            _ => vec![],
-        };
+    //     let children_tokens: Vec<proc_macro2::TokenStream> = match &self.nodes[index] {
+    //         Child::Widget(widget) => (0..widget.children.nodes.len())
+    //             .into_iter()
+    //             .map(|child_id| widget.children.get_clonable_attributes(child_id))
+    //             .flatten()
+    //             .collect(),
+    //         _ => vec![],
+    //     };
 
-        tokens.extend(children_tokens);
+    //     tokens.extend(children_tokens);
 
-        tokens.dedup_by(|a, b| a.to_string().eq(&b.to_string()));
+    //     tokens.dedup_by(|a, b| a.to_string().eq(&b.to_string()));
 
-        tokens
-    }
+    //     tokens
+    // }
 
     pub fn as_option_of_tuples_tokens(&self, only_children: bool) -> proc_macro2::TokenStream {
         let children_quotes: Vec<_> = self

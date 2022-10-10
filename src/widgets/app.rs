@@ -38,8 +38,8 @@ impl Default for KayakAppBundle {
 
 /// TODO: USE CAMERA INSTEAD OF WINDOW!!
 pub fn app_update(
-    In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut commands: Commands,
+    In((widget_context, entity)): In<(WidgetContext, Entity)>,
+    _: Commands,
     windows: Res<Windows>,
     mut query: Query<(&mut Style, &Children), With<KayakApp>>,
 ) -> bool {

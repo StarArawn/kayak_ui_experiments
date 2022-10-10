@@ -35,8 +35,8 @@ impl Default for ButtonBundle {
 impl Widget for Button {}
 
 pub fn button_update(
-    In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut commands: Commands,
+    In((widget_context, entity)): In<(WidgetContext, Entity)>,
+    _: Commands,
     mut query: Query<(&mut Style, &Children), Changed<Button>>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {

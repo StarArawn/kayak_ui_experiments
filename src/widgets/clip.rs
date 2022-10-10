@@ -38,8 +38,8 @@ impl Default for ClipBundle {
 }
 
 pub fn update_clip(
-    In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut commands: Commands,
+    In((widget_context, entity)): In<(WidgetContext, Entity)>,
+    _: Commands,
     mut query: Query<(&Style, &Children), (Changed<Style>, With<Clip>)>,
 ) -> bool {
     if let Ok((_, children)) = query.get_mut(entity) {

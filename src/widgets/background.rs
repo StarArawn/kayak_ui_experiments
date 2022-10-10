@@ -36,8 +36,8 @@ impl Default for BackgroundBundle {
 }
 
 pub fn update_background(
-    In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut commands: Commands,
+    In((widget_context, entity)): In<(WidgetContext, Entity)>,
+    _: Commands,
     mut query: Query<(&mut Style, &Children), (Changed<Style>, With<Background>)>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {

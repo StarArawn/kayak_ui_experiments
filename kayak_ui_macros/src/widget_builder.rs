@@ -22,7 +22,7 @@ use quote::quote;
 pub fn build_widget_stream(
     widget_name: TokenStream,
     widget_constructor: TokenStream,
-    index: usize,
+    _index: usize,
     with_children: bool,
 ) -> TokenStream {
     if with_children {

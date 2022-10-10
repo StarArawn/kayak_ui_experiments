@@ -80,7 +80,7 @@ impl<'a, 'c> CustomWidgetAttributes<'a, 'c> {
     /// * `ident`: The ident to assign to (i.e. "props")
     ///
     /// returns: TokenStream
-    pub fn assign_attributes(&self, ident: &Ident) -> TokenStream {
+    pub fn assign_attributes(&self, _ident: &Ident) -> TokenStream {
         let attrs = self
             .attributes
             .iter()
