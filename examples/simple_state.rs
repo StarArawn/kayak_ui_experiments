@@ -5,7 +5,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, *};
 
 #[derive(Component, Default)]
 struct CurrentCount(pub u32);

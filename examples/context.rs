@@ -12,7 +12,7 @@ use bevy::{
         App as BevyApp, AssetServer, Bundle, Changed, Color, Commands, Component, Entity,
         ImageSettings, In, ParamSet, Query, Res, ResMut, Vec2,
     },
-    DefaultPlugins, ui::widget,
+    DefaultPlugins
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
 

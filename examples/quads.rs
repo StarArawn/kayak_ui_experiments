@@ -69,7 +69,7 @@ fn startup(
     rsx! {
         <KayakAppBundle>
             {
-                0..1000.for_each(|_| {
+                (0..1000).for_each(|_| {
                     let pos = Vec2::new(fastrand::i32(0..1280) as f32, fastrand::i32(0..720) as f32);
                     let size = Vec2::new(
                         fastrand::i32(32..64) as f32,
