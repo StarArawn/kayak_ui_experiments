@@ -1,10 +1,12 @@
+use crate::{
+    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
+    render_primitive::RenderPrimitive,
+    styles::Corner,
+};
 use bevy::{
     math::Vec2,
-    prelude::{Assets, Res, Rect},
+    prelude::{Assets, Rect, Res},
     render::{color::Color, texture::Image},
-};
-use crate::{
-    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, render_primitive::RenderPrimitive, styles::Corner,
 };
 
 pub fn extract_nine_patch(

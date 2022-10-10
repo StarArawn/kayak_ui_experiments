@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{KeyCode, Resource, World, Entity},
+    prelude::{Entity, KeyCode, Resource, World},
     utils::{HashMap, HashSet},
 };
 
@@ -180,20 +180,13 @@ impl EventDispatcher {
         context: &mut Context,
         world: &mut World,
     ) {
-        let events = {
-            self.build_event_stream(&input_events, context, world)
-        };
+        let events = { self.build_event_stream(&input_events, context, world) };
         self.dispatch_events(events, context, world);
     }
 
     /// Dispatch an [Event](crate::Event)
     #[allow(dead_code)]
-    pub fn dispatch_event(
-        &mut self,
-        event: Event,
-        context: &mut Context,
-        world: &mut World,
-    ) {
+    pub fn dispatch_event(&mut self, event: Event, context: &mut Context, world: &mut World) {
         self.dispatch_events(vec![event], context, world);
     }
 
@@ -227,7 +220,8 @@ impl EventDispatcher {
                             cursor_capture: self.cursor_capture,
                         };
 
-                        (event_dispatcher_context, node_event) = on_event.try_call(event_dispatcher_context, index.0, node_event, world);
+                        (event_dispatcher_context, node_event) =
+                            on_event.try_call(event_dispatcher_context, index.0, node_event, world);
                         world.entity_mut(index.0).insert(on_event);
                         event_dispatcher_context.merge(self);
                     }
@@ -720,12 +714,7 @@ impl EventDispatcher {
     }
 
     /// Executes default actions for events
-    fn execute_default(
-        &mut self,
-        event: Event,
-        context: &mut Context,
-        world: &mut World,
-    ) {
+    fn execute_default(&mut self, event: Event, context: &mut Context, world: &mut World) {
         match event.event_type {
             EventType::KeyDown(evt) => match evt.key() {
                 KeyCode::Tab => {
@@ -792,45 +781,44 @@ pub struct EventDispatcherContext {
 }
 
 impl EventDispatcherContext {
-        /// Captures all cursor events and instead makes the given index the target
-        pub fn capture_cursor(&mut self, index: Entity) -> Option<WrappedIndex> {
-            let old = self.cursor_capture;
-            self.cursor_capture = Some(WrappedIndex(index));
-            old
-        }
-    
-        /// Releases the captured cursor
-        ///
-        /// Returns true if successful.
-        ///
-        /// This will only release the cursor if the given index matches the current captor. This
-        /// prevents other widgets from accidentally releasing against the will of the original captor.
-        ///
-        /// This check can be side-stepped if necessary by calling [`force_release_cursor`](Self::force_release_cursor)
-        /// instead (or by calling this method with the correct index).
-        pub fn release_cursor(&mut self, index: Entity) -> bool {
-            if self.cursor_capture == Some(WrappedIndex(index)) {
-                self.force_release_cursor();
-                true
-            } else {
-                false
-            }
-        }
-    
-        /// Releases the captured cursor
-        ///
-        /// Returns the index of the previous captor.
-        ///
-        /// This will force the release, regardless of which widget has called it. To safely release,
-        /// use the standard [`release_cursor`](Self::release_cursor) method instead.
-        pub fn force_release_cursor(&mut self) -> Option<WrappedIndex> {
-            let old = self.cursor_capture;
-            self.cursor_capture = None;
-            old
-        }
+    /// Captures all cursor events and instead makes the given index the target
+    pub fn capture_cursor(&mut self, index: Entity) -> Option<WrappedIndex> {
+        let old = self.cursor_capture;
+        self.cursor_capture = Some(WrappedIndex(index));
+        old
+    }
 
-        pub(crate) fn merge(self, event_dispatcher: &mut EventDispatcher) {
-            event_dispatcher.cursor_capture = self.cursor_capture;
+    /// Releases the captured cursor
+    ///
+    /// Returns true if successful.
+    ///
+    /// This will only release the cursor if the given index matches the current captor. This
+    /// prevents other widgets from accidentally releasing against the will of the original captor.
+    ///
+    /// This check can be side-stepped if necessary by calling [`force_release_cursor`](Self::force_release_cursor)
+    /// instead (or by calling this method with the correct index).
+    pub fn release_cursor(&mut self, index: Entity) -> bool {
+        if self.cursor_capture == Some(WrappedIndex(index)) {
+            self.force_release_cursor();
+            true
+        } else {
+            false
         }
-    
+    }
+
+    /// Releases the captured cursor
+    ///
+    /// Returns the index of the previous captor.
+    ///
+    /// This will force the release, regardless of which widget has called it. To safely release,
+    /// use the standard [`release_cursor`](Self::release_cursor) method instead.
+    pub fn force_release_cursor(&mut self) -> Option<WrappedIndex> {
+        let old = self.cursor_capture;
+        self.cursor_capture = None;
+        old
+    }
+
+    pub(crate) fn merge(self, event_dispatcher: &mut EventDispatcher) {
+        event_dispatcher.cursor_capture = self.cursor_capture;
+    }
 }

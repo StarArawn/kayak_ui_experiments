@@ -47,7 +47,7 @@ pub fn button_update(
             })
             .with_style(style.clone())
             .with_style(Style {
-            render_command: StyleProp::Value(RenderCommand::Quad),
+                render_command: StyleProp::Value(RenderCommand::Quad),
                 background_color: StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0)),
                 border_radius: StyleProp::Value(Corner::all(5.0)),
                 height: StyleProp::Value(Units::Pixels(45.0)),
@@ -59,7 +59,7 @@ pub fn button_update(
             });
         // style.cursor = CursorIcon::Hand.into();/
 
-        children.spawn(Some(entity), &mut widget_context, &mut commands);
+        children.process(&widget_context, Some(entity));
 
         return true;
     }

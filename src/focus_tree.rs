@@ -1,6 +1,6 @@
 use bevy::utils::HashMap;
 
-use crate::{prelude::Tree, node::WrappedIndex};
+use crate::{node::WrappedIndex, prelude::Tree};
 
 #[derive(Debug, Default, PartialEq)]
 pub struct FocusTree {
@@ -216,8 +216,8 @@ impl FocusTracker {
 #[cfg(test)]
 mod tests {
     use crate::focus_tree::FocusTree;
-    use crate::tree::Tree;
     use crate::node::WrappedIndex;
+    use crate::tree::Tree;
     use bevy::prelude::Entity;
 
     #[test]

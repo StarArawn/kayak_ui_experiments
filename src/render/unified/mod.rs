@@ -28,7 +28,7 @@ pub struct UnifiedRenderPlugin;
 impl Plugin for UnifiedRenderPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(text::TextRendererPlugin);
-        
+
         let mut shaders = app.world.get_resource_mut::<Assets<Shader>>().unwrap();
         let unified_shader = Shader::from_wgsl(include_str!("shader.wgsl"));
         shaders.set_untracked(UNIFIED_SHADER_HANDLE, unified_shader);

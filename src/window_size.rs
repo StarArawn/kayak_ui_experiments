@@ -1,4 +1,7 @@
-use bevy::{prelude::*, window::{WindowResized, WindowCreated}};
+use bevy::{
+    prelude::*,
+    window::{WindowCreated, WindowResized},
+};
 
 /// Tracks the bevy window size.
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq)]

@@ -1,8 +1,5 @@
 use bevy::{
-    prelude::{
-        App as BevyApp, AssetServer, Commands, Res,
-        ResMut, ImageSettings,
-    },
+    prelude::{App as BevyApp, AssetServer, Commands, ImageSettings, Res, ResMut},
     DefaultPlugins,
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
@@ -18,35 +15,25 @@ fn startup(
 
     let image = asset_server.load("generic-rpg-vendor.png");
 
-    let mut context = Context::new();
-    let entity = commands
-        .spawn()
-        .insert_bundle(KayakAppBundle {
-            children: Children::new(move |parent_id, widget_context, commands| {
-                let image_entity = commands.spawn().insert_bundle(ImageBundle {
-                    image: Image(image.clone()),
-                    style: Style {
-                        position_type: StyleProp::Value(PositionType::SelfDirected),
-                        left: StyleProp::Value(Units::Pixels(10.0)),
-                        top: StyleProp::Value(Units::Pixels(10.0)),
-                        border_radius: StyleProp::Value(Corner::all(500.0)),
-                        width: StyleProp::Value(Units::Pixels(200.0)),
-                        height: StyleProp::Value(Units::Pixels(182.0)),
-                        ..Default::default()
-                    },
+    let mut widget_context = Context::new();
+    let parent_id = None;
+    rsx! {
+        <KayakAppBundle>
+            <ImageBundle
+                image={Image(image.clone())}
+                style={Style {
+                    position_type: StyleProp::Value(PositionType::SelfDirected),
+                    left: StyleProp::Value(Units::Pixels(10.0)),
+                    top: StyleProp::Value(Units::Pixels(10.0)),
+                    border_radius: StyleProp::Value(Corner::all(500.0)),
+                    width: StyleProp::Value(Units::Pixels(200.0)),
+                    height: StyleProp::Value(Units::Pixels(182.0)),
                     ..Default::default()
-                }).id();
-                widget_context.add(image_entity, parent_id);
-            }),
-            styles: Style {
-                render_command: StyleProp::Value(RenderCommand::Layout),
-                ..Style::new_default()
-            },
-            ..Default::default()
-        })
-        .id();
-    context.add_widget(None, entity);
-    commands.insert_resource(context);
+                }}
+            />
+        </KayakAppBundle>
+    }
+    commands.insert_resource(widget_context);
 }
 
 fn main() {

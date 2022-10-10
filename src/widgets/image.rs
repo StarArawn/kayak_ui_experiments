@@ -1,6 +1,11 @@
-use bevy::prelude::{Handle, In, Entity, Query, Changed, Bundle, Component};
+use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, In, Query};
 
-use crate::{widget::Widget, prelude::WidgetContext, styles::{Style, RenderCommand, StyleProp}, context::WidgetName};
+use crate::{
+    context::WidgetName,
+    prelude::WidgetContext,
+    styles::{RenderCommand, Style, StyleProp},
+    widget::Widget,
+};
 
 #[derive(Component, Default)]
 pub struct Image(pub Handle<bevy::prelude::Image>);
@@ -16,7 +21,11 @@ pub struct ImageBundle {
 
 impl Default for ImageBundle {
     fn default() -> Self {
-        Self { image: Default::default(), style: Default::default(), widget_name: WidgetName(Image::default().get_name()) }
+        Self {
+            image: Default::default(),
+            style: Default::default(),
+            widget_name: WidgetName(Image::default().get_name()),
+        }
     }
 }
 
@@ -25,7 +34,9 @@ pub fn update_image(
     mut query: Query<(&mut Style, &Image), (Changed<Image>, Changed<Style>)>,
 ) -> bool {
     if let Ok((mut style, image)) = query.get_mut(entity) {
-        style.render_command = StyleProp::Value(RenderCommand::Image { handle: image.0.clone_weak() });
+        style.render_command = StyleProp::Value(RenderCommand::Image {
+            handle: image.0.clone_weak(),
+        });
         return true;
     }
     false

@@ -1,4 +1,4 @@
-use bevy::prelude::{Resource, Rect};
+use bevy::prelude::{Rect, Resource};
 use bevy::render::render_resource::{DynamicUniformBuffer, ShaderType};
 use bevy::utils::FloatOrd;
 use bevy::{
@@ -36,10 +36,10 @@ use kayak_font::{
     KayakFont,
 };
 
-use crate::prelude::Corner;
 use super::{Dpi, UNIFIED_SHADER_HANDLE};
+use crate::prelude::Corner;
 use crate::render::ui_pass::TransparentUI;
-use crate::{WindowSize};
+use crate::WindowSize;
 
 #[derive(Resource)]
 pub struct UnifiedPipeline {

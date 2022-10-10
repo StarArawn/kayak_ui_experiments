@@ -1,21 +1,21 @@
 use bevy::{
     prelude::{
-        App as BevyApp, AssetServer, Commands, Component, Entity, In, Input, KeyCode, Query, Res,
-        ResMut, Resource,
+        App as BevyApp, AssetServer, Bundle, Commands, Component, Entity, In, Input, KeyCode,
+        Query, Res, ResMut, Resource,
     },
     DefaultPlugins,
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
 
 #[derive(Component, Default)]
-pub struct MyWidget {
+pub struct MyWidgetProps {
     pub foo: u32,
 }
 
 fn my_widget_1_update(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     my_resource: Res<MyResource>,
-    mut query: Query<(&mut MyWidget, &mut Style)>,
+    mut query: Query<(&mut MyWidgetProps, &mut Style)>,
 ) -> bool {
     if my_resource.is_changed() || my_resource.is_added() {
         if let Ok((mut my_widget, mut style)) = query.get_mut(entity) {
@@ -32,7 +32,24 @@ fn my_widget_1_update(
     false
 }
 
-impl Widget for MyWidget {}
+impl Widget for MyWidgetProps {}
+
+#[derive(Bundle)]
+pub struct MyWidgetBundle {
+    props: MyWidgetProps,
+    styles: Style,
+    widget_name: WidgetName,
+}
+
+impl Default for MyWidgetBundle {
+    fn default() -> Self {
+        Self {
+            props: Default::default(),
+            styles: Default::default(),
+            widget_name: WidgetName(MyWidgetProps::default().get_name()),
+        }
+    }
+}
 
 #[derive(Resource)]
 pub struct MyResource(pub u32);
@@ -46,29 +63,13 @@ fn startup(
 
     commands.spawn().insert_bundle(UICameraBundle::new());
 
-    let mut context = Context::new();
-    context.add_widget_system(MyWidget::default().get_name(), my_widget_1_update);
-    let entity = commands
-        .spawn()
-        .insert_bundle(KayakAppBundle {
-            children: Children::new(|parent_id, widget_context, commands| {
-                let my_widget_entity = commands
-                    .spawn()
-                    .insert(MyWidget { foo: 0 })
-                    .insert(Style::default())
-                    .insert(WidgetName(MyWidget::default().get_name()))
-                    .id();
-                widget_context.add(my_widget_entity, parent_id);
-            }),
-            styles: Style {
-                render_command: StyleProp::Value(RenderCommand::Layout),
-                ..Style::new_default()
-            },
-            ..Default::default()
-        })
-        .id();
-    context.add_widget(None, entity);
-    commands.insert_resource(context);
+    let mut widget_context = Context::new();
+    let parent_id = None;
+    widget_context.add_widget_system(MyWidgetProps::default().get_name(), my_widget_1_update);
+    rsx! {
+        <KayakAppBundle><MyWidgetBundle props={MyWidgetProps { foo: 0 }} /></KayakAppBundle>
+    }
+    commands.insert_resource(widget_context);
 }
 
 fn update_resource(keyboard_input: Res<Input<KeyCode>>, mut my_resource: ResMut<MyResource>) {

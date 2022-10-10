@@ -12,7 +12,7 @@ use bevy::{
         App as BevyApp, AssetServer, Bundle, Changed, Color, Commands, Component, Entity,
         ImageSettings, In, ParamSet, Query, Res, ResMut, Vec2,
     },
-    DefaultPlugins,
+    DefaultPlugins, ui::widget,
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
 
@@ -101,11 +101,12 @@ fn update_theme_button(
                         box_style.width = StyleProp::Value(Units::Pixels(24.0));
                         box_style.height = StyleProp::Value(Units::Pixels(24.0));
                     }
-                    let background_entity = commands
-                        .spawn()
-                        .insert_bundle(BackgroundBundle {
-                            styles: box_style,
-                            on_event: OnEvent::new(
+                    
+                    let parent_id = Some(theme_button_entity);
+                    rsx! {
+                        <BackgroundBundle
+                            styles={box_style}
+                            on_event={OnEvent::new(
                                 move |In((event_dispatcher_context, event, _entity)): In<(
                                     EventDispatcherContext,
                                     Event,
@@ -126,11 +127,9 @@ fn update_theme_button(
                                     }
                                     (event_dispatcher_context, event)
                                 },
-                            ),
-                            ..Default::default()
-                        })
-                        .id();
-                    widget_context.add(background_entity, Some(theme_button_entity));
+                            )}
+                        />
+                    }
 
                     return true;
                 }
@@ -173,47 +172,20 @@ fn update_theme_selector(
             top: StyleProp::Value(Units::Pixels(5.0)),
             ..Default::default()
         };
-        let element_entity = commands
-            .spawn()
-            .insert_bundle(ElementBundle {
-                styles: button_container_style,
-                children: Children::new(|parent_id, widget_context, commands| {
-                    let vampire_theme = Theme::vampire();
-                    let solar_theme = Theme::solar();
-                    let vector_theme = Theme::vector();
-                    let vampire_button_entity = commands
-                        .spawn()
-                        .insert_bundle(ThemeButtonBundle {
-                            theme_button: ThemeButton {
-                                theme: vampire_theme,
-                            },
-                            ..Default::default()
-                        })
-                        .id();
-                    widget_context.add(vampire_button_entity, parent_id);
-                    let solar_button_entity = commands
-                        .spawn()
-                        .insert_bundle(ThemeButtonBundle {
-                            theme_button: ThemeButton { theme: solar_theme },
-                            ..Default::default()
-                        })
-                        .id();
-                    widget_context.add(solar_button_entity, parent_id);
-                    let vector_button_entity = commands
-                        .spawn()
-                        .insert_bundle(ThemeButtonBundle {
-                            theme_button: ThemeButton {
-                                theme: vector_theme,
-                            },
-                            ..Default::default()
-                        })
-                        .id();
-                    widget_context.add(vector_button_entity, parent_id);
-                }),
-                ..Default::default()
-            })
-            .id();
-        widget_context.add(element_entity, Some(entity));
+
+        let vampire_theme = Theme::vampire();
+        let solar_theme = Theme::solar();
+        let vector_theme = Theme::vector();
+
+        let parent_id = Some(entity);
+        rsx! {
+            <ElementBundle styles={button_container_style}>
+                <ThemeButtonBundle theme_button={ThemeButton { theme: vampire_theme }} />
+                <ThemeButtonBundle theme_button={ThemeButton { theme: solar_theme }} />
+                <ThemeButtonBundle theme_button={ThemeButton { theme: vector_theme }} />
+            </ElementBundle>
+        }
+
         return true;
     }
 
@@ -259,37 +231,13 @@ fn update_theme_demo(
                         format!("Select A Different Theme (Current: {})", theme.name)
                     };
 
-                    let select_text_entity = commands
-                        .spawn()
-                        .insert_bundle(TextBundle {
-                            text: Text {
-                                content: select_lbl,
-                                size: 14.0,
-                                line_height: Some(28.0),
-                                ..Default::default()
-                            },
-                            styles: Style {
-                                height: StyleProp::Value(Units::Pixels(28.0)),
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        })
-                        .id();
-                    widget_context.add(select_text_entity, Some(entity));
-
-                    let theme_selector_entity = commands
-                        .spawn()
-                        .insert_bundle(ThemeSelectorBundle::default())
-                        .id();
-                    widget_context.add(theme_selector_entity, Some(entity));
-
                     if theme_demo.is_root {
                         if theme_demo.context_entity.is_none() {
                             let theme_entity = commands.spawn().insert(Theme::vector()).id();
                             theme_demo.context_entity = Some(theme_entity);
                         }
                     }
-
+                        
                     let context_entity = if let Some(entity) = theme_demo.context_entity {
                         entity
                     } else {
@@ -310,90 +258,78 @@ fn update_theme_demo(
                         ..Default::default()
                     };
 
-                    let is_root = theme_demo.is_root;
-                    let background_children =
-                        Children::new(move |parent_id, widget_context, commands| {
-                            let text_entity = commands
-                                .spawn()
-                                .insert_bundle(TextBundle {
-                                    text: Text {
+                    let parent_id = Some(entity);
+                    let mut children = kayak_ui::prelude::Children::new();
+                    rsx! {
+                        <>
+                            <TextBundle
+                                text={Text {
+                                    content: select_lbl,
+                                    size: 14.0,
+                                    line_height: Some(28.0),
+                                    ..Default::default()
+                                }}
+                                styles={Style {
+                                    height: StyleProp::Value(Units::Pixels(28.0)),
+                                    ..Default::default()
+                                }}
+                            />
+                            <ThemeSelectorBundle />
+                            <BackgroundBundle
+                                styles={Style {
+                                    background_color: StyleProp::Value(theme.background),
+                                    top: StyleProp::Value(Units::Pixels(15.0)),
+                                    width: StyleProp::Value(Units::Stretch(1.0)),
+                                    height: StyleProp::Value(Units::Stretch(1.0)),
+                                    ..Default::default()
+                                }}
+                            >
+                                <TextBundle
+                                    text={Text {
                                         content: "Lorem ipsum dolor...".into(),
                                         size: 12.0,
                                         ..Default::default()
-                                    },
-                                    styles: text_styles.clone(),
-                                    ..Default::default()
-                                })
-                                .id();
-                            widget_context.add(text_entity, parent_id);
-
-                            let button_entity = commands
-                                .spawn()
-                                .insert_bundle(ButtonBundle {
-                                    styles: btn_style.clone(),
-                                    children: Children::new(|parent_id, widget_context, commands| {
-                                        let text_entity = commands.spawn().insert_bundle(TextBundle {
-                                            text: Text {
-                                                content: "BUTTON".into(),
-                                                size: 14.0,
-                                                ..Default::default()
-                                            },
+                                    }}
+                                    styles={text_styles.clone()}
+                                />
+                                <ButtonBundle
+                                    styles={btn_style.clone()}
+                                >
+                                    <TextBundle
+                                        text={Text {
+                                            content: "BUTTON".into(),
+                                            size: 14.0,
                                             ..Default::default()
-                                        }).id();
-                                        widget_context.add(text_entity, parent_id);
-                                    }),
-                                    ..Default::default()
-                                })
-                                .id();
-                            widget_context.add(button_entity, parent_id);
+                                        }}
+                                    />
+                                </ButtonBundle>
+                                {
+                                    if theme_demo.is_root {
+                                        widget_context.set_context_entity::<Theme>(
+                                            parent_id,
+                                            context_entity,
+                                        );
+                                        constructor! {
+                                            <ElementBundle
+                                                styles={Style {
+                                                    top: StyleProp::Value(Units::Pixels(10.0)),
+                                                    left: StyleProp::Value(Units::Pixels(10.0)),
+                                                    bottom: StyleProp::Value(Units::Pixels(10.0)),
+                                                    right: StyleProp::Value(Units::Pixels(10.0)),
+                                                    ..Default::default()
+                                                }}
+                                            >
+                                                <ThemeDemoBundle />
+                                            </ElementBundle>
+                                        }
+                                    }
+                                }
+                            </BackgroundBundle>
+                        </>
+                    }
 
-                            if is_root {
-                                let element_entity = commands
-                                    .spawn()
-                                    .insert_bundle(ElementBundle {
-                                        styles: Style {
-                                            top: StyleProp::Value(Units::Pixels(10.0)),
-                                            left: StyleProp::Value(Units::Pixels(10.0)),
-                                            bottom: StyleProp::Value(Units::Pixels(10.0)),
-                                            right: StyleProp::Value(Units::Pixels(10.0)),
-                                            ..Default::default()
-                                        },
-                                        children: Children::new(
-                                            move |parent_id, widget_context, commands| {
-                                                widget_context.set_context_entity::<Theme>(
-                                                    parent_id,
-                                                    context_entity,
-                                                );
-                                                let theme_demo_child = commands
-                                                    .spawn()
-                                                    .insert_bundle(ThemeDemoBundle::default())
-                                                    .id();
-                                                widget_context.add(theme_demo_child, parent_id);
-                                            },
-                                        ),
-                                        ..Default::default()
-                                    })
-                                    .id();
-                                widget_context.add(element_entity, parent_id);
-                            }
-                        });
-
-                    let background_widget_entity = commands
-                        .spawn()
-                        .insert_bundle(BackgroundBundle {
-                            styles: Style {
-                                background_color: StyleProp::Value(theme.background),
-                                top: StyleProp::Value(Units::Pixels(15.0)),
-                                width: StyleProp::Value(Units::Stretch(1.0)),
-                                height: StyleProp::Value(Units::Stretch(1.0)),
-                                ..Default::default()
-                            },
-                            children: background_children,
-                            ..Default::default()
-                        })
-                        .id();
-                    widget_context.add(background_widget_entity, Some(entity));
-
+                    children.process(&widget_context, parent_id);
+                    
                     return true;
                 }
             }
@@ -412,54 +348,36 @@ fn startup(
 
     commands.spawn().insert_bundle(UICameraBundle::new());
 
-    let mut context = Context::new();
-    context.add_widget_system(ThemeDemo::default().get_name(), update_theme_demo);
-    context.add_widget_system(ThemeButton::default().get_name(), update_theme_button);
-    context.add_widget_system(ThemeSelector::default().get_name(), update_theme_selector);
-    let entity = commands
-        .spawn()
-        .insert_bundle(KayakAppBundle {
-            children: Children::new(move |parent_id, widget_context, commands| {
+    let mut widget_context = Context::new();
+    widget_context.add_widget_system(ThemeDemo::default().get_name(), update_theme_demo);
+    widget_context.add_widget_system(ThemeButton::default().get_name(), update_theme_button);
+    widget_context.add_widget_system(ThemeSelector::default().get_name(), update_theme_selector);
+    let parent_id = None;
+    rsx! {
+        <KayakAppBundle>
+            {
                 let theme_entity = commands.spawn().insert(Theme::vampire()).id();
                 widget_context.set_context_entity::<Theme>(parent_id, theme_entity);
-
-                let window_entity = commands
-                    .spawn()
-                    .insert_bundle(WindowBundle {
-                        window: Window {
-                            title: "Context Example".into(),
-                            draggable: true,
-                            position: Vec2::ZERO,
-                            size: Vec2::new(350.0, 400.0),
-                            ..Default::default()
-                        },
-                        children: Children::new(|parent_id, widget_context, commands| {
-                            let theme_demo_entity = commands
-                                .spawn()
-                                .insert_bundle(ThemeDemoBundle {
-                                    theme_demo: ThemeDemo {
-                                        is_root: true,
-                                        context_entity: None,
-                                    },
-                                    ..Default::default()
-                                })
-                                .id();
-                            widget_context.add(theme_demo_entity, parent_id);
-                        }),
-                        ..Default::default()
-                    })
-                    .id();
-                widget_context.add(window_entity, parent_id);
-            }),
-            styles: Style {
-                render_command: StyleProp::Value(RenderCommand::Layout),
-                ..Style::new_default()
-            },
-            ..Default::default()
-        })
-        .id();
-    context.add_widget(None, entity);
-    commands.insert_resource(context);
+            }
+            <WindowBundle
+                window={Window {
+                    title: "Context Example".into(),
+                    draggable: true,
+                    position: Vec2::ZERO,
+                    size: Vec2::new(350.0, 400.0),
+                    ..Default::default()
+                }}
+            >
+                <ThemeDemoBundle
+                    theme_demo={ThemeDemo {
+                        is_root: true,
+                        context_entity: None,
+                    }}
+                />
+            </WindowBundle>
+        </KayakAppBundle>
+    }
+    commands.insert_resource(widget_context);
 }
 
 fn main() {

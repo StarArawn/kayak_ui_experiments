@@ -1,37 +1,37 @@
 use bevy::prelude::*;
 
 mod app;
-mod button;
-mod text;
-mod window;
 mod background;
+mod button;
 mod clip;
-mod image;
-mod texture_atlas;
-mod nine_patch;
 mod element;
+mod image;
+mod nine_patch;
+mod text;
+mod texture_atlas;
+mod window;
 
 pub use app::{KayakApp, KayakAppBundle};
-pub use button::{Button, ButtonBundle};
-pub use text::{Text, TextBundle};
-pub use window::{Window, WindowBundle};
 pub use background::{Background, BackgroundBundle};
+pub use button::{Button, ButtonBundle};
 pub use clip::{Clip, ClipBundle};
-pub use image::{Image, ImageBundle};
-pub use texture_atlas::{TextureAtlas, TextureAtlasBundle};
-pub use nine_patch::{NinePatch, NinePatchBundle};
 pub use element::{Element, ElementBundle};
+pub use image::{Image, ImageBundle};
+pub use nine_patch::{NinePatch, NinePatchBundle};
+pub use text::{Text, TextBundle};
+pub use texture_atlas::{TextureAtlas, TextureAtlasBundle};
+pub use window::{Window, WindowBundle};
 
 use app::app_update;
-use button::button_update;
-use text::text_update;
-use window::window_update;
 use background::update_background;
+use button::button_update;
 use clip::update_clip;
-use image::update_image;
-use texture_atlas::update_texture_atlas;
-use nine_patch::update_nine_patch;
 use element::update_element;
+use image::update_image;
+use nine_patch::update_nine_patch;
+use text::text_update;
+use texture_atlas::update_texture_atlas;
+use window::window_update;
 
 use crate::{context::Context, widget::Widget};
 

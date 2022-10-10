@@ -1,15 +1,16 @@
 use bevy::{
-    prelude::{Assets, Commands, Entity, Query, ResMut, With, Res},
+    prelude::{Assets, Commands, Entity, Query, Res, ResMut, With},
     utils::HashMap,
 };
 use kayak_font::KayakFont;
 
 use crate::{
+    layout::{DataCache, Rect},
     node::{DirtyNode, Node, NodeBuilder, WrappedIndex},
     prelude::{Context, RenderCommand, Style, Tree},
     render::font::FontMapping,
     render_primitive::RenderPrimitive,
-    styles::{StyleProp, Units}, layout::{Rect, DataCache},
+    styles::{StyleProp, Units},
 };
 
 pub fn calculate_nodes(
@@ -33,7 +34,6 @@ pub fn calculate_nodes(
     let default_styles = Style::new_default();
 
     if let Ok(tree) = context.tree.clone().read() {
-
         for dirty_entity in query.iter() {
             let dirty_entity = WrappedIndex(dirty_entity);
             if let Ok(styles) = all_styles_query.get(dirty_entity.0) {
@@ -41,20 +41,20 @@ pub fn calculate_nodes(
                 // 1. Already-resolved node styles (best)
                 // 2. Unresolved widget prop styles
                 // 3. Unresolved default styles
-                let parent_styles =
-                    if let Some(parent_widget_id) = tree.parents.get(&dirty_entity) {
-                        if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
-                            parent_node.resolved_styles.clone()
-                        } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
-                            parent_node.0.resolved_styles.clone()
-                        } else if let Ok(parent_styles) = all_styles_query.get(parent_widget_id.0) {
-                            parent_styles.clone()
-                        } else {
-                            default_styles.clone()
-                        }
+                let parent_styles = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity)
+                {
+                    if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
+                        parent_node.resolved_styles.clone()
+                    } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
+                        parent_node.0.resolved_styles.clone()
+                    } else if let Ok(parent_styles) = all_styles_query.get(parent_widget_id.0) {
+                        parent_styles.clone()
                     } else {
                         default_styles.clone()
-                    };
+                    }
+                } else {
+                    default_styles.clone()
+                };
 
                 let parent_z = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity) {
                     if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
@@ -85,13 +85,17 @@ pub fn calculate_nodes(
                 // Fill in all `inherited` values for any `inherit` property
                 styles.inherit(&parent_styles);
 
-                let (primitive, needs_layout) = create_primitive(&mut commands, &context, &fonts, &font_mapping, &node_query, dirty_entity, &mut styles);
+                let (primitive, needs_layout) = create_primitive(
+                    &mut commands,
+                    &context,
+                    &fonts,
+                    &font_mapping,
+                    &node_query,
+                    dirty_entity,
+                    &mut styles,
+                );
 
-                let children = tree
-                    .children
-                    .get(&dirty_entity)
-                    .cloned()
-                    .unwrap_or(vec![]);
+                let children = tree.children.get(&dirty_entity).cloned().unwrap_or(vec![]);
 
                 let width = styles.width.resolve().value_or(0.0, 0.0);
                 let height = styles.height.resolve().value_or(0.0, 0.0);
@@ -103,14 +107,17 @@ pub fn calculate_nodes(
                     .with_primitive(primitive)
                     .build();
                 if dirty_entity == tree.root_node.unwrap() {
-                    context.layout_cache.rect.insert(dirty_entity, Rect {
-                        posx: 0.0,
-                        posy: 0.0,
-                        width,
-                        height,
-                        z_index: 0.0,
-                    });
-                } 
+                    context.layout_cache.rect.insert(
+                        dirty_entity,
+                        Rect {
+                            posx: 0.0,
+                            posy: 0.0,
+                            width,
+                            height,
+                            z_index: 0.0,
+                        },
+                    );
+                }
                 node.z = current_z;
                 new_nodes.insert(dirty_entity.0, (node, needs_layout));
             }
@@ -126,9 +133,8 @@ pub fn calculate_nodes(
         }
 
         // if has_new_nodes {
-            build_nodes_tree(&mut context, &tree, &node_query);
+        build_nodes_tree(&mut context, &tree, &node_query);
         // }
-
 
         {
             let context = context.as_mut();
@@ -204,6 +210,9 @@ fn create_primitive(
 }
 
 pub fn build_nodes_tree(context: &mut Context, tree: &Tree, node_query: &Query<(Entity, &Node)>) {
+    if tree.root_node.is_none() {
+        return;
+    }
     let mut node_tree = Tree::default();
     node_tree.root_node = tree.root_node;
     node_tree.children.insert(

@@ -1,7 +1,12 @@
 use bevy::prelude::*;
 use kayak_font::Alignment;
 
-use crate::{styles::{Style, StyleProp, RenderCommand}, prelude::WidgetContext, widget::Widget, context::WidgetName};
+use crate::{
+    context::WidgetName,
+    prelude::WidgetContext,
+    styles::{RenderCommand, Style, StyleProp},
+    widget::Widget,
+};
 
 #[derive(Component)]
 pub struct Text {
@@ -49,7 +54,11 @@ pub struct TextBundle {
 
 impl Default for TextBundle {
     fn default() -> Self {
-        Self { text: Default::default(), styles: Default::default(), widget_name: WidgetName(Text::default().get_name()) }
+        Self {
+            text: Default::default(),
+            styles: Default::default(),
+            widget_name: WidgetName(Text::default().get_name()),
+        }
     }
 }
 
@@ -57,7 +66,6 @@ pub fn text_update(
     In((_, entity)): In<(WidgetContext, Entity)>,
     mut query: Query<(&mut Style, &Text), Changed<Text>>,
 ) -> bool {
-
     if let Ok((mut style, text)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Text {
             content: text.content.clone(),
@@ -68,7 +76,7 @@ pub fn text_update(
             style.font = StyleProp::Value(font.clone());
         }
         // if text.show_cursor {
-            // style.cursor = StyleProp::Value(CursorIcon::Text);
+        // style.cursor = StyleProp::Value(CursorIcon::Text);
         // }
         if text.size >= 0.0 {
             style.font_size = StyleProp::Value(text.size);

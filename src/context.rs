@@ -14,16 +14,17 @@ use crate::{
     focus_tree::FocusTree,
     layout::{LayoutCache, Rect},
     node::{DirtyNode, WrappedIndex},
+    prelude::WidgetContext,
     render_primitive::RenderPrimitive,
     tree::{Change, Tree},
-    WindowSize, prelude::WidgetContext,
+    WindowSize,
 };
 
 const UPDATE_DEPTH: u32 = 0;
 
 #[derive(Resource)]
 pub struct Context {
-    pub(crate) tree: Arc<RwLock<Tree>>,
+    pub tree: Arc<RwLock<Tree>>,
     pub(crate) node_tree: Tree,
     pub(crate) layout_cache: LayoutCache,
     pub(crate) focus_tree: FocusTree,
@@ -58,13 +59,28 @@ impl Context {
         self.systems.insert(type_name.into(), Box::new(system));
     }
 
-    pub fn add_widget(&mut self, parent: Option<WrappedIndex>, entity: Entity) {
+    pub fn add_widget(&mut self, parent: Option<Entity>, entity: Entity) {
         if let Ok(mut tree) = self.tree.write() {
-            tree.add(WrappedIndex(entity), parent);
+            tree.add(
+                WrappedIndex(entity),
+                parent.and_then(|p| Some(WrappedIndex(p))),
+            );
             self.layout_cache.add(WrappedIndex(entity));
         }
     }
 
+    /// Creates a new context using the context entity for the given type_id + parent id.
+    pub fn set_context_entity<T: Default + 'static>(
+        &self,
+        parent_id: Option<Entity>,
+        context_entity: Entity,
+    ) {
+        if let Some(parent_id) = parent_id {
+            self.context_entities
+                .add_context_entity::<T>(parent_id, context_entity);
+        }
+    }
+    
     pub fn build_render_primitives(
         &self,
         nodes: &Query<&crate::node::Node>,
@@ -339,5 +355,5 @@ fn calculate_ui(world: &mut World) {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct WidgetName(pub &'static str);

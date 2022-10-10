@@ -1,40 +1,39 @@
-use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
-
-use bevy::prelude::{Commands, Entity, Component};
+use bevy::prelude::*;
 
 use crate::prelude::WidgetContext;
 
-/// A container for a function that generates child widgets
-#[derive(Component, Clone)]
-pub struct Children(Arc<dyn Fn(Option<Entity>, &WidgetContext, &mut Commands) + Send + Sync>);
-
-impl Default for Children {
-    fn default() -> Self {
-        Children::new(|_e, _w, _c| {})
-    }
+/// Defers widgets being added to the widget tree.
+#[derive(Component, Debug, Default, Clone)]
+pub struct Children {
+    inner: Vec<Entity>,
 }
 
 impl Children {
-    pub fn new<F: Fn(Option<Entity>, &WidgetContext, &mut Commands) + Send + Sync + 'static>(
-        builder: F,
-    ) -> Self {
-        Self(Arc::new(builder))
+    pub fn new() -> Self {
+        Self { inner: Vec::new() }
     }
-    pub fn spawn(&self, id: Option<Entity>, widget_context: &WidgetContext, commands: &mut Commands) {
-        self.0(id, widget_context, commands);
-    }
-}
 
-impl Debug for Children {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Children").finish()
+    /// Adds a widget entity to child storage.
+    pub fn add(&mut self, widget_entity: Entity) {
+        self.inner.push(widget_entity);
     }
-}
 
-impl PartialEq for Children {
-    fn eq(&self, _: &Self) -> bool {
-        // Never prevent "==" for being true because of this struct
-        true
+    pub fn get(&self, index: usize) -> Option<Entity> {
+        self.inner.get(index).and_then(|e| Some(*e))
+    }
+
+    pub fn remove(&mut self, index: usize) -> Option<Entity> {
+        if index < self.inner.len() {
+            Some(self.inner.remove(index))
+        } else {
+            None
+        }
+    }
+
+    /// Processes all widgets and adds them to the tree.
+    pub fn process(&self, widget_context: &WidgetContext, parent_id: Option<Entity>) {
+        for child in self.inner.iter() {
+            widget_context.add_widget(parent_id, *child);
+        }
     }
 }

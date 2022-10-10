@@ -25,9 +25,9 @@ fn process_loaded_fonts(
     context_resource: Res<Context>,
 ) {
     // if let Some(context = context_resource.as_ref() {
-        if context_resource.is_added() {
-            font_mapping.mark_all_as_new();
-        }
-        // font_mapping.add_loaded_to_kayak(&fonts, &context);
+    if context_resource.is_added() {
+        font_mapping.mark_all_as_new();
+    }
+    // font_mapping.add_loaded_to_kayak(&fonts, &context);
     // }
 }

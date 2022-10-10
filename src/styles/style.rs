@@ -8,10 +8,10 @@ pub use morphorm::{LayoutType, PositionType, Units};
 
 use crate::cursor::PointerEvents;
 
+use super::AsRefOption;
 pub use super::Corner;
 pub use super::Edge;
 use super::RenderCommand;
-use super::AsRefOption;
 
 /// The base container of all style properties
 ///

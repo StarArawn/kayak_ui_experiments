@@ -1,8 +1,8 @@
-use bevy::prelude::{Component, Query, Entity};
+use bevy::prelude::{Component, Entity, Query};
 
 use crate::{
+    render_primitive::RenderPrimitive,
     styles::{Style, StyleProp},
-    render_primitive::RenderPrimitive
 };
 
 #[derive(Component, Debug, Clone, Copy)]
@@ -27,7 +27,14 @@ pub struct Node {
 
 impl Default for Node {
     fn default() -> Self {
-        Self { children: Default::default(), id: WrappedIndex(Entity::from_raw(0)), resolved_styles: Default::default(), raw_styles: Default::default(), primitive: RenderPrimitive::Empty, z: Default::default() }
+        Self {
+            children: Default::default(),
+            id: WrappedIndex(Entity::from_raw(0)),
+            resolved_styles: Default::default(),
+            raw_styles: Default::default(),
+            primitive: RenderPrimitive::Empty,
+            z: Default::default(),
+        }
     }
 }
 

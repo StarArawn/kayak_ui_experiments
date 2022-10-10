@@ -12,16 +12,16 @@ use crate::{
     CameraUiKayak,
 };
 
-use self::{ui_pass::TransparentUI, extract::BevyKayakUIExtractPlugin};
+use self::{extract::BevyKayakUIExtractPlugin, ui_pass::TransparentUI};
 
-mod ui_pass;
-pub mod unified;
 mod extract;
-pub(crate) mod quad;
 pub(crate) mod font;
 pub(crate) mod image;
 pub(crate) mod nine_patch;
+pub(crate) mod quad;
 pub(crate) mod texture_atlas;
+mod ui_pass;
+pub mod unified;
 
 pub mod draw_ui_graph {
     pub const NAME: &str = "kayak_draw_ui";
@@ -64,8 +64,7 @@ impl Plugin for BevyKayakUIRenderPlugin {
 
         // graph.add_node_edge(MAIN_PASS, draw_ui_graph::NAME).unwrap();
 
-        app
-            .add_plugin(font::TextRendererPlugin)
+        app.add_plugin(font::TextRendererPlugin)
             .add_plugin(UnifiedRenderPlugin)
             .add_plugin(BevyKayakUIExtractPlugin);
     }

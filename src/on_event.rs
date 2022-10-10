@@ -1,6 +1,6 @@
+use bevy::prelude::{Component, Entity, In, IntoSystem, System, World};
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, RwLock};
-use bevy::prelude::{Component, System, Entity, IntoSystem, In, World};
 
 use crate::event::Event;
 use crate::event_dispatcher::EventDispatcherContext;
@@ -13,14 +13,23 @@ use crate::event_dispatcher::EventDispatcherContext;
 #[derive(Component, Clone)]
 pub struct OnEvent {
     has_initialized: bool,
-    system: Arc<RwLock<dyn System<In = (EventDispatcherContext, Event, Entity), Out = (EventDispatcherContext, Event)>>>,
+    system: Arc<
+        RwLock<
+            dyn System<
+                In = (EventDispatcherContext, Event, Entity),
+                Out = (EventDispatcherContext, Event),
+            >,
+        >,
+    >,
 }
 
 impl Default for OnEvent {
     fn default() -> Self {
-        Self::new(|In((event_dispatcher_context, event, _entity))| (event_dispatcher_context, event))
+        Self::new(|In((event_dispatcher_context, event, _entity))| {
+            (event_dispatcher_context, event)
+        })
     }
-} 
+}
 
 impl OnEvent {
     /// Create a new event handler
@@ -29,7 +38,11 @@ impl OnEvent {
     /// 1. The current context
     /// 2. The event
     pub fn new<Params>(
-        system: impl IntoSystem<(EventDispatcherContext, Event, Entity), (EventDispatcherContext, Event), Params>,
+        system: impl IntoSystem<
+            (EventDispatcherContext, Event, Entity),
+            (EventDispatcherContext, Event),
+            Params,
+        >,
     ) -> OnEvent {
         Self {
             has_initialized: false,
@@ -40,13 +53,20 @@ impl OnEvent {
     /// Call the event handler
     ///
     /// Returns true if the handler was successfully invoked.
-    pub fn try_call(&mut self, mut event_dispatcher_context: EventDispatcherContext, entity: Entity, mut event: Event, world: &mut World) -> (EventDispatcherContext, Event) {
+    pub fn try_call(
+        &mut self,
+        mut event_dispatcher_context: EventDispatcherContext,
+        entity: Entity,
+        mut event: Event,
+        world: &mut World,
+    ) -> (EventDispatcherContext, Event) {
         if let Ok(mut system) = self.system.try_write() {
             if !self.has_initialized {
                 system.initialize(world);
                 self.has_initialized = true;
             }
-            (event_dispatcher_context, event) = system.run((event_dispatcher_context, event, entity), world);
+            (event_dispatcher_context, event) =
+                system.run((event_dispatcher_context, event, entity), world);
             system.apply_buffers(world);
         }
         (event_dispatcher_context, event)

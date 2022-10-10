@@ -1,11 +1,13 @@
 use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::{
-        App as BevyApp, AssetServer, Changed, Color, Commands, Component, Entity, In, Query, Res, ResMut, Vec2,
+        App as BevyApp, AssetServer, Bundle, Changed, Color, Commands, Component, Entity, In,
+        Query, Res, ResMut, Vec2,
     },
-    DefaultPlugins, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
+    DefaultPlugins,
 };
-use kayak_ui::prelude::{Style, *, widgets::*};
-use morphorm::{Units, PositionType};
+use kayak_ui::prelude::{widgets::*, Style, *};
+use morphorm::{PositionType, Units};
 
 #[derive(Component, Default)]
 pub struct MyQuad {
@@ -34,6 +36,22 @@ fn my_quad_update(
 
 impl Widget for MyQuad {}
 
+#[derive(Bundle)]
+pub struct MyQuadBundle {
+    my_quad: MyQuad,
+    styles: Style,
+    widget_name: WidgetName,
+}
+
+impl Default for MyQuadBundle {
+    fn default() -> Self {
+        Self {
+            my_quad: Default::default(),
+            styles: Style::default(),
+            widget_name: WidgetName(MyQuad::default().get_name()),
+        }
+    }
+}
 
 fn startup(
     mut commands: Commands,
@@ -44,45 +62,36 @@ fn startup(
 
     commands.spawn().insert_bundle(UICameraBundle::new());
 
-    let mut context = Context::new();
-    context.add_widget_system(MyQuad::default().get_name(), my_quad_update);
-    let entity = commands
-        .spawn()
-        .insert_bundle(KayakAppBundle {
-            children: Children::new(|parent_id, widget_context, commands| {
-                for _ in 0..1000 {
+    let mut widget_context = Context::new();
+    widget_context.add_widget_system(MyQuad::default().get_name(), my_quad_update);
+    let parent_id = None;
+
+    rsx! {
+        <KayakAppBundle>
+            {
+                0..1000.for_each(|_| {
                     let pos = Vec2::new(fastrand::i32(0..1280) as f32, fastrand::i32(0..720) as f32);
-                    let my_widget_entity = commands
-                        .spawn()
-                        .insert(MyQuad {
-                            pos,
-                            size: Vec2::new(
-                                fastrand::i32(32..64) as f32,
-                                fastrand::i32(32..64) as f32,
-                            ),
-                            color: Color::rgba(
-                                fastrand::f32(),
-                                fastrand::f32(),
-                                fastrand::f32(),
-                                1.0,
-                            ),
-                        })
-                        .insert(Style::default())
-                        .insert(WidgetName(MyQuad::default().get_name()))
-                        .insert(DirtyNode)
-                        .id();
-                    widget_context.add(my_widget_entity, parent_id);
-                }
-            }),
-            styles: Style {
-                render_command: StyleProp::Value(RenderCommand::Layout),
-                ..Style::new_default()
-            },
-            ..Default::default()
-        })
-        .id();
-    context.add_widget(None, entity);
-    commands.insert_resource(context);
+                    let size = Vec2::new(
+                        fastrand::i32(32..64) as f32,
+                        fastrand::i32(32..64) as f32,
+                    );
+                    let color = Color::rgba(
+                        fastrand::f32(),
+                        fastrand::f32(),
+                        fastrand::f32(),
+                        1.0,
+                    );
+                    constructor! {
+                        <MyQuadBundle
+                            my_quad={MyQuad { pos, size, color }}
+                        />
+                    }
+                });
+            }
+        </KayakAppBundle>
+    }
+
+    commands.insert_resource(widget_context);
 }
 
 fn main() {

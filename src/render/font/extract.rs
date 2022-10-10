@@ -1,12 +1,14 @@
 use bevy::{
     math::Vec2,
-    prelude::{Assets, Res, Rect},
+    prelude::{Assets, Rect, Res},
 };
 use kayak_font::KayakFont;
 
-use crate::{render::{
-    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
-}, render_primitive::RenderPrimitive, styles::Corner};
+use crate::{
+    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
+    render_primitive::RenderPrimitive,
+    styles::Corner,
+};
 
 use super::font_mapping::FontMapping;
 
@@ -32,10 +34,12 @@ pub fn extract_texts(
     let font_handle = font_mapping.get_handle(font.clone()).unwrap();
     let font = match fonts.get(&font_handle) {
         Some(font) => font,
-        None => { return Vec::new(); },
+        None => {
+            return Vec::new();
+        }
     };
-    
-    let base_position = Vec2::new(layout.posx, layout.posy + properties.font_size) ;
+
+    let base_position = Vec2::new(layout.posx, layout.posy + properties.font_size);
 
     for glyph_rect in text_layout.glyphs() {
         let mut position = Vec2::from(glyph_rect.position);

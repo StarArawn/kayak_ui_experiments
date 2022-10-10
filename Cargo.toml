@@ -2,6 +2,10 @@
 name = "kayak_ui"
 version = "0.1.0"
 edition = "2021"
+resolver = "2"
+
+[workspace]
+members = ["kayak_ui_macros"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,6 +15,7 @@ bytemuck = "1.12"
 dashmap = "5.4"
 kayak_font = { path = "./kayak_font" }
 morphorm = { git = "https://github.com/geom3trik/morphorm", rev = "1243152d4cebea46fd3e5098df26402c73acae91" }
+kayak_ui_macros = { path = "./kayak_ui_macros" }
 
 [dev-dependencies]
 fastrand = "1.8"

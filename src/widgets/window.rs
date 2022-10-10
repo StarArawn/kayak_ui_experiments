@@ -78,13 +78,29 @@ pub fn window_update(
             ..window_style.clone()
         };
 
-        // let title_text_styles = Style {
-        //     height: StyleProp::Value(Units::Pixels(25.0)),
-        //     ..Style::default()
-        // };
-
         if window.title_bar_entity.is_none() {
             let title = window.title.clone();
+
+            let mut title_children = Children::new();
+            // Spawn title children
+            let title_entity = commands
+                .spawn()
+                .insert_bundle(TextBundle {
+                    text: Text {
+                        content: title.clone(),
+                        size: 16.0,
+                        line_height: Some(25.0),
+                        ..Text::default()
+                    },
+                    styles: Style {
+                        height: StyleProp::Value(Units::Pixels(25.0)),
+                        ..Style::default()
+                    },
+                    ..Default::default()
+                })
+                .id();
+            title_children.add(title_entity);
+
             let title_background_entity = commands
                 .spawn()
                 .insert_bundle(BackgroundBundle {
@@ -101,25 +117,7 @@ pub fn window_update(
                         padding_left: StyleProp::Value(Units::Pixels(5.0)),
                         ..Style::default()
                     },
-                    children: Children::new(move |entity, widget_context, commands| {
-                        let title_entity = commands
-                            .spawn()
-                            .insert_bundle(TextBundle {
-                                text: Text {
-                                    content: title.clone(),
-                                    size: 16.0,
-                                    line_height: Some(25.0),
-                                    ..Text::default()
-                                },
-                                styles: Style {
-                                    height: StyleProp::Value(Units::Pixels(25.0)),
-                                    ..Style::default()
-                                },
-                                ..Default::default()
-                            })
-                            .id();
-                        widget_context.add(title_entity, entity);
-                    }),
+                    children: title_children,
                     ..BackgroundBundle::default()
                 })
                 .id();
@@ -164,25 +162,23 @@ pub fn window_update(
                         },
                     ));
             }
-            widget_context.add(window.title_bar_entity.unwrap(), Some(window_entity));
+            widget_context.add_widget(Some(window_entity), window.title_bar_entity.unwrap());
 
             let children = children.clone();
 
             let mut clip_bundle = ClipBundle {
-                children: Children::new(move |entity, widget_context, commands| {
-                    children.spawn(entity, &widget_context, commands);
-                }),
+                children: children.clone(),
                 ..ClipBundle::default()
             };
             clip_bundle.styles.padding = StyleProp::Value(Edge::all(Units::Pixels(10.0)));
 
             let clip_entity = commands.spawn().insert_bundle(clip_bundle).id();
-            widget_context.add(clip_entity, Some(window_entity));
+            widget_context.add_widget(Some(window_entity), clip_entity);
             let children = widget_context.get_children(window_entity);
             window.children = children;
         } else {
             for child in window.children.iter() {
-                widget_context.add(*child, Some(window_entity));
+                widget_context.add_widget(Some(window_entity), *child);
             }
         }
 

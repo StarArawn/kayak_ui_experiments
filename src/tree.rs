@@ -1,7 +1,7 @@
-use std::iter::Rev;
 use bevy::prelude::Entity;
 use bevy::utils::HashMap;
 use morphorm::Hierarchy;
+use std::iter::Rev;
 
 use crate::node::WrappedIndex;
 
@@ -258,7 +258,12 @@ impl Tree {
         }
     }
 
-    pub fn diff_children(&self, other_tree: &Tree, root_node: WrappedIndex, depth: u32) -> ChildChanges {
+    pub fn diff_children(
+        &self,
+        other_tree: &Tree,
+        root_node: WrappedIndex,
+        depth: u32,
+    ) -> ChildChanges {
         let children_a = self.children.get(&root_node);
         let children_b = other_tree.children.get(&root_node);
 
@@ -314,7 +319,9 @@ impl Tree {
             .iter()
             .map(|(id, node)| {
                 let old_node = children_a.get(*id);
-                let inserted = old_node.is_none() || old_node.is_some() && !children_a.iter().any(|(_, old_node)| node == old_node);
+                let inserted = old_node.is_none()
+                    || old_node.is_some()
+                        && !children_a.iter().any(|(_, old_node)| node == old_node);
 
                 let value_changed = if let Some((_, old_node)) = old_node {
                     node != old_node
@@ -384,7 +391,8 @@ impl Tree {
         if depth > 0 {
             for (child_id, child_node) in children_a.iter() {
                 // Add children of child changes.
-                let children_of_child_changes = self.diff_children(other_tree, *child_node, depth - 1);
+                let children_of_child_changes =
+                    self.diff_children(other_tree, *child_node, depth - 1);
                 child_changes
                     .child_changes
                     .push((*child_id, children_of_child_changes));
@@ -507,7 +515,13 @@ impl Tree {
         flat_tree_diff_nodes
     }
 
-    pub fn merge(&mut self, other: &Tree, root_node: WrappedIndex, changes: ChildChanges, depth: u32) {
+    pub fn merge(
+        &mut self,
+        other: &Tree,
+        root_node: WrappedIndex,
+        changes: ChildChanges,
+        depth: u32,
+    ) {
         let has_changes = changes.has_changes();
         let children_a = self.children.get_mut(&root_node);
         let children_b = other.children.get(&root_node);
@@ -563,23 +577,22 @@ impl Tree {
                     other,
                     changes.changes[child_id].1,
                     children_of_child_changes,
-                    depth - 1
+                    depth - 1,
                 );
             }
         }
     }
 
-    /// Copies a specific node and it's children from other_tree to self. 
+    /// Copies a specific node and it's children from other_tree to self.
     /// Note: Does not deep copy.
     pub fn copy_from_point(&mut self, other_tree: &Tree, root_node: WrappedIndex) {
         if let Some(children) = other_tree.children.get(&root_node) {
             self.children.insert(root_node, children.clone());
             for child in children.iter() {
                 self.parents.insert(*child, root_node);
-            }       
+            }
         }
     }
-
 }
 
 /// An iterator that performs a depth-first traversal down a tree starting
@@ -782,7 +795,7 @@ impl<'a> Hierarchy<'a> for Tree {
 #[cfg(test)]
 mod tests {
     use crate::tree::{DownwardIterator, UpwardIterator};
-    use crate::tree::{WrappedIndex, Tree};
+    use crate::tree::{Tree, WrappedIndex};
     use bevy::prelude::Entity;
 
     #[test]

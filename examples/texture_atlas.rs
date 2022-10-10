@@ -1,8 +1,5 @@
 use bevy::{
-    prelude::{
-        App as BevyApp, AssetServer, Commands, Res,
-        ResMut, ImageSettings,
-    },
+    prelude::{App as BevyApp, AssetServer, Commands, ImageSettings, Res, ResMut},
     DefaultPlugins,
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
@@ -34,57 +31,46 @@ fn startup(
     //The flower is in the 6(-1) row and 15 collumn
     let flower_index = columns * 5 + 15;
 
-    let mut context = Context::new();
-    let entity = commands
-        .spawn()
-        .insert_bundle(KayakAppBundle {
-            children: Children::new(move |parent_id, widget_context, commands| {
-                let atlas_styles = Style {
-                    position_type: StyleProp::Value(PositionType::ParentDirected),
-                    width: StyleProp::Value(Units::Pixels(200.0)),
-                    height: StyleProp::Value(Units::Pixels(200.0)),
-                    ..Style::default()
-                };
-        
-                let rect = atlas.textures[sign_index];
-                let sign_position = rect.min;
-                let sign_size = rect.max - rect.min;
-        
-                let rect = atlas.textures[flower_index];
-                let flower_position = rect.min;
-                let flower_size = rect.max - rect.min;
+    let mut widget_context = Context::new();
+    let parent_id = None;
 
-                let image_entity = commands.spawn().insert_bundle(TextureAtlasBundle {
-                    atlas: TextureAtlas {
-                        handle: image_handle.clone(),
-                        position: sign_position,
-                        tile_size: sign_size,
-                    },
-                    styles: atlas_styles.clone(),
-                    ..Default::default()
-                }).id();
-                widget_context.add(image_entity, parent_id);
+    let atlas_styles = Style {
+        position_type: StyleProp::Value(PositionType::ParentDirected),
+        width: StyleProp::Value(Units::Pixels(200.0)),
+        height: StyleProp::Value(Units::Pixels(200.0)),
+        ..Style::default()
+    };
 
-                let image_entity = commands.spawn().insert_bundle(TextureAtlasBundle {
-                    atlas: TextureAtlas {
-                        handle: image_handle.clone(),
-                        position: flower_position,
-                        tile_size: flower_size,
-                    },
-                    styles: atlas_styles.clone(),
-                    ..Default::default()
-                }).id();
-                widget_context.add(image_entity, parent_id);
-            }),
-            styles: Style {
-                render_command: StyleProp::Value(RenderCommand::Layout),
-                ..Style::new_default()
-            },
-            ..Default::default()
-        })
-        .id();
-    context.add_widget(None, entity);
-    commands.insert_resource(context);
+    let rect = atlas.textures[sign_index];
+    let sign_position = rect.min;
+    let sign_size = rect.max - rect.min;
+
+    let rect = atlas.textures[flower_index];
+    let flower_position = rect.min;
+    let flower_size = rect.max - rect.min;
+
+    rsx! {
+        <KayakAppBundle>
+            <TextureAtlasBundle
+                atlas={TextureAtlas {
+                    handle: image_handle.clone(),
+                    position: sign_position,
+                    tile_size: sign_size,
+                }}
+                styles={atlas_styles.clone()}
+            />
+            <TextureAtlasBundle
+                atlas={TextureAtlas {
+                    handle: image_handle.clone(),
+                    position: flower_position,
+                    tile_size: flower_size,
+                }}
+                styles={atlas_styles.clone()}
+            />
+        </KayakAppBundle>
+    }
+
+    commands.insert_resource(widget_context);
 }
 
 fn main() {

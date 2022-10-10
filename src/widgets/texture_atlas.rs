@@ -1,6 +1,11 @@
-use bevy::prelude::{Image, Handle, Bundle, Component, In, Entity, Query, Changed, Vec2};
+use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, Image, In, Query, Vec2};
 
-use crate::{widget::Widget, styles::{Style, StyleProp, RenderCommand}, context::WidgetName, prelude::WidgetContext};
+use crate::{
+    context::WidgetName,
+    prelude::WidgetContext,
+    styles::{RenderCommand, Style, StyleProp},
+    widget::Widget,
+};
 
 /// A widget that renders a texture atlas
 /// Allows for the use of a partial square of an image such as in a sprite sheet
@@ -38,7 +43,11 @@ pub struct TextureAtlasBundle {
 
 impl Default for TextureAtlasBundle {
     fn default() -> Self {
-        Self { atlas: Default::default(), styles: Default::default(), widget_name: WidgetName(TextureAtlas::default().get_name()) }
+        Self {
+            atlas: Default::default(),
+            styles: Default::default(),
+            widget_name: WidgetName(TextureAtlas::default().get_name()),
+        }
     }
 }
 

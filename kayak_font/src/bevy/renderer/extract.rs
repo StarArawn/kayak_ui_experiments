@@ -1,6 +1,8 @@
 use crate::bevy::renderer::FontTextureCache;
 use crate::KayakFont;
-use bevy::prelude::{AssetEvent, Assets, Commands, EventReader, Handle, Image, Local, Res, ResMut, Resource};
+use bevy::prelude::{
+    AssetEvent, Assets, Commands, EventReader, Handle, Image, Local, Res, ResMut, Resource,
+};
 use bevy::render::{
     render_resource::{TextureFormat, TextureUsages},
     Extract,

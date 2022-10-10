@@ -1,9 +1,11 @@
-use bevy::prelude::{Bundle, Component, In, Entity, Query, Changed, Image, Handle, Commands};
+use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, Handle, Image, In, Query};
 
 use crate::{
+    children::Children,
     context::WidgetName,
-    styles::{Edge, Style, StyleProp, RenderCommand},
-    widget::Widget, prelude::WidgetContext, children::Children,
+    prelude::WidgetContext,
+    styles::{Edge, RenderCommand, Style, StyleProp},
+    widget::Widget,
 };
 
 #[derive(Component, Default, Debug)]
@@ -46,7 +48,7 @@ pub fn update_nine_patch(
             handle: nine_patch.handle.clone_weak(),
         });
 
-        children.spawn(Some(entity), &widget_context, &mut commands);
+        children.process(&widget_context, Some(entity));
 
         return true;
     }

@@ -1,10 +1,11 @@
-use bevy::{math::Vec2, render::color::Color, prelude::Rect};
-use crate::{render_primitive::RenderPrimitive, render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, styles::Corner};
+use crate::{
+    render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
+    render_primitive::RenderPrimitive,
+    styles::Corner,
+};
+use bevy::{math::Vec2, prelude::Rect, render::color::Color};
 
-pub fn extract_images(
-    render_command: &RenderPrimitive,
-    dpi: f32,
-) -> Vec<ExtractQuadBundle> {
+pub fn extract_images(render_command: &RenderPrimitive, dpi: f32) -> Vec<ExtractQuadBundle> {
     let (border_radius, layout, handle) = match render_command {
         RenderPrimitive::Image {
             border_radius,

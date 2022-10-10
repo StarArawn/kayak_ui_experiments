@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use bevy::prelude::Query;
 use morphorm::{Cache, GeometryChanged};
 
-use crate::node::{WrappedIndex};
+use crate::node::WrappedIndex;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Rect {
@@ -112,7 +112,6 @@ impl LayoutCache {
         self.geometry_changed.iter()
     }
 }
-
 
 pub struct DataCache<'borrow, 'world, 'state> {
     pub query: &'borrow Query<'world, 'state, &'static crate::node::Node>,

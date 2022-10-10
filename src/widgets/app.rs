@@ -1,7 +1,16 @@
-use bevy::{prelude::{Component, Commands, In, Entity, Res, Query, With, Bundle}, window::Windows};
+use bevy::{
+    prelude::{Bundle, Commands, Component, Entity, In, Query, Res, With},
+    window::Windows,
+};
 use morphorm::Units;
 
-use crate::{styles::{StyleProp, Style}, widget::Widget, children::Children, prelude::WidgetContext, context::WidgetName};
+use crate::{
+    children::Children,
+    context::WidgetName,
+    prelude::WidgetContext,
+    styles::{RenderCommand, Style, StyleProp},
+    widget::Widget,
+};
 
 #[derive(Component, Default)]
 pub struct KayakApp;
@@ -18,7 +27,12 @@ pub struct KayakAppBundle {
 
 impl Default for KayakAppBundle {
     fn default() -> Self {
-        Self { app: Default::default(), styles: Default::default(), children: Default::default(), widget_name: WidgetName(KayakApp::default().get_name()) }
+        Self {
+            app: Default::default(),
+            styles: Default::default(),
+            children: Default::default(),
+            widget_name: WidgetName(KayakApp::default().get_name()),
+        }
     }
 }
 
@@ -41,8 +55,10 @@ pub fn app_update(
             has_changed = true;
         }
 
+        app_style.render_command = StyleProp::Value(RenderCommand::Layout);
+
         if has_changed {
-            children.spawn(Some(entity), &mut widget_context, &mut commands);
+            children.process(&widget_context, Some(entity));
         }
     }
 

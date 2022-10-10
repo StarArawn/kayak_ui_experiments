@@ -1,6 +1,9 @@
 use bevy::prelude::Entity;
 
-use crate::{cursor::{CursorEvent, ScrollEvent}, keyboard_event::KeyboardEvent};
+use crate::{
+    cursor::{CursorEvent, ScrollEvent},
+    keyboard_event::KeyboardEvent,
+};
 
 /// An event type sent to widgets
 #[derive(Debug, Clone, Copy, PartialEq)]

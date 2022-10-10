@@ -1,7 +1,7 @@
 use crate::{context::Context, node::Node, render_primitive::RenderPrimitive, styles::Corner};
 use bevy::{
     // math::Vec2,
-    prelude::{Assets, Color, Commands, Plugin, Query, Res, Vec2, Image, Rect},
+    prelude::{Assets, Color, Commands, Image, Plugin, Query, Rect, Res, Vec2},
     render::{Extract, RenderApp, RenderStage},
     window::Windows,
 };
@@ -9,7 +9,8 @@ use kayak_font::KayakFont;
 
 use super::{
     font::{self, FontMapping},
-    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType}, image, nine_patch, texture_atlas,
+    image, nine_patch, texture_atlas,
+    unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
 };
 
 // mod nine_patch;
@@ -64,11 +65,8 @@ pub fn extract(
                 extracted_quads.extend(nine_patch_quads);
             }
             RenderPrimitive::TextureAtlas { .. } => {
-                let texture_atlas_quads = texture_atlas::extract_texture_atlas(
-                    &render_primitive,
-                    &images,
-                    dpi,
-                );
+                let texture_atlas_quads =
+                    texture_atlas::extract_texture_atlas(&render_primitive, &images, dpi);
                 extracted_quads.extend(texture_atlas_quads);
             }
             RenderPrimitive::Clip { layout } => {

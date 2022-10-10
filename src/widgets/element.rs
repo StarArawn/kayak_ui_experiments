@@ -1,7 +1,11 @@
 use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Query, With};
 
 use crate::{
-    children::Children, context::WidgetName, prelude::WidgetContext, styles::{Style, StyleProp, RenderCommand}, widget::Widget,
+    children::Children,
+    context::WidgetName,
+    prelude::WidgetContext,
+    styles::{RenderCommand, Style, StyleProp},
+    widget::Widget,
 };
 
 #[derive(Component, Default)]
@@ -35,7 +39,7 @@ pub fn update_element(
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Layout);
-        children.spawn(Some(entity), &mut widget_context, &mut commands);
+        children.process(&mut widget_context, Some(entity));
         return true;
     }
     false

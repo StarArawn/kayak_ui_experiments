@@ -1,6 +1,7 @@
 use crate::{
     render::unified::pipeline::{ExtractQuadBundle, ExtractedQuad, UIQuadType},
-    render_primitive::RenderPrimitive, styles::Corner,
+    render_primitive::RenderPrimitive,
+    styles::Corner,
 };
 use bevy::{math::Vec2, prelude::Rect};
 
