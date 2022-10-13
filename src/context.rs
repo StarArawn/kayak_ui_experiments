@@ -20,7 +20,11 @@ use crate::{
     WindowSize,
 };
 
-const UPDATE_DEPTH: u32 = 0;
+/// A tag component representing when a widget has been mounted(added to the tree).
+#[derive(Component)]
+pub struct Mounted;
+
+const UPDATE_DEPTH: u32 = 1;
 
 #[derive(Resource)]
 pub struct Context {
@@ -80,7 +84,7 @@ impl Context {
                 .add_context_entity::<T>(parent_id, context_entity);
         }
     }
-    
+
     pub fn build_render_primitives(
         &self,
         nodes: &Query<&crate::node::Node>,
@@ -88,6 +92,8 @@ impl Context {
         if self.node_tree.root_node.is_none() {
             return vec![];
         }
+
+        // self.node_tree.dump();
 
         recurse_node_tree_to_build_primitives(
             &self.node_tree,
@@ -129,7 +135,6 @@ fn recurse_node_tree_to_build_primitives(
             };
 
             prev_clip = new_prev_clip.clone();
-
             if node_tree.children.contains_key(&current_node) {
                 for child in node_tree.children.get(&current_node).unwrap() {
                     main_z_index += 1.0;
@@ -185,6 +190,10 @@ fn update_widgets_sys(world: &mut World) {
         system.set_last_change_tick(world.read_change_tick());
         // system.apply_buffers(world);
     }
+
+    // if let Ok(tree) = context.tree.try_read() {
+    // tree.dump();
+    // }
 
     world.insert_resource(context);
 }
@@ -268,6 +277,8 @@ fn update_widget(
     let mut command_queue = CommandQueue::default();
     let mut commands = Commands::new(&mut command_queue, world);
 
+    commands.entity(entity.0).remove::<Mounted>();
+
     // Mark node as needing a recalculation of rendering/layout.
     if should_update_children {
         commands.entity(entity.0).insert(DirtyNode);
@@ -281,9 +292,14 @@ fn update_widget(
     if should_update_children {
         for (_, changed_entity, _, changes) in diff.changes.iter() {
             if changes.iter().any(|change| *change == Change::Deleted) {
-                commands.entity(changed_entity.0).despawn();
+                // commands.entity(changed_entity.0).despawn();
+                commands.entity(changed_entity.0).remove::<DirtyNode>();
             } else {
                 commands.entity(changed_entity.0).insert(DirtyNode);
+            }
+
+            if changes.iter().any(|change| *change == Change::Inserted) {
+                commands.entity(changed_entity.0).insert(Mounted);
             }
         }
     }

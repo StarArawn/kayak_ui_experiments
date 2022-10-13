@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use kayak_font::Alignment;
 
 use crate::{
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -64,7 +64,7 @@ impl Default for TextBundle {
 
 pub fn text_update(
     In((_, entity)): In<(WidgetContext, Entity)>,
-    mut query: Query<(&mut Style, &Text), Changed<Text>>,
+    mut query: Query<(&mut Style, &Text), Or<(Changed<Text>, With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, text)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Text {

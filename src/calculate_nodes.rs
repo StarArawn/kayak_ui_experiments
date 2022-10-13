@@ -136,6 +136,7 @@ pub fn calculate_nodes(
         build_nodes_tree(&mut context, &tree, &node_query);
         // }
 
+        // dbg!("STARTING");
         {
             let context = context.as_mut();
             let node_tree = &context.node_tree;
@@ -145,8 +146,11 @@ pub fn calculate_nodes(
                 query: &nodes_no_entity_query,
             };
 
+            // dbg!(&node_tree);
+
             morphorm::layout(&mut data_cache, node_tree, &nodes_no_entity_query);
         }
+        // dbg!("FINISHED");
     }
 }
 

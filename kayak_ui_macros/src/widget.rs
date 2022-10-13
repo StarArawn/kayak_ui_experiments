@@ -133,7 +133,7 @@ impl Widget {
             let key = attribute.ident();
             let value = attribute.value_tokens();
             let key_name = quote! { #key }.to_string();
-            if key_name.contains("id") {
+            if key_name == "id" {
                 return Some(value);
             } else {
                 None
@@ -152,7 +152,9 @@ impl Widget {
         // If this widget contains children, add it (should result in error if widget does not accept children)
         let children = if attrs.should_add_children() {
             let kayak_core = get_core_crate();
-            let children_tuple = attrs.children.as_option_of_tuples_tokens(only_children || attrs.children.is_block());
+            let children_tuple = attrs
+                .children
+                .as_option_of_tuples_tokens(only_children || attrs.children.is_block());
 
             // attrs.push(quote! {
             //     let children = children.clone();
@@ -172,6 +174,7 @@ impl Widget {
             };
             let end = if !only_children {
                 quote! {
+                    #prop_ident.children.despawn(&mut commands);
                     #prop_ident.children = children;
                     let parent_id = parent_id_old;
                 }

@@ -1,8 +1,8 @@
-use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Query, With};
+use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Or, Query, With};
 
 use crate::{
     children::Children,
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp, Units},
     widget::Widget,
@@ -40,7 +40,7 @@ impl Default for ClipBundle {
 pub fn update_clip(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
-    mut query: Query<(&Style, &Children), (Changed<Style>, With<Clip>)>,
+    mut query: Query<(&Style, &Children), Or<((Changed<Style>, With<Clip>), With<Mounted>)>>,
 ) -> bool {
     if let Ok((_, children)) = query.get_mut(entity) {
         children.process(&widget_context, Some(entity));

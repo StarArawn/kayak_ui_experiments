@@ -19,3 +19,7 @@ kayak_ui_macros = { path = "./kayak_ui_macros" }
 
 [dev-dependencies]
 fastrand = "1.8"
+
+[[example]]
+name = "tabs"
+path = "examples/tabs/tabs.rs"

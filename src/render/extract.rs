@@ -34,7 +34,9 @@ pub fn extract(
     images: Extract<Res<Assets<Image>>>,
     windows: Extract<Res<Windows>>,
 ) {
+    // dbg!("STARTED");
     let render_primitives = context.build_render_primitives(&node_query);
+    // dbg!("FINISHED");
 
     let dpi = if let Some(window) = windows.get_primary() {
         window.scale_factor() as f32

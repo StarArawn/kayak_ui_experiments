@@ -88,7 +88,7 @@ impl<'a, 'c> CustomWidgetAttributes<'a, 'c> {
                 let key = attribute.ident();
                 let value = attribute.value_tokens();
                 let key_name = quote! { #key }.to_string();
-                if key_name.contains("id") {
+                if key_name == "id" {
                     None
                 } else {
                     Some(quote! {

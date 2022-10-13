@@ -1,7 +1,4 @@
-use crate::{
-    child::{Child},
-    widget_builder::build_widget_stream,
-};
+use crate::{child::Child, widget_builder::build_widget_stream};
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream, Result};
 
@@ -64,7 +61,14 @@ impl Children {
                     Child::Widget(widget) => widget.entity_id.clone(),
                     _ => quote! {},
                 };
-                (entity_id, quote! { #child }, match child { Child::Widget(_) => true, _ => false })
+                (
+                    entity_id,
+                    quote! { #child },
+                    match child {
+                        Child::Widget(_) => true,
+                        _ => false,
+                    },
+                )
             })
             .collect();
 

@@ -1,8 +1,10 @@
-use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Query, Vec2};
+use bevy::prelude::{
+    Bundle, Changed, Color, Commands, Component, Entity, In, Or, Query, Vec2, With,
+};
 
 use crate::{
     children::Children,
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     event::{Event, EventType},
     event_dispatcher::EventDispatcherContext,
     on_event::OnEvent,
@@ -31,7 +33,7 @@ pub struct Window {
     pub is_dragging: bool,
     pub offset: Vec2,
     pub title_bar_entity: Option<Entity>,
-    pub children: Vec<Entity>,
+    // pub children: Vec<Entity>,
 }
 
 impl Widget for Window {}
@@ -58,7 +60,15 @@ impl Default for WindowBundle {
 pub fn window_update(
     In((widget_context, window_entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
-    mut query: Query<(&mut Style, &Children, &mut Window), Changed<Window>>,
+    mut query: Query<
+        (&mut Style, &Children, &mut Window),
+        Or<(
+            Changed<Window>,
+            Changed<Style>,
+            Changed<Children>,
+            With<Mounted>,
+        )>,
+    >,
 ) -> bool {
     let mut has_changed = false;
     if let Ok((mut window_style, children, mut window)) = query.get_mut(window_entity) {
@@ -142,10 +152,12 @@ pub fn window_update(
                                             window.position.x - data.position.0,
                                             window.position.y - data.position.1,
                                         );
+                                        window.title_bar_entity = None;
                                     }
                                     EventType::MouseUp(..) => {
                                         event_dispatcher_context.release_cursor(entity);
                                         window.is_dragging = false;
+                                        window.title_bar_entity = None;
                                     }
                                     EventType::Hover(data) => {
                                         if window.is_dragging {
@@ -153,6 +165,7 @@ pub fn window_update(
                                                 window.offset.x + data.position.0,
                                                 window.offset.y + data.position.1,
                                             );
+                                            window.title_bar_entity = None;
                                         }
                                     }
                                     _ => {}
@@ -164,8 +177,6 @@ pub fn window_update(
             }
             widget_context.add_widget(Some(window_entity), window.title_bar_entity.unwrap());
 
-            let children = children.clone();
-
             let mut clip_bundle = ClipBundle {
                 children: children.clone(),
                 ..ClipBundle::default()
@@ -174,12 +185,7 @@ pub fn window_update(
 
             let clip_entity = commands.spawn().insert_bundle(clip_bundle).id();
             widget_context.add_widget(Some(window_entity), clip_entity);
-            let children = widget_context.get_children(window_entity);
-            window.children = children;
-        } else {
-            for child in window.children.iter() {
-                widget_context.add_widget(Some(window_entity), *child);
-            }
+            // let children = widget_context.get_children(window_entity);
         }
 
         has_changed = true;

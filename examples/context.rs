@@ -12,7 +12,7 @@ use bevy::{
         App as BevyApp, AssetServer, Bundle, Changed, Color, Commands, Component, Entity,
         ImageSettings, In, ParamSet, Query, Res, ResMut, Vec2,
     },
-    DefaultPlugins
+    DefaultPlugins,
 };
 use kayak_ui::prelude::{widgets::*, Style, *};
 
@@ -101,7 +101,7 @@ fn update_theme_button(
                         box_style.width = StyleProp::Value(Units::Pixels(24.0));
                         box_style.height = StyleProp::Value(Units::Pixels(24.0));
                     }
-                    
+
                     let parent_id = Some(theme_button_entity);
                     rsx! {
                         <BackgroundBundle
@@ -237,7 +237,7 @@ fn update_theme_demo(
                             theme_demo.context_entity = Some(theme_entity);
                         }
                     }
-                        
+
                     let context_entity = if let Some(entity) = theme_demo.context_entity {
                         entity
                     } else {
@@ -329,7 +329,7 @@ fn update_theme_demo(
                     }
 
                     children.process(&widget_context, parent_id);
-                    
+
                     return true;
                 }
             }

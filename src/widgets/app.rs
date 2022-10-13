@@ -1,12 +1,12 @@
 use bevy::{
-    prelude::{Bundle, Commands, Component, Entity, In, Query, Res, With},
+    prelude::{Bundle, Commands, Component, Entity, In, Or, Query, Res, With},
     window::Windows,
 };
 use morphorm::Units;
 
 use crate::{
     children::Children,
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -41,7 +41,7 @@ pub fn app_update(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
     windows: Res<Windows>,
-    mut query: Query<(&mut Style, &Children), With<KayakApp>>,
+    mut query: Query<(&mut Style, &Children), Or<(With<KayakApp>, With<Mounted>)>>,
 ) -> bool {
     let mut has_changed = false;
     let primary_window = windows.get_primary().unwrap();

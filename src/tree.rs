@@ -593,6 +593,47 @@ impl Tree {
             }
         }
     }
+
+    /// Dumps the tree's current state to the console
+    ///
+    /// To dump only a section of the tree, use [dump_at] instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `widgets`: Optionally, provide the current widgets to include metadata about each widget
+    ///
+    /// returns: ()
+    pub fn dump(&self) {
+        if let Some(root) = self.root_node {
+            self.dump_at(root);
+        }
+    }
+
+    /// Dumps a section of the tree's current state to the console (starting from a specific index)
+    ///
+    /// To dump the entire tree, use [dump] instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `start_index`: The index to start recursing from (including itself)
+    /// * `widgets`: Optionally, provide the current widgets to include metadata about each widget
+    ///
+    /// returns: ()
+    pub fn dump_at(&self, start_index: WrappedIndex) {
+        self.dump_at_internal(start_index, 0);
+    }
+
+    fn dump_at_internal(&self, start_index: WrappedIndex, depth: usize) {
+        let indent = "  ".repeat(depth);
+        let raw_parts = start_index.0.id();
+        println!("{} [{}]", indent, raw_parts,);
+
+        if let Some(children) = self.children.get(&start_index) {
+            for node_index in children {
+                self.dump_at_internal(*node_index, depth + 1);
+            }
+        }
+    }
 }
 
 /// An iterator that performs a depth-first traversal down a tree starting

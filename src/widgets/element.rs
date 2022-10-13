@@ -1,8 +1,8 @@
-use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Query, With};
+use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Or, Query, With};
 
 use crate::{
     children::Children,
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -35,7 +35,7 @@ impl Default for ElementBundle {
 pub fn update_element(
     In((mut widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
-    mut query: Query<(&mut Style, &Children), (Changed<Style>, With<Element>)>,
+    mut query: Query<(&mut Style, &Children), Or<((Changed<Style>, With<Element>), With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Layout);

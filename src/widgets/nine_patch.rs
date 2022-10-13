@@ -1,8 +1,10 @@
-use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, Handle, Image, In, Query};
+use bevy::prelude::{
+    Bundle, Changed, Commands, Component, Entity, Handle, Image, In, Or, Query, With,
+};
 
 use crate::{
     children::Children,
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{Edge, RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -40,7 +42,10 @@ impl Default for NinePatchBundle {
 pub fn update_nine_patch(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
-    mut query: Query<(&mut Style, &NinePatch, &Children), (Changed<NinePatch>, Changed<Style>)>,
+    mut query: Query<
+        (&mut Style, &NinePatch, &Children),
+        Or<((Changed<NinePatch>, Changed<Style>), With<Mounted>)>,
+    >,
 ) -> bool {
     if let Ok((mut style, nine_patch, children)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::NinePatch {

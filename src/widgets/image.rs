@@ -1,7 +1,7 @@
-use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, In, Query};
+use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, In, Or, Query, With};
 
 use crate::{
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -31,7 +31,7 @@ impl Default for ImageBundle {
 
 pub fn update_image(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut query: Query<(&mut Style, &Image), (Changed<Image>, Changed<Style>)>,
+    mut query: Query<(&mut Style, &Image), Or<((Changed<Image>, Changed<Style>), With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, image)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Image {

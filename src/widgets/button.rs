@@ -1,7 +1,7 @@
-use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Query};
+use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Or, Query, With};
 
 use crate::{
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     on_event::OnEvent,
     prelude::{Children, Units, WidgetContext},
     styles::{Corner, RenderCommand, Style, StyleProp},
@@ -37,7 +37,7 @@ impl Widget for Button {}
 pub fn button_update(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
-    mut query: Query<(&mut Style, &Children), Changed<Button>>,
+    mut query: Query<(&mut Style, &Children), Or<(Changed<Button>, With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {
         *style = Style::default()

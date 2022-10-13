@@ -1,7 +1,7 @@
-use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, Image, In, Query, Vec2};
+use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, Image, In, Or, Query, Vec2, With};
 
 use crate::{
-    context::WidgetName,
+    context::{Mounted, WidgetName},
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -53,7 +53,10 @@ impl Default for TextureAtlasBundle {
 
 pub fn update_texture_atlas(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut query: Query<(&mut Style, &TextureAtlas), (Changed<TextureAtlas>, Changed<Style>)>,
+    mut query: Query<
+        (&mut Style, &TextureAtlas),
+        Or<((Changed<TextureAtlas>, Changed<Style>), With<Mounted>)>,
+    >,
 ) -> bool {
     if let Ok((mut styles, texture_atlas)) = query.get_mut(entity) {
         *styles = Style {

@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
 use quote::quote;
 use syn::parse_macro_input;
-use widget::{Widget, ConstructedWidget};
+use widget::{ConstructedWidget, Widget};
 
 pub(crate) mod attribute;
 pub(crate) mod child;
@@ -30,7 +30,7 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 pub fn constructor(input: TokenStream) -> TokenStream {
     let el = parse_macro_input!(input as ConstructedWidget);
     let widget = el.widget;
-    let result = quote! { 
+    let result = quote! {
         let widget_entity = #widget;
         children.add(widget_entity);
     };

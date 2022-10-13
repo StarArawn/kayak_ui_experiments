@@ -7,6 +7,43 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug example 'test'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=test",
+                    "--package=kayak_ui_macros"
+                ],
+                "filter": {
+                    "name": "test",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=test",
+                    "--package=kayak_ui_macros"
+                ],
+                "filter": {
+                    "name": "test",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug unit tests in library 'kayak_ui'",
             "cargo": {
                 "args": [
@@ -18,6 +55,46 @@
                 "filter": {
                     "name": "kayak_ui",
                     "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'tabs'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=tabs",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "tabs",
+                    "kind": "example"
+                }
+            },
+            "env": {
+                "CARGO_MANIFEST_DIR": "${workspaceFolder}",
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'tabs'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=tabs",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "tabs",
+                    "kind": "example"
                 }
             },
             "args": [],
@@ -350,6 +427,62 @@
                 ],
                 "filter": {
                     "name": "texture_atlas",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'kayak_font'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=kayak_font"
+                ],
+                "filter": {
+                    "name": "kayak_font",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'bevy'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=bevy",
+                    "--package=kayak_font"
+                ],
+                "filter": {
+                    "name": "bevy",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'bevy'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=bevy",
+                    "--package=kayak_font"
+                ],
+                "filter": {
+                    "name": "bevy",
                     "kind": "example"
                 }
             },

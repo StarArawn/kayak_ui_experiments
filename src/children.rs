@@ -30,6 +30,12 @@ impl Children {
         }
     }
 
+    pub fn despawn(&mut self, commands: &mut Commands) {
+        for child in self.inner.drain(..) {
+            commands.entity(child).despawn_recursive();
+        }
+    }
+
     /// Processes all widgets and adds them to the tree.
     pub fn process(&self, widget_context: &WidgetContext, parent_id: Option<Entity>) {
         for child in self.inner.iter() {
