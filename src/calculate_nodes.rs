@@ -7,7 +7,7 @@ use kayak_font::KayakFont;
 use crate::{
     layout::{DataCache, Rect},
     node::{DirtyNode, Node, NodeBuilder, WrappedIndex},
-    prelude::{Context, RenderCommand, Style, Tree},
+    prelude::{Context, Style},
     render::font::FontMapping,
     render_primitive::RenderPrimitive,
     styles::{StyleProp, Units},
@@ -32,6 +32,11 @@ pub fn calculate_nodes(
 
     let initial_styles = Style::initial();
     let default_styles = Style::new_default();
+
+    // Jump out early.
+    // if query.is_empty() {
+    //     return;
+    // }
 
     if let Ok(tree) = context.tree.clone().read() {
         for dirty_entity in query.iter() {
@@ -90,7 +95,7 @@ pub fn calculate_nodes(
                     &context,
                     &fonts,
                     &font_mapping,
-                    &node_query,
+                    // &node_query,
                     dirty_entity,
                     &mut styles,
                 );
@@ -106,17 +111,20 @@ pub fn calculate_nodes(
                     .with_children(children)
                     .with_primitive(primitive)
                     .build();
+
                 if dirty_entity == tree.root_node.unwrap() {
-                    context.layout_cache.rect.insert(
-                        dirty_entity,
-                        Rect {
-                            posx: 0.0,
-                            posy: 0.0,
-                            width,
-                            height,
-                            z_index: 0.0,
-                        },
-                    );
+                    if let Ok(mut cache) = context.layout_cache.try_write() {
+                        cache.rect.insert(
+                            dirty_entity,
+                            Rect {
+                                posx: 0.0,
+                                posy: 0.0,
+                                width,
+                                height,
+                                z_index: 0.0,
+                            },
+                        );
+                    }
                 }
                 node.z = current_z;
                 new_nodes.insert(dirty_entity.0, (node, needs_layout));
@@ -133,24 +141,34 @@ pub fn calculate_nodes(
         }
 
         // if has_new_nodes {
-        build_nodes_tree(&mut context, &tree, &node_query);
+        // build_nodes_tree(&mut context, &tree, &node_query);
         // }
 
-        // dbg!("STARTING");
+        // dbg!("STARTING MORPHORM CALC!");
+        // dbg!("node_tree");
+        // context.node_tree.dump();
+        // if let Ok(tree) = context.tree.try_read() {
+        // dbg!("tree");
+        // dbg!(&tree);
+        // tree.dump();
+        // }
         {
             let context = context.as_mut();
-            let node_tree = &context.node_tree;
-            let layout_cache = &mut context.layout_cache;
-            let mut data_cache = DataCache {
-                cache: layout_cache,
-                query: &nodes_no_entity_query,
-            };
+            if let Ok(tree) = context.tree.try_read() {
+                let node_tree = &*tree;
+                if let Ok(mut cache) = context.layout_cache.try_write() {
+                    let mut data_cache = DataCache {
+                        cache: &mut cache,
+                        query: &nodes_no_entity_query,
+                    };
 
-            // dbg!(&node_tree);
+                    // dbg!(&node_tree);
 
-            morphorm::layout(&mut data_cache, node_tree, &nodes_no_entity_query);
+                    morphorm::layout(&mut data_cache, node_tree, &nodes_no_entity_query);
+                }
+            }
         }
-        // dbg!("FINISHED");
+        // dbg!("FINISHED MORPHORM CALC!");
     }
 }
 
@@ -159,7 +177,7 @@ fn create_primitive(
     context: &Context,
     fonts: &Assets<KayakFont>,
     font_mapping: &FontMapping,
-    query: &Query<(Entity, &Node)>,
+    // query: &Query<(Entity, &Node)>,
     id: WrappedIndex,
     styles: &mut Style,
 ) -> (RenderPrimitive, bool) {
@@ -178,20 +196,24 @@ fn create_primitive(
             let font_handle = font_mapping.get_handle(font.clone()).unwrap();
             if let Some(font) = fonts.get(&font_handle) {
                 // self.bind(id, &asset);
-                if let Some(parent_id) = get_valid_parent(&context.node_tree, query, id) {
-                    if let Some(parent_layout) = context.get_layout(&parent_id) {
-                        properties.max_size = (parent_layout.width, parent_layout.height);
+                if let Ok(node_tree) = context.tree.try_read() {
+                    if let Some(parent_id) = node_tree.get_parent(id) {
+                        if let Some(parent_layout) = context.get_layout(&parent_id) {
+                            properties.max_size = (parent_layout.width, parent_layout.height);
 
-                        // --- Calculate Text Layout --- //
-                        *text_layout = font.measure(&content, *properties);
-                        let measurement = text_layout.size();
+                            // --- Calculate Text Layout --- //
+                            *text_layout = font.measure(&content, *properties);
+                            let measurement = text_layout.size();
 
-                        // --- Apply Layout --- //
-                        if matches!(styles.width, StyleProp::Default) {
-                            styles.width = StyleProp::Value(Units::Pixels(measurement.0));
-                        }
-                        if matches!(styles.height, StyleProp::Default) {
-                            styles.height = StyleProp::Value(Units::Pixels(measurement.1));
+                            // --- Apply Layout --- //
+                            if matches!(styles.width, StyleProp::Default) {
+                                styles.width = StyleProp::Value(Units::Pixels(measurement.0));
+                            }
+                            if matches!(styles.height, StyleProp::Default) {
+                                styles.height = StyleProp::Value(Units::Pixels(measurement.1));
+                            }
+                        } else {
+                            needs_layout = true;
                         }
                     } else {
                         needs_layout = true;
@@ -213,88 +235,88 @@ fn create_primitive(
     (render_primitive, needs_layout)
 }
 
-pub fn build_nodes_tree(context: &mut Context, tree: &Tree, node_query: &Query<(Entity, &Node)>) {
-    if tree.root_node.is_none() {
-        return;
-    }
-    let mut node_tree = Tree::default();
-    node_tree.root_node = tree.root_node;
-    node_tree.children.insert(
-        tree.root_node.unwrap(),
-        get_valid_node_children(&tree, &node_query, tree.root_node.unwrap()),
-    );
+// pub fn build_nodes_tree(context: &mut Context, tree: &Tree, node_query: &Query<(Entity, &Node)>) {
+//     if tree.root_node.is_none() {
+//         return;
+//     }
+//     let mut node_tree = Tree::default();
+//     node_tree.root_node = tree.root_node;
+//     node_tree.children.insert(
+//         tree.root_node.unwrap(),
+//         get_valid_node_children(&tree, &node_query, tree.root_node.unwrap()),
+//     );
 
-    // let old_focus = self.focus_tree.current();
-    // self.focus_tree.clear();
-    // self.focus_tree.add(root_node_id, &self.tree);
+//     // let old_focus = self.focus_tree.current();
+//     // self.focus_tree.clear();
+//     // self.focus_tree.add(root_node_id, &self.tree);
 
-    for (node_id, node) in node_query.iter() {
-        let node_id = WrappedIndex(node_id);
-        if let Some(widget_styles) = node.raw_styles.as_ref() {
-            // Only add widgets who have renderable nodes.
-            if widget_styles.render_command.resolve() != RenderCommand::Empty {
-                let valid_children = get_valid_node_children(&tree, &node_query, node_id);
-                node_tree.children.insert(node_id, valid_children);
-                let valid_parent = get_valid_parent(&tree, &node_query, node_id);
-                if let Some(valid_parent) = valid_parent {
-                    node_tree.parents.insert(node_id, valid_parent);
-                }
-            }
-        }
+//     for (node_id, node) in node_query.iter() {
+//         let node_id = WrappedIndex(node_id);
+//         if let Some(widget_styles) = node.raw_styles.as_ref() {
+//             // Only add widgets who have renderable nodes.
+//             // if widget_styles.render_command.resolve() != RenderCommand::Empty {
+//                 let valid_children = get_valid_node_children(&tree, &node_query, node_id);
+//                 node_tree.children.insert(node_id, valid_children);
+//                 let valid_parent = get_valid_parent(&tree, &node_query, node_id);
+//                 if let Some(valid_parent) = valid_parent {
+//                     node_tree.parents.insert(node_id, valid_parent);
+//                 }
+//             // }
+//         }
 
-        // let focusable = self.get_focusable(widget_id).unwrap_or_default();
-        // if focusable {
-        //     self.focus_tree.add(widget_id, &self.tree);
-        // }
-    }
+//         // let focusable = self.get_focusable(widget_id).unwrap_or_default();
+//         // if focusable {
+//         //     self.focus_tree.add(widget_id, &self.tree);
+//         // }
+//     }
 
-    // if let Some(old_focus) = old_focus {
-    //     if self.focus_tree.contains(old_focus) {
-    //         self.focus_tree.focus(old_focus);
-    //     }
-    // }
+//     // if let Some(old_focus) = old_focus {
+//     //     if self.focus_tree.contains(old_focus) {
+//     //         self.focus_tree.focus(old_focus);
+//     //     }
+//     // }
 
-    // dbg!(&node_tree);
+//     // dbg!(&node_tree);
 
-    context.node_tree = node_tree;
-}
+//     // context.node_tree = node_tree;
+// }
 
-pub fn get_valid_node_children(
-    tree: &Tree,
-    query: &Query<(Entity, &Node)>,
-    node_id: WrappedIndex,
-) -> Vec<WrappedIndex> {
-    let mut children = Vec::new();
-    if let Some(node_children) = tree.children.get(&node_id) {
-        for child_id in node_children {
-            if let Ok((_, child_node)) = query.get(child_id.0) {
-                if child_node.resolved_styles.render_command.resolve() != RenderCommand::Empty {
-                    children.push(*child_id);
-                } else {
-                    children.extend(get_valid_node_children(tree, query, *child_id));
-                }
-            } else {
-                children.extend(get_valid_node_children(tree, query, *child_id));
-            }
-        }
-    }
+// pub fn get_valid_node_children(
+//     tree: &Tree,
+//     query: &Query<(Entity, &Node)>,
+//     node_id: WrappedIndex,
+// ) -> Vec<WrappedIndex> {
+//     let mut children = Vec::new();
+//     if let Some(node_children) = tree.children.get(&node_id) {
+//         for child_id in node_children {
+//             if let Ok((_, _child_node)) = query.get(child_id.0) {
+//                 // if child_node.resolved_styles.render_command.resolve() != RenderCommand::Empty {
+//                     children.push(*child_id);
+//                 // } else {
+//                     // children.extend(get_valid_node_children(tree, query, *child_id));
+//                 // }
+//             } else {
+//                 // children.extend(get_valid_node_children(tree, query, *child_id));
+//             }
+//         }
+//     }
 
-    children
-}
+//     children
+// }
 
-pub fn get_valid_parent(
-    tree: &Tree,
-    query: &Query<(Entity, &Node)>,
-    node_id: WrappedIndex,
-) -> Option<WrappedIndex> {
-    if let Some(parent_id) = tree.parents.get(&node_id) {
-        if let Ok((_, parent_node)) = query.get(parent_id.0) {
-            if parent_node.resolved_styles.render_command.resolve() != RenderCommand::Empty {
-                return Some(*parent_id);
-            }
-        }
-        return get_valid_parent(tree, query, *parent_id);
-    }
+// pub fn get_valid_parent(
+//     tree: &Tree,
+//     query: &Query<(Entity, &Node)>,
+//     node_id: WrappedIndex,
+// ) -> Option<WrappedIndex> {
+//     if let Some(parent_id) = tree.parents.get(&node_id) {
+//         if let Ok((_, parent_node)) = query.get(parent_id.0) {
+//             // if parent_node.resolved_styles.render_command.resolve() != RenderCommand::Empty {
+//                 return Some(*parent_id);
+//             // }
+//         }
+//         // return get_valid_parent(tree, query, *parent_id);
+//     }
 
-    None
-}
+//     None
+// }

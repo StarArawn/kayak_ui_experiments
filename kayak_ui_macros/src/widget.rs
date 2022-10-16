@@ -8,7 +8,7 @@ use crate::children::Children;
 use crate::tags::ClosingTag;
 use crate::widget_attributes::CustomWidgetAttributes;
 use crate::widget_builder::build_widget_stream;
-use crate::{get_core_crate, tags::OpenTag, widget_attributes::WidgetAttributes};
+use crate::{tags::OpenTag, widget_attributes::WidgetAttributes};
 
 #[derive(Clone, Debug)]
 pub struct Widget {
@@ -26,14 +26,14 @@ pub struct ConstructedWidget {
 impl Parse for ConstructedWidget {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self {
-            widget: Widget::custom_parse(input, true).unwrap(),
+            widget: Widget::custom_parse(input, true, 0).unwrap(),
         })
     }
 }
 
 impl Parse for Widget {
     fn parse(input: ParseStream) -> Result<Self> {
-        Self::custom_parse(input, false)
+        Self::custom_parse(input, false, 0)
     }
 }
 
@@ -49,7 +49,7 @@ impl Widget {
         }
     }
 
-    pub fn custom_parse(input: ParseStream, as_prop: bool) -> Result<Widget> {
+    pub fn custom_parse(input: ParseStream, as_prop: bool, index: usize) -> Result<Widget> {
         //let o = input.parse::<OpenCodeBlock>()?;
         let open_tag = input.parse::<OpenTag>()?;
 
@@ -65,7 +65,8 @@ impl Widget {
         let (entity_id, declaration) = if let Some(name) = open_tag.name {
             if Self::is_custom_element(&name) {
                 let attrs = &open_tag.attributes.for_custom_element(&children);
-                let (entity_id, props, constructor) = Self::construct(&name, attrs, as_prop, false);
+                let (entity_id, props, constructor) =
+                    Self::construct(&name, attrs, as_prop, false, index);
                 if !as_prop {
                     let widget_block =
                         build_widget_stream(quote! { built_widget }, constructor, 0, false);
@@ -92,7 +93,7 @@ impl Widget {
         } else {
             let attrs = &open_tag.attributes.for_custom_element(&children);
             let name = syn::parse_str::<syn::Path>(&"fragment").unwrap();
-            let (entity_id, props, _) = Self::construct(&name, attrs, true, true);
+            let (entity_id, props, _) = Self::construct(&name, attrs, true, true, index);
             (
                 entity_id,
                 quote! {
@@ -126,6 +127,7 @@ impl Widget {
         attrs: &CustomWidgetAttributes,
         as_prop: bool,
         only_children: bool,
+        _index: usize,
     ) -> (TokenStream, TokenStream, TokenStream) {
         // let kayak_core = get_core_crate();
 
@@ -151,7 +153,7 @@ impl Widget {
 
         // If this widget contains children, add it (should result in error if widget does not accept children)
         let children = if attrs.should_add_children() {
-            let kayak_core = get_core_crate();
+            // let kayak_core = get_core_crate();
             let children_tuple = attrs
                 .children
                 .as_option_of_tuples_tokens(only_children || attrs.children.is_block());
@@ -164,7 +166,7 @@ impl Widget {
                 quote! {
                     let parent_id_old = parent_id;
                     let parent_id = Some(#entity_id);
-                    let mut children = #kayak_core::prelude::Children::new();
+                    let mut children = Children::new();
                 }
             } else {
                 quote! {}
@@ -174,7 +176,7 @@ impl Widget {
             };
             let end = if !only_children {
                 quote! {
-                    #prop_ident.children.despawn(&mut commands);
+                    // #prop_ident.children.despawn(&mut commands);
                     #prop_ident.children = children;
                     let parent_id = parent_id_old;
                 }
@@ -195,7 +197,14 @@ impl Widget {
         }
 
         let props = quote! {
-            let #entity_id = commands.spawn().id();
+            let entity = widget_context.get_child_at(parent_id);
+            let #entity_id = if let Some(entity) = entity {
+                use bevy::prelude::DespawnRecursiveExt;
+                commands.entity(entity).despawn_recursive();
+                commands.get_or_spawn(entity).id()
+            } else {
+                commands.spawn().id()
+            };
             let mut #prop_ident = #name {
                 #assigned_attrs
                 ..Default::default()

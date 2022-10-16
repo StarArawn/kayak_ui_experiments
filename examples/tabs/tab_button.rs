@@ -2,7 +2,7 @@ use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Que
 use kayak_ui::prelude::{
     rsx,
     widgets::{ButtonBundle, Text, TextBundle},
-    Event, EventDispatcherContext, EventType, OnEvent, Style, StyleProp, Units, Widget,
+    Children, Event, EventDispatcherContext, EventType, OnEvent, Style, StyleProp, Units, Widget,
     WidgetContext, WidgetName,
 };
 

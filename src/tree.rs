@@ -340,6 +340,19 @@ impl Tree {
             .collect::<Vec<_>>();
         child_changes.changes.extend(inserted_and_changed);
 
+        if child_changes.changes.len() > 0
+            && child_changes.changes.iter().any(|a| {
+                child_changes
+                    .changes
+                    .iter()
+                    .any(|b| a.1 == b.1 && a.3 != b.3)
+            })
+        {
+            dbg!("ABORT!");
+            dbg!(&children_a);
+            dbg!(&children_b);
+        }
+
         let flat_tree_diff_nodes = child_changes
             .changes
             .iter()
@@ -523,7 +536,7 @@ impl Tree {
         depth: u32,
     ) {
         let has_changes = changes.has_changes();
-        let children_a = self.children.get_mut(&root_node);
+        let children_a = self.children.get(&root_node).cloned();
         let children_b = other.children.get(&root_node);
         if children_a.is_none() && children_b.is_none() {
             // Nothing to do.
@@ -548,11 +561,17 @@ impl Tree {
             }
             return;
         }
-        let children_a = children_a.unwrap();
+        let mut children_a = children_a.unwrap();
         let children_b = children_b.unwrap();
         children_a.resize(children_b.len(), WrappedIndex(Entity::from_raw(0)));
+
         for (id, node, parent_node, change) in changes.changes.iter() {
             match change.as_slice() {
+                [Change::Deleted] => {
+                    // self.parents.remove(node);
+                    children_a[*id] = WrappedIndex(Entity::from_raw(0));
+                    self.remove(*node);
+                }
                 [Change::Inserted] => {
                     children_a[*id] = *node;
                     self.parents.insert(*node, *parent_node);
@@ -564,12 +583,17 @@ impl Tree {
                 [Change::Updated] => {
                     children_a[*id] = *node;
                 }
-                [Change::Deleted] => {
-                    self.parents.remove(node);
-                }
                 _ => {}
             }
         }
+
+        for (id, _node, _parent_node, _change) in changes.changes.iter() {
+            if children_a[*id].0.id() == 0 {
+                children_a.remove(*id);
+            }
+        }
+
+        self.children.insert(root_node, children_a);
 
         if depth > 0 {
             for (child_id, children_of_child_changes) in changes.child_changes {
@@ -579,6 +603,16 @@ impl Tree {
                     children_of_child_changes,
                     depth - 1,
                 );
+            }
+        }
+    }
+
+    pub fn remove_child_from_node(&mut self, parent: &WrappedIndex, child: &WrappedIndex) {
+        if let Some(children) = self.children.get_mut(parent) {
+            let child_index = children.iter().position(|c| c == child);
+
+            if let Some(child_index) = child_index {
+                children.remove(child_index);
             }
         }
     }
@@ -639,10 +673,10 @@ impl Tree {
 /// An iterator that performs a depth-first traversal down a tree starting
 /// from a given node.
 pub struct DownwardIterator<'a> {
-    tree: &'a Tree,
-    starting_node: Option<WrappedIndex>,
-    current_node: Option<WrappedIndex>,
-    include_self: bool,
+    pub tree: &'a Tree,
+    pub starting_node: Option<WrappedIndex>,
+    pub current_node: Option<WrappedIndex>,
+    pub include_self: bool,
 }
 
 impl<'a> DownwardIterator<'a> {

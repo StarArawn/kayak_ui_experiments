@@ -113,7 +113,7 @@ impl<'a, 'c> CustomWidgetAttributes<'a, 'c> {
         } else if self.children.nodes.len() == 1 {
             let child = self.children.nodes.first().unwrap();
             match child {
-                Child::RawBlock(block) => {
+                Child::RawBlock((block, _)) => {
                     // Is child NOT an empty block? (`<Foo>{}</Foo>`)
                     block.stmts.len() > 0
                 }

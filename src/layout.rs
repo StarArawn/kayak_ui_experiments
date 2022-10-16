@@ -1,8 +1,9 @@
 use std::collections::hash_map::Iter;
 use std::collections::HashMap;
 
-use bevy::prelude::Query;
-use morphorm::{Cache, GeometryChanged};
+use bevy::prelude::{Entity, Query};
+use morphorm::Cache;
+pub use morphorm::GeometryChanged;
 
 use crate::node::WrappedIndex;
 
@@ -37,7 +38,7 @@ pub struct Size {
 }
 
 #[derive(Default, Debug)]
-pub struct LayoutCache {
+pub(crate) struct LayoutCache {
     // Computed Outputs
     pub rect: HashMap<WrappedIndex, Rect>,
 
@@ -113,7 +114,7 @@ impl LayoutCache {
     }
 }
 
-pub struct DataCache<'borrow, 'world, 'state> {
+pub(crate) struct DataCache<'borrow, 'world, 'state> {
     pub query: &'borrow Query<'world, 'state, &'static crate::node::Node>,
     pub cache: &'borrow mut LayoutCache,
 }
@@ -140,7 +141,6 @@ impl<'b, 'w, 's> Cache for DataCache<'b, 'w, 's> {
     fn set_geo_changed(&mut self, node: Self::Item, flag: GeometryChanged, value: bool) {
         // This method is guaranteed to be called by morphorm every layout so we'll attempt to initialize here
         self.cache.try_init(node);
-
         if value {
             // Setting a flag -> Add entry if it does not already exist
             let geometry_changed = self.cache.geometry_changed.entry(node).or_default();
@@ -388,5 +388,88 @@ impl<'b, 'w, 's> Cache for DataCache<'b, 'w, 's> {
 
     fn set_stack_last_child(&mut self, node: Self::Item, value: bool) {
         *self.cache.stack_last_child.get_mut(&node).unwrap() = value;
+    }
+}
+
+/// A layout data sent to widgets on layout.
+///
+/// Similar and interchangeable with [Rect]
+/// ```
+/// use kayak_core::layout_cache::Rect;
+/// use kayak_core::Layout;
+///
+/// let layout = Layout::default();
+/// let rect : Rect = layout.into();
+/// let layout : Layout = rect.into();
+/// ```
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub struct Layout {
+    /// width of the component
+    pub width: f32,
+    /// height of the component
+    pub height: f32,
+    /// x-coordinates of the component
+    pub x: f32,
+    /// y-coordinates of the component
+    pub y: f32,
+    /// z-coordinates of the component
+    pub z: f32,
+}
+
+impl Layout {
+    /// Returns the position as a Kayak position type
+    pub fn pos(&self) -> (f32, f32) {
+        (self.x, self.y)
+    }
+}
+
+impl From<Layout> for Rect {
+    fn from(layout: Layout) -> Self {
+        Rect {
+            posx: layout.x,
+            posy: layout.y,
+            width: layout.width,
+            height: layout.height,
+            z_index: layout.z,
+        }
+    }
+}
+
+impl From<Rect> for Layout {
+    fn from(rect: Rect) -> Self {
+        Layout {
+            width: rect.width,
+            height: rect.height,
+            x: rect.posx,
+            y: rect.posy,
+            z: rect.z_index,
+        }
+    }
+}
+
+///
+/// Struct used for [crate::OnLayout] as layout event data.
+///
+pub struct LayoutEvent {
+    /// Layout of target component
+    pub layout: Layout,
+    /// Flags denoting the layout change.
+    ///
+    /// Note: The flags can potentially all be unset in cases where the [target's] layout did
+    /// not change, but one of its immediate children did.
+    ///
+    /// [target's]: LayoutEvent::target
+    pub flags: GeometryChanged,
+    /// The node ID of the element receiving the layout event.
+    pub target: Entity,
+}
+
+impl LayoutEvent {
+    pub(crate) fn new(rect: Rect, geometry_change: GeometryChanged, index: Entity) -> LayoutEvent {
+        LayoutEvent {
+            layout: rect.into(),
+            flags: geometry_change,
+            target: index,
+        }
     }
 }

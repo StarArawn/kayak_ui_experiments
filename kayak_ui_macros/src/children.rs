@@ -57,9 +57,9 @@ impl Children {
             .nodes
             .iter()
             .map(|child| {
-                let entity_id = match child {
-                    Child::Widget(widget) => widget.entity_id.clone(),
-                    _ => quote! {},
+                let (entity_id, index) = match child {
+                    Child::Widget((widget, index)) => (widget.entity_id.clone(), *index),
+                    _ => (quote! {}, 0usize),
                 };
                 (
                     entity_id,
@@ -68,6 +68,7 @@ impl Children {
                         Child::Widget(_) => true,
                         _ => false,
                     },
+                    index,
                 )
             })
             .collect();
@@ -196,10 +197,11 @@ impl Children {
 impl Parse for Children {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut nodes = vec![];
-
+        let mut index: usize = 0;
         while !input.peek(syn::Token![<]) || !input.peek2(syn::Token![/]) {
-            let child = input.parse::<Child>()?;
+            let child = Child::custom_parse(input, index)?;
             nodes.push(child);
+            index += 1;
         }
 
         Ok(Self::new(nodes))

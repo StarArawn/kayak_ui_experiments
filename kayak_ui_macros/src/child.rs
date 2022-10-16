@@ -1,19 +1,31 @@
 use quote::{quote, ToTokens};
-use syn::parse::{Parse, ParseStream, Result};
+use syn::parse::{ParseStream, Result};
 
 use crate::widget::Widget;
 
 #[derive(Clone, Debug)]
 pub enum Child {
-    Widget(Widget),
-    RawBlock(syn::Block),
+    Widget((Widget, usize)),
+    RawBlock((syn::Block, usize)),
+}
+
+impl Child {
+    pub fn custom_parse(input: ParseStream, index: usize) -> Result<Self> {
+        match Widget::custom_parse(input, true, index) {
+            Ok(widget) => Ok(Self::Widget((widget, index))),
+            Err(_) => {
+                let block = input.parse::<syn::Block>()?;
+                Ok(Self::RawBlock((block, index)))
+            }
+        }
+    }
 }
 
 impl ToTokens for Child {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         match self {
-            Self::Widget(widget) => widget.to_tokens(tokens),
-            Self::RawBlock(block) => {
+            Self::Widget((widget, _)) => widget.to_tokens(tokens),
+            Self::RawBlock((block, _)) => {
                 let ts = if block.stmts.len() == 1 {
                     let first = &block.stmts[0];
                     quote!(#first)
@@ -21,18 +33,6 @@ impl ToTokens for Child {
                     quote!(#block)
                 };
                 ts.to_tokens(tokens);
-            }
-        }
-    }
-}
-
-impl Parse for Child {
-    fn parse(input: ParseStream) -> Result<Self> {
-        match Widget::custom_parse(input, true) {
-            Ok(widget) => Ok(Self::Widget(widget)),
-            Err(_) => {
-                let block = input.parse::<syn::Block>()?;
-                Ok(Self::RawBlock(block))
             }
         }
     }

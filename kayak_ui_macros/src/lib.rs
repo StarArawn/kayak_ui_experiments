@@ -37,32 +37,41 @@ pub fn constructor(input: TokenStream) -> TokenStream {
     TokenStream::from(result)
 }
 
-/// Helper method for getting the core crate
-///
-/// Depending on the usage of the macro, this will become `crate`, `kayak_core`,
-/// or `kayak_ui::core`.
-///
-/// # Examples
-///
-/// ```
-/// fn my_macro() -> proc_macro2::TokenStream {
-///   let kayak_core = get_core_crate();
-///   quote! {
-///     let foo = #kayak_core::Foo;
-///   }
-/// }
-/// ```
-fn get_core_crate() -> proc_macro2::TokenStream {
-    let found_crate = proc_macro_crate::crate_name("kayak_ui");
-    if let Ok(found_crate) = found_crate {
-        match found_crate {
-            proc_macro_crate::FoundCrate::Itself => quote! { kayak_ui },
-            proc_macro_crate::FoundCrate::Name(name) => {
-                let ident = syn::Ident::new(&name, proc_macro2::Span::call_site());
-                quote!(#ident)
-            }
-        }
-    } else {
-        quote!(kayak_ui)
-    }
-}
+// / Helper method for getting the core crate
+// /
+// / Depending on the usage of the macro, this will become `crate`, `kayak_core`,
+// / or `kayak_ui::core`.
+// /
+// / # Examples
+// /
+// / ```
+// / fn my_macro() -> proc_macro2::TokenStream {
+// /   let kayak_core = get_core_crate();
+// /   quote! {
+// /     let foo = #kayak_core::Foo;
+// /   }
+// / }
+// / ```
+// fn get_core_crate() -> proc_macro2::TokenStream {
+//     let found_crate = proc_macro_crate::crate_name("kayak_ui");
+//     if let Ok(found_crate) = found_crate {
+//         let result = match found_crate {
+//             proc_macro_crate::FoundCrate::Itself => {
+//                 // let crate_name = find_crate::find_crate(|s| s == "kayak_ui" || s == "crate");
+//                 // dbg!(crate_name);
+//                 // if path.contains("example") {
+//                 //quote! { kayak_ui }
+//                 // } else {
+//                 quote! { crate }
+//                 // }
+//             },
+//             proc_macro_crate::FoundCrate::Name(name) => {
+//                 let ident = syn::Ident::new(&name, proc_macro2::Span::call_site());
+//                 quote!(#ident)
+//             }
+//         };
+//         result
+//     } else {
+//         quote!(kayak_ui)
+//     }
+// }

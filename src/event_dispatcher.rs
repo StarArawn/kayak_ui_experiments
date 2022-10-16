@@ -231,7 +231,11 @@ impl EventDispatcher {
 
                 // --- Propagate Event --- //
                 if node_event.should_propagate {
-                    current_target = context.node_tree.get_parent(index);
+                    if let Ok(node_tree) = context.tree.try_read() {
+                        current_target = node_tree.get_parent(index);
+                    } else {
+                        current_target = None;
+                    }
                 } else {
                     current_target = None;
                 }
@@ -286,173 +290,175 @@ impl EventDispatcher {
         let mut event_stream = Vec::<Event>::new();
         let mut states: HashMap<EventType, EventState> = HashMap::new();
 
-        let root = if let Some(root) = context.node_tree.root_node {
-            root
-        } else {
-            return event_stream;
-        };
+        if let Ok(node_tree) = context.tree.try_read() {
+            let root = if let Some(root) = node_tree.root_node {
+                root
+            } else {
+                return event_stream;
+            };
 
-        // === Setup Cursor States === //
-        let old_hovered = self.hovered;
-        let old_contains_cursor = self.contains_cursor;
-        let old_wants_cursor = self.wants_cursor;
-        self.hovered = None;
-        self.contains_cursor = None;
-        self.wants_cursor = None;
-        self.next_mouse_position = self.current_mouse_position;
-        self.next_mouse_pressed = self.is_mouse_pressed;
+            // === Setup Cursor States === //
+            let old_hovered = self.hovered;
+            let old_contains_cursor = self.contains_cursor;
+            let old_wants_cursor = self.wants_cursor;
+            self.hovered = None;
+            self.contains_cursor = None;
+            self.wants_cursor = None;
+            self.next_mouse_position = self.current_mouse_position;
+            self.next_mouse_pressed = self.is_mouse_pressed;
 
-        // --- Pre-Process --- //
-        // We pre-process some events so that we can provide accurate event data (such as if the mouse is pressed)
-        // This is faster than resolving data after the fact since `input_events` is generally very small
-        for input_event in input_events {
-            if let InputEvent::MouseMoved(point) = input_event {
-                // Reset next global mouse position
-                self.next_mouse_position = *point;
-            }
-
-            if matches!(input_event, InputEvent::MouseLeftPress) {
-                // Reset next global mouse pressed
-                self.next_mouse_pressed = true;
-                break;
-            } else if matches!(input_event, InputEvent::MouseLeftRelease) {
-                // Reset next global mouse pressed
-                self.next_mouse_pressed = false;
-                // Reset global cursor container
-                self.has_cursor = None;
-                break;
-            }
-        }
-
-        // === Mouse Events === //
-        if let Some(captor) = self.cursor_capture {
-            // A widget has been set to capture pointer events -> it should be the only one receiving events
+            // --- Pre-Process --- //
+            // We pre-process some events so that we can provide accurate event data (such as if the mouse is pressed)
+            // This is faster than resolving data after the fact since `input_events` is generally very small
             for input_event in input_events {
-                // --- Process Event --- //
-                if matches!(input_event.category(), InputEventCategory::Mouse) {
-                    // A widget's PointerEvents style will determine how it and its children are processed
-                    let pointer_events = Self::resolve_pointer_events(captor, world);
+                if let InputEvent::MouseMoved(point) = input_event {
+                    // Reset next global mouse position
+                    self.next_mouse_position = *point;
+                }
 
-                    match pointer_events {
-                        PointerEvents::All | PointerEvents::SelfOnly => {
-                            let events = self.process_pointer_events(
-                                input_event,
-                                (captor, 0),
-                                &mut states,
-                                world,
-                                context,
-                                true,
-                            );
-                            event_stream.extend(events);
-                        }
-                        _ => {}
-                    }
+                if matches!(input_event, InputEvent::MouseLeftPress) {
+                    // Reset next global mouse pressed
+                    self.next_mouse_pressed = true;
+                    break;
+                } else if matches!(input_event, InputEvent::MouseLeftRelease) {
+                    // Reset next global mouse pressed
+                    self.next_mouse_pressed = false;
+                    // Reset global cursor container
+                    self.has_cursor = None;
+                    break;
                 }
             }
-        } else {
-            // No capturing widget -> process cursor events as normal
-            let mut stack: Vec<TreeNode> = vec![(root, 0)];
-            while stack.len() > 0 {
-                let (current, depth) = stack.pop().unwrap();
-                let mut enter_children = true;
 
+            // === Mouse Events === //
+            if let Some(captor) = self.cursor_capture {
+                // A widget has been set to capture pointer events -> it should be the only one receiving events
                 for input_event in input_events {
                     // --- Process Event --- //
                     if matches!(input_event.category(), InputEventCategory::Mouse) {
                         // A widget's PointerEvents style will determine how it and its children are processed
-                        let pointer_events = Self::resolve_pointer_events(current, world);
+                        let pointer_events = Self::resolve_pointer_events(captor, world);
 
                         match pointer_events {
                             PointerEvents::All | PointerEvents::SelfOnly => {
                                 let events = self.process_pointer_events(
                                     input_event,
-                                    (current, depth),
+                                    (captor, 0),
                                     &mut states,
                                     world,
                                     context,
-                                    false,
+                                    true,
                                 );
                                 event_stream.extend(events);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            } else {
+                // No capturing widget -> process cursor events as normal
+                let mut stack: Vec<TreeNode> = vec![(root, 0)];
+                while stack.len() > 0 {
+                    let (current, depth) = stack.pop().unwrap();
+                    let mut enter_children = true;
 
-                                if matches!(pointer_events, PointerEvents::SelfOnly) {
-                                    enter_children = false;
+                    for input_event in input_events {
+                        // --- Process Event --- //
+                        if matches!(input_event.category(), InputEventCategory::Mouse) {
+                            // A widget's PointerEvents style will determine how it and its children are processed
+                            let pointer_events = Self::resolve_pointer_events(current, world);
+
+                            match pointer_events {
+                                PointerEvents::All | PointerEvents::SelfOnly => {
+                                    let events = self.process_pointer_events(
+                                        input_event,
+                                        (current, depth),
+                                        &mut states,
+                                        world,
+                                        context,
+                                        false,
+                                    );
+                                    event_stream.extend(events);
+
+                                    if matches!(pointer_events, PointerEvents::SelfOnly) {
+                                        enter_children = false;
+                                    }
+                                }
+                                PointerEvents::None => enter_children = false,
+                                PointerEvents::ChildrenOnly => {}
+                            }
+                        }
+                    }
+
+                    // --- Push Children to Stack --- //
+                    if enter_children {
+                        if let Some(children) = node_tree.children.get(&current) {
+                            for child in children {
+                                stack.push((*child, depth + 1));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // === Keyboard Events === //
+            for input_event in input_events {
+                // Keyboard events only care about the currently focused widget so we don't need to run this over every node in the tree
+                let events =
+                    self.process_keyboard_events(input_event, &mut states, &context.focus_tree);
+                event_stream.extend(events);
+            }
+
+            // === Additional Events === //
+            let mut had_focus_event = false;
+
+            // These events are ones that require a specific target and need the tree to be evaluated before selecting the best match
+            for (event_type, state) in states {
+                if let Some(node) = state.best_match {
+                    event_stream.push(Event::new(node.0, event_type));
+
+                    match event_type {
+                        EventType::Focus => {
+                            had_focus_event = true;
+                            if let Some(current_focus) = context.focus_tree.current() {
+                                if current_focus != node {
+                                    event_stream.push(Event::new(current_focus.0, EventType::Blur));
                                 }
                             }
-                            PointerEvents::None => enter_children = false,
-                            PointerEvents::ChildrenOnly => {}
+                            context.focus_tree.focus(node);
                         }
-                    }
-                }
-
-                // --- Push Children to Stack --- //
-                if enter_children {
-                    if let Some(children) = context.node_tree.children.get(&current) {
-                        for child in children {
-                            stack.push((*child, depth + 1));
+                        EventType::Hover(..) => {
+                            self.hovered = Some(node);
                         }
+                        _ => {}
                     }
                 }
             }
-        }
 
-        // === Keyboard Events === //
-        for input_event in input_events {
-            // Keyboard events only care about the currently focused widget so we don't need to run this over every node in the tree
-            let events =
-                self.process_keyboard_events(input_event, &mut states, &context.focus_tree);
-            event_stream.extend(events);
-        }
-
-        // === Additional Events === //
-        let mut had_focus_event = false;
-
-        // These events are ones that require a specific target and need the tree to be evaluated before selecting the best match
-        for (event_type, state) in states {
-            if let Some(node) = state.best_match {
-                event_stream.push(Event::new(node.0, event_type));
-
-                match event_type {
-                    EventType::Focus => {
-                        had_focus_event = true;
-                        if let Some(current_focus) = context.focus_tree.current() {
-                            if current_focus != node {
-                                event_stream.push(Event::new(current_focus.0, EventType::Blur));
-                            }
-                        }
-                        context.focus_tree.focus(node);
-                    }
-                    EventType::Hover(..) => {
-                        self.hovered = Some(node);
-                    }
-                    _ => {}
+            // --- Blur Event --- //
+            if !had_focus_event && input_events.contains(&InputEvent::MouseLeftPress) {
+                // A mouse press didn't contain a focus event -> blur
+                if let Some(current_focus) = context.focus_tree.current() {
+                    event_stream.push(Event::new(current_focus.0, EventType::Blur));
+                    context.focus_tree.blur();
                 }
             }
-        }
 
-        // --- Blur Event --- //
-        if !had_focus_event && input_events.contains(&InputEvent::MouseLeftPress) {
-            // A mouse press didn't contain a focus event -> blur
-            if let Some(current_focus) = context.focus_tree.current() {
-                event_stream.push(Event::new(current_focus.0, EventType::Blur));
-                context.focus_tree.blur();
+            // === Process Cursor States === //
+            self.current_mouse_position = self.next_mouse_position;
+            self.is_mouse_pressed = self.next_mouse_pressed;
+
+            if self.hovered.is_none() {
+                // No change -> revert
+                self.hovered = old_hovered;
             }
-        }
-
-        // === Process Cursor States === //
-        self.current_mouse_position = self.next_mouse_position;
-        self.is_mouse_pressed = self.next_mouse_pressed;
-
-        if self.hovered.is_none() {
-            // No change -> revert
-            self.hovered = old_hovered;
-        }
-        if self.contains_cursor.is_none() {
-            // No change -> revert
-            self.contains_cursor = old_contains_cursor;
-        }
-        if self.wants_cursor.is_none() {
-            // No change -> revert
-            self.wants_cursor = old_wants_cursor;
+            if self.contains_cursor.is_none() {
+                // No change -> revert
+                self.contains_cursor = old_contains_cursor;
+            }
+            if self.wants_cursor.is_none() {
+                // No change -> revert
+                self.wants_cursor = old_wants_cursor;
+            }
         }
 
         event_stream
@@ -517,7 +523,7 @@ impl EventDispatcher {
                         Self::update_state(
                             states,
                             (node, depth),
-                            layout,
+                            &layout,
                             EventType::Hover(cursor_event),
                         );
                     }
@@ -530,7 +536,7 @@ impl EventDispatcher {
                         event_stream.push(Event::new(node.0, EventType::MouseDown(cursor_event)));
 
                         if world.get::<Focusable>(node.0).is_some() {
-                            Self::update_state(states, (node, depth), layout, EventType::Focus);
+                            Self::update_state(states, (node, depth), &layout, EventType::Focus);
                         }
 
                         if self.has_cursor.is_none() {
@@ -559,7 +565,7 @@ impl EventDispatcher {
                             Self::update_state(
                                 states,
                                 (node, depth),
-                                layout,
+                                &layout,
                                 EventType::Click(cursor_event),
                             );
                         }
@@ -573,7 +579,7 @@ impl EventDispatcher {
                         Self::update_state(
                             states,
                             (node, depth),
-                            layout,
+                            &layout,
                             EventType::Scroll(ScrollEvent {
                                 delta: if *is_line {
                                     ScrollUnit::Line { x: *dx, y: *dy }

@@ -3,6 +3,7 @@ use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Or, Query,
 use crate::{
     children::Children,
     context::{Mounted, WidgetName},
+    on_event::OnEvent,
     prelude::WidgetContext,
     styles::{RenderCommand, Style, StyleProp},
     widget::Widget,
@@ -17,6 +18,7 @@ impl Widget for Element {}
 pub struct ElementBundle {
     pub element: Element,
     pub styles: Style,
+    pub on_event: OnEvent,
     pub children: Children,
     pub widget_name: WidgetName,
 }
@@ -27,6 +29,7 @@ impl Default for ElementBundle {
             element: Default::default(),
             styles: Default::default(),
             children: Default::default(),
+            on_event: OnEvent::default(),
             widget_name: WidgetName(Element::default().get_name()),
         }
     }

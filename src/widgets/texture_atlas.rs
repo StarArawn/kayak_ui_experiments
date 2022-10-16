@@ -55,7 +55,7 @@ pub fn update_texture_atlas(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     mut query: Query<
         (&mut Style, &TextureAtlas),
-        Or<((Changed<TextureAtlas>, Changed<Style>), With<Mounted>)>,
+        Or<(Changed<TextureAtlas>, Changed<Style>, With<Mounted>)>,
     >,
 ) -> bool {
     if let Ok((mut styles, texture_atlas)) = query.get_mut(entity) {

@@ -7,43 +7,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug example 'test'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--example=test",
-                    "--package=kayak_ui_macros"
-                ],
-                "filter": {
-                    "name": "test",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in example 'test'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--example=test",
-                    "--package=kayak_ui_macros"
-                ],
-                "filter": {
-                    "name": "test",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "Debug unit tests in library 'kayak_ui'",
             "cargo": {
                 "args": [
@@ -74,9 +37,6 @@
                     "name": "tabs",
                     "kind": "example"
                 }
-            },
-            "env": {
-                "CARGO_MANIFEST_DIR": "${workspaceFolder}",
             },
             "args": [],
             "cwd": "${workspaceFolder}"
@@ -279,6 +239,43 @@
                 ],
                 "filter": {
                     "name": "quads",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'scrolling'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=scrolling",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "scrolling",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'scrolling'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=scrolling",
+                    "--package=kayak_ui"
+                ],
+                "filter": {
+                    "name": "scrolling",
                     "kind": "example"
                 }
             },

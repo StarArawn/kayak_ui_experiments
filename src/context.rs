@@ -13,6 +13,7 @@ use crate::{
     event_dispatcher::EventDispatcher,
     focus_tree::FocusTree,
     layout::{LayoutCache, Rect},
+    layout_dispatcher::LayoutEventDispatcher,
     node::{DirtyNode, WrappedIndex},
     prelude::WidgetContext,
     render_primitive::RenderPrimitive,
@@ -24,13 +25,12 @@ use crate::{
 #[derive(Component)]
 pub struct Mounted;
 
-const UPDATE_DEPTH: u32 = 1;
+const UPDATE_DEPTH: u32 = 0;
 
 #[derive(Resource)]
 pub struct Context {
     pub tree: Arc<RwLock<Tree>>,
-    pub(crate) node_tree: Tree,
-    pub(crate) layout_cache: LayoutCache,
+    pub(crate) layout_cache: Arc<RwLock<LayoutCache>>,
     pub(crate) focus_tree: FocusTree,
     systems: HashMap<String, Box<dyn System<In = (WidgetContext, Entity), Out = bool>>>,
     pub(crate) current_z: f32,
@@ -41,8 +41,7 @@ impl Context {
     pub fn new() -> Self {
         Self {
             tree: Arc::new(RwLock::new(Tree::default())),
-            node_tree: Tree::default(),
-            layout_cache: LayoutCache::default(),
+            layout_cache: Arc::new(RwLock::new(LayoutCache::default())),
             focus_tree: FocusTree::default(),
             systems: HashMap::default(),
             current_z: 0.0,
@@ -50,8 +49,12 @@ impl Context {
         }
     }
 
-    pub(crate) fn get_layout(&self, id: &WrappedIndex) -> Option<&Rect> {
-        self.layout_cache.rect.get(id)
+    pub(crate) fn get_layout(&self, id: &WrappedIndex) -> Option<Rect> {
+        if let Ok(cache) = self.layout_cache.try_read() {
+            cache.rect.get(id).cloned()
+        } else {
+            None
+        }
     }
 
     pub fn add_widget_system<Params>(
@@ -69,7 +72,9 @@ impl Context {
                 WrappedIndex(entity),
                 parent.and_then(|p| Some(WrappedIndex(p))),
             );
-            self.layout_cache.add(WrappedIndex(entity));
+            if let Ok(mut cache) = self.layout_cache.try_write() {
+                cache.add(WrappedIndex(entity));
+            }
         }
     }
 
@@ -85,21 +90,38 @@ impl Context {
         }
     }
 
+    pub fn get_child_at(&self, entity: Option<Entity>) -> Option<Entity> {
+        if let Ok(tree) = self.tree.try_read() {
+            if let Some(entity) = entity {
+                let children = tree.child_iter(WrappedIndex(entity)).collect::<Vec<_>>();
+                return children.get(0).cloned().map(|index| index.0);
+            }
+        }
+        None
+    }
+
     pub fn build_render_primitives(
         &self,
         nodes: &Query<&crate::node::Node>,
     ) -> Vec<RenderPrimitive> {
-        if self.node_tree.root_node.is_none() {
+        let node_tree = self.tree.try_read();
+        if node_tree.is_err() {
+            return vec![];
+        }
+
+        let node_tree = node_tree.unwrap();
+
+        if node_tree.root_node.is_none() {
             return vec![];
         }
 
         // self.node_tree.dump();
 
         recurse_node_tree_to_build_primitives(
-            &self.node_tree,
+            &*node_tree,
             &self.layout_cache,
             nodes,
-            self.node_tree.root_node.unwrap(),
+            node_tree.root_node.unwrap(),
             0.0,
             RenderPrimitive::Empty,
         )
@@ -108,7 +130,7 @@ impl Context {
 
 fn recurse_node_tree_to_build_primitives(
     node_tree: &Tree,
-    layout_cache: &LayoutCache,
+    layout_cache: &Arc<RwLock<LayoutCache>>,
     nodes: &Query<&crate::node::Node>,
     current_node: WrappedIndex,
     mut main_z_index: f32,
@@ -116,52 +138,58 @@ fn recurse_node_tree_to_build_primitives(
 ) -> Vec<RenderPrimitive> {
     let mut render_primitives = Vec::new();
     if let Ok(node) = nodes.get(current_node.0) {
-        if let Some(layout) = layout_cache.rect.get(&current_node) {
-            let mut render_primitive = node.primitive.clone();
-            let mut layout = *layout;
-            let new_z_index = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
-                main_z_index - 0.1
-            } else {
-                main_z_index
-            };
-            layout.z_index = new_z_index;
-            render_primitive.set_layout(layout);
-            render_primitives.push(render_primitive.clone());
+        if let Ok(cache) = layout_cache.try_read() {
+            if let Some(layout) = cache.rect.get(&current_node) {
+                let mut render_primitive = node.primitive.clone();
+                let mut layout = *layout;
+                let new_z_index = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
+                    main_z_index - 0.1
+                } else {
+                    main_z_index
+                };
+                layout.z_index = new_z_index;
+                render_primitive.set_layout(layout);
+                render_primitives.push(render_primitive.clone());
 
-            let new_prev_clip = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
-                render_primitive.clone()
-            } else {
-                prev_clip
-            };
+                let new_prev_clip = if matches!(render_primitive, RenderPrimitive::Clip { .. }) {
+                    render_primitive.clone()
+                } else {
+                    prev_clip
+                };
 
-            prev_clip = new_prev_clip.clone();
-            if node_tree.children.contains_key(&current_node) {
-                for child in node_tree.children.get(&current_node).unwrap() {
-                    main_z_index += 1.0;
-                    render_primitives.extend(recurse_node_tree_to_build_primitives(
-                        node_tree,
-                        layout_cache,
-                        nodes,
-                        *child,
-                        main_z_index,
-                        new_prev_clip.clone(),
-                    ));
+                prev_clip = new_prev_clip.clone();
+                if node_tree.children.contains_key(&current_node) {
+                    for child in node_tree.children.get(&current_node).unwrap() {
+                        main_z_index += 1.0;
+                        render_primitives.extend(recurse_node_tree_to_build_primitives(
+                            node_tree,
+                            layout_cache,
+                            nodes,
+                            *child,
+                            main_z_index,
+                            new_prev_clip.clone(),
+                        ));
 
-                    main_z_index = layout.z_index;
-                    // Between each child node we need to reset the clip.
-                    if matches!(prev_clip, RenderPrimitive::Clip { .. }) {
-                        // main_z_index = new_z_index;
-                        match &mut prev_clip {
-                            RenderPrimitive::Clip { layout } => {
-                                layout.z_index = main_z_index + 0.1;
-                            }
-                            _ => {}
-                        };
-                        render_primitives.push(prev_clip.clone());
+                        main_z_index = layout.z_index;
+                        // Between each child node we need to reset the clip.
+                        if matches!(prev_clip, RenderPrimitive::Clip { .. }) {
+                            // main_z_index = new_z_index;
+                            match &mut prev_clip {
+                                RenderPrimitive::Clip { layout } => {
+                                    layout.z_index = main_z_index + 0.1;
+                                }
+                                _ => {}
+                            };
+                            render_primitives.push(prev_clip.clone());
+                        }
                     }
                 }
+            } else {
+                println!("No layout for: {:?}", current_node.0.id());
             }
         }
+    } else {
+        println!("No node for: {:?}", current_node.0.id());
     }
 
     render_primitives
@@ -177,14 +205,16 @@ fn update_widgets_sys(world: &mut World) {
 
     // let change_tick = world.increment_change_tick();
 
+    // dbg!("Updating widgets!");
     update_widgets(
         world,
         &context.tree,
-        &mut context.layout_cache,
+        &context.layout_cache,
         &mut context.systems,
         tree_iterator,
         &context.context_entities,
     );
+    // dbg!("Finished updating widgets!");
 
     for system in context.systems.values_mut() {
         system.set_last_change_tick(world.read_change_tick());
@@ -201,7 +231,7 @@ fn update_widgets_sys(world: &mut World) {
 fn update_widgets(
     world: &mut World,
     tree: &Arc<RwLock<Tree>>,
-    layout_cache: &mut LayoutCache,
+    layout_cache: &Arc<RwLock<LayoutCache>>,
     systems: &mut HashMap<String, Box<dyn System<In = (WidgetContext, Entity), Out = bool>>>,
     widgets: Vec<WrappedIndex>,
     context_entities: &ContextEntities,
@@ -209,7 +239,11 @@ fn update_widgets(
     for entity in widgets.iter() {
         if let Some(entity_ref) = world.get_entity(entity.0) {
             if let Some(widget_type) = entity_ref.get::<WidgetName>() {
-                let widget_context = WidgetContext::new(tree.clone(), context_entities.clone());
+                let widget_context = WidgetContext::new(
+                    tree.clone(),
+                    context_entities.clone(),
+                    layout_cache.clone(),
+                );
                 widget_context.copy_from_point(&tree, *entity);
                 let children_before = widget_context.get_children(entity.0);
                 let (widget_context, should_update_children) = update_widget(
@@ -226,15 +260,21 @@ fn update_widgets(
                 if should_update_children {
                     if let Ok(mut tree) = tree.write() {
                         let diff = tree.diff_children(&widget_context, *entity, UPDATE_DEPTH);
-
                         for (_index, child, _parent, changes) in diff.changes.iter() {
                             for change in changes.iter() {
                                 if matches!(change, Change::Inserted) {
-                                    layout_cache.add(*child);
+                                    if let Ok(mut cache) = layout_cache.try_write() {
+                                        cache.add(*child);
+                                    }
                                 }
                             }
                         }
+                        // dbg!("Dumping widget tree:");
+                        // widget_context.dump_at(*entity);
+                        // dbg!(entity.0, &diff);
+
                         tree.merge(&widget_context, *entity, diff, UPDATE_DEPTH);
+                        // dbg!(tree.dump_at(*entity));
                     }
                 }
 
@@ -291,13 +331,14 @@ fn update_widget(
     };
     if should_update_children {
         for (_, changed_entity, _, changes) in diff.changes.iter() {
-            if changes.iter().any(|change| *change == Change::Deleted) {
-                // commands.entity(changed_entity.0).despawn();
-                commands.entity(changed_entity.0).remove::<DirtyNode>();
-            } else {
+            if changes.iter().any(|change| *change != Change::Deleted) {
                 commands.entity(changed_entity.0).insert(DirtyNode);
             }
 
+            if changes.iter().any(|change| *change == Change::Deleted) {
+                // commands.entity(changed_entity.0).despawn();
+                commands.entity(changed_entity.0).remove::<DirtyNode>();
+            }
             if changes.iter().any(|change| *change == Change::Inserted) {
                 commands.entity(changed_entity.0).insert(Mounted);
             }
@@ -356,19 +397,31 @@ impl Plugin for ContextPlugin {
                 CoreStage::PostUpdate,
                 update_widgets_sys.exclusive_system().at_start(),
             )
-            .add_system_to_stage(CoreStage::PostUpdate, calculate_ui.exclusive_system())
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                calculate_ui.exclusive_system().at_end(),
+            )
             .add_system(crate::window_size::update_window_size);
     }
 }
 
 fn calculate_ui(world: &mut World) {
+    // dbg!("Calculating nodes!");
     let mut system = IntoSystem::into_system(calculate_nodes);
     system.initialize(world);
 
     for _ in 0..5 {
         system.run((), world);
         system.apply_buffers(world);
+        world.resource_scope::<Context, _>(|world, mut context| {
+            LayoutEventDispatcher::dispatch(&mut context, world);
+        });
     }
+
+    // dbg!("Finished calculating nodes!");
+
+    // dbg!("Dispatching layout events!");
+    // dbg!("Finished dispatching layout events!");
 }
 
 #[derive(Component, Debug)]

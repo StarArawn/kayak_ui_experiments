@@ -7,6 +7,7 @@ mod clip;
 mod element;
 mod image;
 mod nine_patch;
+mod scroll;
 mod text;
 mod texture_atlas;
 mod window;
@@ -18,6 +19,14 @@ pub use clip::{Clip, ClipBundle};
 pub use element::{Element, ElementBundle};
 pub use image::{Image, ImageBundle};
 pub use nine_patch::{NinePatch, NinePatchBundle};
+pub use scroll::{
+    scroll_bar::{ScrollBarBundle, ScrollBarProps},
+    scroll_box::{ScrollBoxBundle, ScrollBoxProps},
+    scroll_content::{ScrollContentBundle, ScrollContentProps},
+    scroll_context::{
+        ScrollContext, ScrollContextProvider, ScrollContextProviderBundle, ScrollMode,
+    },
+};
 pub use text::{Text, TextBundle};
 pub use texture_atlas::{TextureAtlas, TextureAtlasBundle};
 pub use window::{Window, WindowBundle};
@@ -29,6 +38,10 @@ use clip::update_clip;
 use element::update_element;
 use image::update_image;
 use nine_patch::update_nine_patch;
+use scroll::{
+    scroll_bar::update_scroll_bar, scroll_box::update_scroll_box,
+    scroll_content::update_scroll_content, scroll_context::update_scroll_context,
+};
 use text::text_update;
 use texture_atlas::update_texture_atlas;
 use window::window_update;
@@ -54,4 +67,14 @@ fn add_widget_systems(mut context: ResMut<Context>) {
     context.add_widget_system(TextureAtlas::default().get_name(), update_texture_atlas);
     context.add_widget_system(NinePatch::default().get_name(), update_nine_patch);
     context.add_widget_system(Element::default().get_name(), update_element);
+    context.add_widget_system(ScrollBarProps::default().get_name(), update_scroll_bar);
+    context.add_widget_system(
+        ScrollContentProps::default().get_name(),
+        update_scroll_content,
+    );
+    context.add_widget_system(ScrollBoxProps::default().get_name(), update_scroll_box);
+    context.add_widget_system(
+        ScrollContextProvider::default().get_name(),
+        update_scroll_context,
+    );
 }
