@@ -18,7 +18,7 @@ use crate::{
     prelude::WidgetContext,
     render_primitive::RenderPrimitive,
     tree::{Change, Tree},
-    WindowSize, Focusable,
+    Focusable, WindowSize,
 };
 
 /// A tag component representing when a widget has been mounted(added to the tree).
@@ -205,14 +205,16 @@ fn update_widgets_sys(world: &mut World) {
 
     // let change_tick = world.increment_change_tick();
 
-    let old_focus = if let Ok(mut focus_tree) = context.focus_tree.try_write() { 
+    let old_focus = if let Ok(mut focus_tree) = context.focus_tree.try_write() {
         let current = focus_tree.current();
         focus_tree.clear();
         if let Ok(tree) = context.tree.read() {
             focus_tree.add(tree.root_node.unwrap(), &tree);
         }
         current
-    } else { None };
+    } else {
+        None
+    };
 
     let mut new_ticks = HashMap::new();
 
@@ -225,11 +227,11 @@ fn update_widgets_sys(world: &mut World) {
         tree_iterator,
         &context.context_entities,
         &context.focus_tree,
-        &mut new_ticks
+        &mut new_ticks,
     );
 
     if let Some(old_focus) = old_focus {
-        if let Ok(mut focus_tree) = context.focus_tree.try_write() { 
+        if let Ok(mut focus_tree) = context.focus_tree.try_write() {
             if focus_tree.contains(old_focus) {
                 focus_tree.focus(old_focus);
             }
@@ -322,11 +324,11 @@ fn update_widgets(
                 // }
             }
         }
-        
+
         if let Some(entity_ref) = world.get_entity(entity.0) {
             if entity_ref.contains::<Focusable>() {
                 if let Ok(tree) = tree.try_read() {
-                    if let Ok(mut focus_tree) = focus_tree.try_write() { 
+                    if let Ok(mut focus_tree) = focus_tree.try_write() {
                         focus_tree.add(*entity, &tree);
                     }
                 }
@@ -429,22 +431,10 @@ impl Plugin for ContextPlugin {
             .add_plugin(crate::camera::KayakUICameraPlugin)
             .add_plugin(crate::render::BevyKayakUIRenderPlugin)
             .register_type::<Node>()
-            .add_startup_system_to_stage(
-                StartupStage::PostStartup,
-                init_systems.at_end(),
-            )
-            .add_system_to_stage(
-                CoreStage::Update,
-                crate::input::process_events,
-            )
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                update_widgets_sys.at_start(),
-            )
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                calculate_ui.at_end(),
-            )
+            .add_startup_system_to_stage(StartupStage::PostStartup, init_systems.at_end())
+            .add_system_to_stage(CoreStage::Update, crate::input::process_events)
+            .add_system_to_stage(CoreStage::PostUpdate, update_widgets_sys.at_start())
+            .add_system_to_stage(CoreStage::PostUpdate, calculate_ui.at_end())
             .add_system(crate::window_size::update_window_size);
     }
 }

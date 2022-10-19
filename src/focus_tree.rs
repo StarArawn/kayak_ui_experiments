@@ -1,4 +1,4 @@
-use bevy::{utils::HashMap, prelude::Component};
+use bevy::{prelude::Component, utils::HashMap};
 
 use crate::{node::WrappedIndex, prelude::Tree};
 

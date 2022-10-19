@@ -1,7 +1,7 @@
 use bevy::{
     prelude::{
-        App as BevyApp, AssetServer, Bundle, Changed, Commands, Component, Entity, In, Or,
-        ParamSet, Query, Res, ResMut, Vec2, With, Added,
+        Added, App as BevyApp, AssetServer, Bundle, Changed, Commands, Component, Entity, In, Or,
+        ParamSet, Query, Res, ResMut, Vec2, With,
     },
     DefaultPlugins,
 };
@@ -38,7 +38,10 @@ impl Default for TextBoxExampleBundle {
 fn update_text_box_example(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
-    props_query: Query<&TextBoxExample, Or<(Changed<TextBoxExample>, Changed<Style>, With<Mounted>)>>,
+    props_query: Query<
+        &TextBoxExample,
+        Or<(Changed<TextBoxExample>, Changed<Style>, With<Mounted>)>,
+    >,
     mut state_query: ParamSet<(
         Query<Entity, Or<(Added<TextBoxExampleState>, Changed<TextBoxExampleState>)>>,
         Query<&TextBoxExampleState>,
@@ -53,8 +56,7 @@ fn update_text_box_example(
                     value2: "Hello World2".into(),
                 })
                 .id();
-            widget_context
-                .set_context_entity::<TextBoxExampleState>(Some(entity), state_entity);
+            widget_context.set_context_entity::<TextBoxExampleState>(Some(entity), state_entity);
             return false;
         }
         let state_entity = state_entity.unwrap();
@@ -64,7 +66,7 @@ fn update_text_box_example(
 
         let on_change = OnChange::new(
             move |In((_widget_context, _, value)): In<(WidgetContext, Entity, String)>,
-                    mut state_query: Query<&mut TextBoxExampleState>| {
+                  mut state_query: Query<&mut TextBoxExampleState>| {
                 if let Ok(mut state) = state_query.get_mut(state_entity) {
                     state.value1 = value;
                 }
@@ -73,7 +75,7 @@ fn update_text_box_example(
 
         let on_change2 = OnChange::new(
             move |In((_widget_context, _, value)): In<(WidgetContext, Entity, String)>,
-                    mut state_query: Query<&mut TextBoxExampleState>| {
+                  mut state_query: Query<&mut TextBoxExampleState>| {
                 if let Ok(mut state) = state_query.get_mut(state_entity) {
                     state.value2 = value;
                 }

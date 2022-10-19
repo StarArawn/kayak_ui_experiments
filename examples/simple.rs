@@ -38,10 +38,7 @@ fn my_widget_1_update(
             let my_child = MyWidget2 { bar: my_widget.foo };
             let should_update = my_widget.foo == my_child.bar;
             let child_id = commands
-                .spawn((
-                    my_child,
-                    MyWidget2::default().get_name(),
-                ))
+                .spawn((my_child, MyWidget2::default().get_name()))
                 .id();
             widget_context.add_widget(Some(entity), child_id);
 

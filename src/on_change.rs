@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::prelude::WidgetContext;
 
-pub trait ChangeValue: Component<Storage = TableStorage> + Default { }
+pub trait ChangeValue: Component<Storage = TableStorage> + Default {}
 
 /// A container for a function that handles layout
 ///
@@ -49,12 +49,7 @@ impl OnChange {
     /// Call the layout event handler
     ///
     /// Returns true if the handler was successfully invoked.
-    pub fn try_call(
-        &self,
-        entity: Entity,
-        world: &mut World,
-        widget_context: WidgetContext,
-    ) {
+    pub fn try_call(&self, entity: Entity, world: &mut World, widget_context: WidgetContext) {
         if let Ok(value) = self.value.try_read() {
             if let Ok(mut init) = self.has_initialized.try_write() {
                 if let Ok(mut system) = self.system.try_write() {

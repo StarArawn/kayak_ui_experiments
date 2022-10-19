@@ -54,20 +54,19 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     });
 
-    commands
-        .spawn((
-            Text {
-                horz_alignment: Alignment::Middle,
-                color: Color::WHITE,
-                content: INSTRUCTIONS.into(),
-                font_size: 32.0,
-                line_height: 32.0 * 1.2, // Firefox method of calculating default line heights see: https://developer.mozilla.org/en-US/docs/Web/CSS/line-height
-                position: Vec2::new(-360.0, 250.0),
-                size: Vec2::new(720.0, 200.0),
-            },
-            Instructions,
-            font_handle.clone()
-        ));
+    commands.spawn((
+        Text {
+            horz_alignment: Alignment::Middle,
+            color: Color::WHITE,
+            content: INSTRUCTIONS.into(),
+            font_size: 32.0,
+            line_height: 32.0 * 1.2, // Firefox method of calculating default line heights see: https://developer.mozilla.org/en-US/docs/Web/CSS/line-height
+            position: Vec2::new(-360.0, 250.0),
+            size: Vec2::new(720.0, 200.0),
+        },
+        Instructions,
+        font_handle.clone(),
+    ));
 }
 
 fn control_text(

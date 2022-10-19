@@ -15,6 +15,7 @@ mod keyboard_event;
 mod layout;
 mod layout_dispatcher;
 mod node;
+mod on_change;
 mod on_event;
 mod on_layout;
 pub(crate) mod render;
@@ -25,7 +26,6 @@ mod widget;
 mod widget_context;
 mod widgets;
 mod window_size;
-mod on_change;
 
 pub use window_size::WindowSize;
 
@@ -44,15 +44,15 @@ pub mod prelude {
         pub use crate::widgets::*;
     }
     pub use crate::event::*;
-    pub use crate::focus_tree::Focusable;
     pub use crate::event_dispatcher::EventDispatcherContext;
+    pub use crate::focus_tree::Focusable;
     pub use crate::input_event::*;
     pub use crate::keyboard_event::*;
     pub use crate::layout::*;
     pub use crate::node::DirtyNode;
+    pub use crate::on_change::OnChange;
     pub use crate::on_event::OnEvent;
     pub use crate::on_layout::OnLayout;
-    pub use crate::on_change::OnChange;
     pub use crate::styles::*;
     pub use crate::widget::*;
     pub use crate::widget_context::*;

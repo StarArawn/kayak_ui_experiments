@@ -45,9 +45,9 @@ use scroll::{
     scroll_content::update_scroll_content, scroll_context::update_scroll_context,
 };
 use text::text_update;
+use text_box::update_text_box;
 use texture_atlas::update_texture_atlas;
 use window::window_update;
-use text_box::update_text_box;
 
 use crate::{context::Context, widget::Widget};
 

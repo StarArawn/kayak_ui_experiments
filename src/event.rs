@@ -2,7 +2,8 @@ use bevy::prelude::{Entity, World};
 
 use crate::{
     cursor::{CursorEvent, ScrollEvent},
-    keyboard_event::KeyboardEvent, prelude::{OnChange, WidgetContext},
+    keyboard_event::KeyboardEvent,
+    prelude::{OnChange, WidgetContext},
 };
 
 /// An event type sent to widgets

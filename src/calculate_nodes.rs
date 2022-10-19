@@ -40,13 +40,14 @@ pub fn calculate_nodes(
     if let Ok(tree) = context.tree.clone().read() {
         for dirty_entity in query.iter() {
             let dirty_entity = WrappedIndex(dirty_entity);
-            let styles = all_styles_query.get(dirty_entity.0).unwrap_or(&default_styles);
+            let styles = all_styles_query
+                .get(dirty_entity.0)
+                .unwrap_or(&default_styles);
             // Get the parent styles. Will be one of the following:
             // 1. Already-resolved node styles (best)
             // 2. Unresolved widget prop styles
             // 3. Unresolved default styles
-            let parent_styles = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity)
-            {
+            let parent_styles = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity) {
                 if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
                     parent_node.resolved_styles.clone()
                 } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
