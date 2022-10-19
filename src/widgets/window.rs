@@ -141,7 +141,6 @@ pub fn window_update(
                             Entity,
                         )>,
                               mut query: Query<&mut Window>| {
-                            dbg!("GOT HERE!");
                             if let Ok(mut window) = query.get_mut(window_entity) {
                                 match event.event_type {
                                     EventType::MouseDown(data) => {

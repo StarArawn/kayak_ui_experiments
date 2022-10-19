@@ -24,3 +24,7 @@ fastrand = "1.8"
 [[example]]
 name = "tabs"
 path = "examples/tabs/tabs.rs"
+
+[[example]]
+name = "todo"
+path = "examples/todo/todo.rs"
