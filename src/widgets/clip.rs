@@ -32,7 +32,7 @@ impl Default for ClipBundle {
                 ..Style::default()
             },
             children: Children::default(),
-            widget_name: WidgetName(Clip::default().get_name()),
+            widget_name: Clip::default().get_name(),
         }
     }
 }

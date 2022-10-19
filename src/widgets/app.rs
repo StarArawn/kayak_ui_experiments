@@ -31,7 +31,7 @@ impl Default for KayakAppBundle {
             app: Default::default(),
             styles: Default::default(),
             children: Default::default(),
-            widget_name: WidgetName(KayakApp::default().get_name()),
+            widget_name: KayakApp::default().get_name(),
         }
     }
 }

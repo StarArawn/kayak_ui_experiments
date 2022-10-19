@@ -34,7 +34,7 @@ impl Default for NinePatchBundle {
             nine_patch: Default::default(),
             styles: Default::default(),
             children: Children::default(),
-            widget_name: WidgetName(NinePatch::default().get_name()),
+            widget_name: NinePatch::default().get_name(),
         }
     }
 }

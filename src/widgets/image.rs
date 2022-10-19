@@ -24,7 +24,7 @@ impl Default for ImageBundle {
         Self {
             image: Default::default(),
             style: Default::default(),
-            widget_name: WidgetName(Image::default().get_name()),
+            widget_name: Image::default().get_name(),
         }
     }
 }

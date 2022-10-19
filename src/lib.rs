@@ -25,8 +25,8 @@ mod widget;
 mod widget_context;
 mod widgets;
 mod window_size;
+mod on_change;
 
-use bevy::prelude::Component;
 pub use window_size::WindowSize;
 
 pub use camera::*;
@@ -44,12 +44,15 @@ pub mod prelude {
         pub use crate::widgets::*;
     }
     pub use crate::event::*;
+    pub use crate::focus_tree::Focusable;
     pub use crate::event_dispatcher::EventDispatcherContext;
     pub use crate::input_event::*;
     pub use crate::keyboard_event::*;
     pub use crate::layout::*;
     pub use crate::node::DirtyNode;
     pub use crate::on_event::OnEvent;
+    pub use crate::on_layout::OnLayout;
+    pub use crate::on_change::OnChange;
     pub use crate::styles::*;
     pub use crate::widget::*;
     pub use crate::widget_context::*;
@@ -57,5 +60,4 @@ pub mod prelude {
     pub use kayak_ui_macros::{constructor, rsx};
 }
 
-#[derive(Component)]
-pub struct Focusable;
+pub use focus_tree::Focusable;

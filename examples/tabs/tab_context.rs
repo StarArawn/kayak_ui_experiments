@@ -25,7 +25,7 @@ impl Default for TabContextProviderBundle {
         Self {
             tab_provider: Default::default(),
             children: Default::default(),
-            widget_name: WidgetName(TabContextProvider::default().get_name()),
+            widget_name: TabContextProvider::default().get_name(),
         }
     }
 }

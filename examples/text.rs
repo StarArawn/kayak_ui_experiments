@@ -46,7 +46,7 @@ impl Default for MyWidgetBundle {
         Self {
             props: Default::default(),
             styles: Default::default(),
-            widget_name: WidgetName(MyWidgetProps::default().get_name()),
+            widget_name: MyWidgetProps::default().get_name(),
         }
     }
 }

@@ -49,7 +49,7 @@ impl Default for ScrollBarBundle {
         Self {
             scrollbar_props: Default::default(),
             styles: Default::default(),
-            widget_name: WidgetName(ScrollBarProps::default().get_name()),
+            widget_name: ScrollBarProps::default().get_name(),
         }
     }
 }

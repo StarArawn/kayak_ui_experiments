@@ -49,8 +49,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras sed tellus neque. 
             >
                 <ScrollContextProviderBundle>
                     <ScrollBoxBundle>
-                        <TextBundle
-                            text={Text {
+                        <TextWidgetBundle
+                            text={TextProps {
                                 content: lorem_ipsum,
                                 size: 14.0,
                                 ..Default::default()

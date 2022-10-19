@@ -68,7 +68,7 @@ impl Default for ThemeButtonBundle {
     fn default() -> Self {
         Self {
             theme_button: Default::default(),
-            widget_name: WidgetName(ThemeButton::default().get_name()),
+            widget_name: ThemeButton::default().get_name(),
         }
     }
 }
@@ -154,7 +154,7 @@ impl Default for ThemeSelectorBundle {
     fn default() -> Self {
         Self {
             theme_selector: Default::default(),
-            widget_name: WidgetName(ThemeSelector::default().get_name()),
+            widget_name: ThemeSelector::default().get_name(),
         }
     }
 }
@@ -209,7 +209,7 @@ impl Default for ThemeDemoBundle {
     fn default() -> Self {
         Self {
             theme_demo: Default::default(),
-            widget_name: WidgetName(ThemeDemo::default().get_name()),
+            widget_name: ThemeDemo::default().get_name(),
         }
     }
 }
@@ -262,8 +262,8 @@ fn update_theme_demo(
                     let mut children = kayak_ui::prelude::Children::new();
                     rsx! {
                         <>
-                            <TextBundle
-                                text={Text {
+                            <TextWidgetBundle
+                                text={TextProps {
                                     content: select_lbl,
                                     size: 14.0,
                                     line_height: Some(28.0),
@@ -284,8 +284,8 @@ fn update_theme_demo(
                                     ..Default::default()
                                 }}
                             >
-                                <TextBundle
-                                    text={Text {
+                                <TextWidgetBundle
+                                    text={TextProps {
                                         content: "Lorem ipsum dolor...".into(),
                                         size: 12.0,
                                         ..Default::default()
@@ -295,8 +295,8 @@ fn update_theme_demo(
                                 <ButtonBundle
                                     styles={btn_style.clone()}
                                 >
-                                    <TextBundle
-                                        text={Text {
+                                    <TextWidgetBundle
+                                        text={TextProps {
                                             content: "BUTTON".into(),
                                             size: 14.0,
                                             ..Default::default()

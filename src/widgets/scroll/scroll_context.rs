@@ -155,7 +155,7 @@ impl Default for ScrollContextProviderBundle {
             scroll_context_provider: Default::default(),
             children: Children::default(),
             styles: Default::default(),
-            widget_name: WidgetName(ScrollContextProvider::default().get_name()),
+            widget_name: ScrollContextProvider::default().get_name(),
         }
     }
 }

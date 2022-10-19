@@ -1,12 +1,12 @@
-use bevy::prelude::Entity;
+use bevy::prelude::{Entity, World};
 
 use crate::{
     cursor::{CursorEvent, ScrollEvent},
-    keyboard_event::KeyboardEvent,
+    keyboard_event::KeyboardEvent, prelude::{OnChange, WidgetContext},
 };
 
 /// An event type sent to widgets
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Event {
     /// The node targeted by this event
     pub target: Entity,
@@ -18,6 +18,8 @@ pub struct Event {
     pub(crate) should_propagate: bool,
     /// Indicates whether the default action of this event (if any) has been prevented
     pub(crate) default_prevented: bool,
+    /// OnChange systems to call afterwards
+    pub(crate) on_change_systems: Vec<OnChange>,
 }
 
 impl Default for Event {
@@ -28,6 +30,7 @@ impl Default for Event {
             event_type: EventType::Click(CursorEvent::default()),
             should_propagate: true,
             default_prevented: false,
+            on_change_systems: Vec::new(),
         }
     }
 }
@@ -44,6 +47,7 @@ impl Event {
             event_type,
             should_propagate: event_type.propagates(),
             default_prevented: false,
+            on_change_systems: Vec::new(),
         }
     }
 
@@ -65,6 +69,16 @@ impl Event {
     /// Prevents this event's default action (if any) from being executed
     pub fn prevent_default(&mut self) {
         self.default_prevented = true;
+    }
+
+    pub fn add_system(&mut self, system: OnChange) {
+        self.on_change_systems.push(system);
+    }
+
+    pub(crate) fn run_on_change(&mut self, world: &mut World, widget_context: WidgetContext) {
+        for system in self.on_change_systems.drain(..) {
+            system.try_call(self.current_target, world, widget_context.clone());
+        }
     }
 }
 

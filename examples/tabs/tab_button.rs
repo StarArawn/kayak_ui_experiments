@@ -1,7 +1,7 @@
 use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Query};
 use kayak_ui::prelude::{
     rsx,
-    widgets::{ButtonBundle, Text, TextBundle},
+    widgets::{ButtonBundle, TextProps, TextWidgetBundle},
     Children, Event, EventDispatcherContext, EventType, OnEvent, Style, StyleProp, Units, Widget,
     WidgetContext, WidgetName,
 };
@@ -28,7 +28,7 @@ impl Default for TabButtonBundle {
         Self {
             tab_button: Default::default(),
             styles: Default::default(),
-            widget_name: WidgetName(TabButton::default().get_name()),
+            widget_name: TabButton::default().get_name(),
         }
     }
 }
@@ -80,7 +80,7 @@ pub fn tab_button_update(
                             height: StyleProp::Value(Units::Pixels(25.0)),
                             ..Default::default()
                         }}>
-                        <TextBundle text={Text { content: tab_button.title.clone(), ..Default::default() }} />
+                        <TextWidgetBundle text={TextProps { content: tab_button.title.clone(), ..Default::default() }} />
                     </ButtonBundle>
                 }
                 return true;

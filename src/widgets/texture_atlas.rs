@@ -46,7 +46,7 @@ impl Default for TextureAtlasBundle {
         Self {
             atlas: Default::default(),
             styles: Default::default(),
-            widget_name: WidgetName(TextureAtlas::default().get_name()),
+            widget_name: TextureAtlas::default().get_name(),
         }
     }
 }

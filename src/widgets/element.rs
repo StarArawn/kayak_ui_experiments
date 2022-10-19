@@ -30,7 +30,7 @@ impl Default for ElementBundle {
             styles: Default::default(),
             children: Default::default(),
             on_event: OnEvent::default(),
-            widget_name: WidgetName(Element::default().get_name()),
+            widget_name: Element::default().get_name(),
         }
     }
 }

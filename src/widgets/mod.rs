@@ -9,6 +9,7 @@ mod image;
 mod nine_patch;
 mod scroll;
 mod text;
+mod text_box;
 mod texture_atlas;
 mod window;
 
@@ -27,7 +28,8 @@ pub use scroll::{
         ScrollContext, ScrollContextProvider, ScrollContextProviderBundle, ScrollMode,
     },
 };
-pub use text::{Text, TextBundle};
+pub use text::{TextProps, TextWidgetBundle};
+pub use text_box::{TextBoxBundle, TextBoxProps};
 pub use texture_atlas::{TextureAtlas, TextureAtlasBundle};
 pub use window::{Window, WindowBundle};
 
@@ -45,6 +47,7 @@ use scroll::{
 use text::text_update;
 use texture_atlas::update_texture_atlas;
 use window::window_update;
+use text_box::update_text_box;
 
 use crate::{context::Context, widget::Widget};
 
@@ -59,7 +62,7 @@ impl Plugin for KayakWidgets {
 fn add_widget_systems(mut context: ResMut<Context>) {
     context.add_widget_system(KayakApp::default().get_name(), app_update);
     context.add_widget_system(Button::default().get_name(), button_update);
-    context.add_widget_system(Text::default().get_name(), text_update);
+    context.add_widget_system(TextProps::default().get_name(), text_update);
     context.add_widget_system(Window::default().get_name(), window_update);
     context.add_widget_system(Background::default().get_name(), update_background);
     context.add_widget_system(Clip::default().get_name(), update_clip);
@@ -77,4 +80,5 @@ fn add_widget_systems(mut context: ResMut<Context>) {
         ScrollContextProvider::default().get_name(),
         update_scroll_context,
     );
+    context.add_widget_system(TextBoxProps::default().get_name(), update_text_box);
 }

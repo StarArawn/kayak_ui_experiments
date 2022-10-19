@@ -18,7 +18,7 @@ use crate::{
     prelude::WidgetContext,
     render_primitive::RenderPrimitive,
     tree::{Change, Tree},
-    WindowSize,
+    WindowSize, Focusable,
 };
 
 /// A tag component representing when a widget has been mounted(added to the tree).
@@ -31,10 +31,10 @@ const UPDATE_DEPTH: u32 = 0;
 pub struct Context {
     pub tree: Arc<RwLock<Tree>>,
     pub(crate) layout_cache: Arc<RwLock<LayoutCache>>,
-    pub(crate) focus_tree: FocusTree,
+    pub(crate) focus_tree: Arc<RwLock<FocusTree>>,
     systems: HashMap<String, Box<dyn System<In = (WidgetContext, Entity), Out = bool>>>,
     pub(crate) current_z: f32,
-    context_entities: ContextEntities,
+    pub(crate) context_entities: ContextEntities,
 }
 
 impl Context {
@@ -42,7 +42,7 @@ impl Context {
         Self {
             tree: Arc::new(RwLock::new(Tree::default())),
             layout_cache: Arc::new(RwLock::new(LayoutCache::default())),
-            focus_tree: FocusTree::default(),
+            focus_tree: Default::default(),
             systems: HashMap::default(),
             current_z: 0.0,
             context_entities: ContextEntities::new(),
@@ -205,6 +205,17 @@ fn update_widgets_sys(world: &mut World) {
 
     // let change_tick = world.increment_change_tick();
 
+    let old_focus = if let Ok(mut focus_tree) = context.focus_tree.try_write() { 
+        let current = focus_tree.current();
+        focus_tree.clear();
+        if let Ok(tree) = context.tree.read() {
+            focus_tree.add(tree.root_node.unwrap(), &tree);
+        }
+        current
+    } else { None };
+
+    let mut new_ticks = HashMap::new();
+
     // dbg!("Updating widgets!");
     update_widgets(
         world,
@@ -213,11 +224,27 @@ fn update_widgets_sys(world: &mut World) {
         &mut context.systems,
         tree_iterator,
         &context.context_entities,
+        &context.focus_tree,
+        &mut new_ticks
     );
-    // dbg!("Finished updating widgets!");
 
-    for system in context.systems.values_mut() {
-        system.set_last_change_tick(world.read_change_tick());
+    if let Some(old_focus) = old_focus {
+        if let Ok(mut focus_tree) = context.focus_tree.try_write() { 
+            if focus_tree.contains(old_focus) {
+                focus_tree.focus(old_focus);
+            }
+        }
+    }
+
+    // dbg!("Finished updating widgets!");
+    let tick = world.read_change_tick();
+
+    for (key, system) in context.systems.iter_mut() {
+        if let Some(new_tick) = new_ticks.get(key) {
+            system.set_last_change_tick(*new_tick);
+        } else {
+            system.set_last_change_tick(tick);
+        }
         // system.apply_buffers(world);
     }
 
@@ -235,6 +262,8 @@ fn update_widgets(
     systems: &mut HashMap<String, Box<dyn System<In = (WidgetContext, Entity), Out = bool>>>,
     widgets: Vec<WrappedIndex>,
     context_entities: &ContextEntities,
+    focus_tree: &Arc<RwLock<FocusTree>>,
+    new_ticks: &mut HashMap<String, u32>,
 ) {
     for entity in widgets.iter() {
         if let Some(entity_ref) = world.get_entity(entity.0) {
@@ -251,12 +280,12 @@ fn update_widgets(
                     tree,
                     world,
                     *entity,
-                    widget_type.0,
+                    widget_type.0.clone(),
                     widget_context,
                     children_before,
+                    new_ticks,
                 );
 
-                // Only merge tree if changes detected.
                 if should_update_children {
                     if let Ok(mut tree) = tree.write() {
                         let diff = tree.diff_children(&widget_context, *entity, UPDATE_DEPTH);
@@ -287,8 +316,20 @@ fn update_widgets(
                     systems,
                     children,
                     context_entities,
+                    focus_tree,
+                    new_ticks,
                 );
                 // }
+            }
+        }
+        
+        if let Some(entity_ref) = world.get_entity(entity.0) {
+            if entity_ref.contains::<Focusable>() {
+                if let Ok(tree) = tree.try_read() {
+                    if let Ok(mut focus_tree) = focus_tree.try_write() { 
+                        focus_tree.add(*entity, &tree);
+                    }
+                }
             }
         }
     }
@@ -299,17 +340,20 @@ fn update_widget(
     tree: &Arc<RwLock<Tree>>,
     world: &mut World,
     entity: WrappedIndex,
-    widget_type: &'static str,
+    widget_type: String,
     widget_context: WidgetContext,
     previous_children: Vec<Entity>,
+    new_ticks: &mut HashMap<String, u32>,
 ) -> (Tree, bool) {
     let should_update_children;
     {
         // Remove children from previous render.
         widget_context.remove_children(previous_children);
-        let widget_system = systems.get_mut(widget_type).unwrap();
+        let widget_system = systems.get_mut(&widget_type).unwrap();
         let old_tick = widget_system.get_last_change_tick();
         should_update_children = widget_system.run((widget_context.clone(), entity.0), world);
+        let new_tick = widget_system.get_last_change_tick();
+        new_ticks.insert(widget_type.clone(), new_tick);
         widget_system.set_last_change_tick(old_tick);
         widget_system.apply_buffers(world);
     }
@@ -425,4 +469,16 @@ fn calculate_ui(world: &mut World) {
 }
 
 #[derive(Component, Debug)]
-pub struct WidgetName(pub &'static str);
+pub struct WidgetName(pub String);
+
+impl From<String> for WidgetName {
+    fn from(value: String) -> Self {
+        WidgetName(value)
+    }
+}
+
+impl Into<String> for WidgetName {
+    fn into(self) -> String {
+        self.0.into()
+    }
+}

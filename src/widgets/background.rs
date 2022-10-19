@@ -30,7 +30,7 @@ impl Default for BackgroundBundle {
             styles: Default::default(),
             children: Default::default(),
             on_event: Default::default(),
-            widget_name: WidgetName(Background::default().get_name()),
+            widget_name: Background::default().get_name(),
         }
     }
 }

@@ -16,7 +16,7 @@ use crate::{
 use super::{
     background::BackgroundBundle,
     clip::ClipBundle,
-    text::{Text, TextBundle},
+    text::{TextProps, TextWidgetBundle},
 };
 
 #[derive(Component, Debug, Default)]
@@ -52,7 +52,7 @@ impl Default for WindowBundle {
             window: Default::default(),
             styles: Default::default(),
             children: Default::default(),
-            widget_name: WidgetName(Window::default().get_name()),
+            widget_name: Window::default().get_name(),
         }
     }
 }
@@ -95,12 +95,12 @@ pub fn window_update(
             // Spawn title children
             let title_entity = commands
                 .spawn()
-                .insert_bundle(TextBundle {
-                    text: Text {
+                .insert_bundle(TextWidgetBundle {
+                    text: TextProps {
                         content: title.clone(),
                         size: 16.0,
                         line_height: Some(25.0),
-                        ..Text::default()
+                        ..Default::default()
                     },
                     styles: Style {
                         height: StyleProp::Value(Units::Pixels(25.0)),

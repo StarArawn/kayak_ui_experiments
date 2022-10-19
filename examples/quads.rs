@@ -48,7 +48,7 @@ impl Default for MyQuadBundle {
         Self {
             my_quad: Default::default(),
             styles: Style::default(),
-            widget_name: WidgetName(MyQuad::default().get_name()),
+            widget_name: MyQuad::default().get_name(),
         }
     }
 }

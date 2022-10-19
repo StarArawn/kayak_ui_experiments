@@ -72,7 +72,7 @@ impl Default for ScrollBoxBundle {
             styles: Default::default(),
             children: Default::default(),
             on_layout: Default::default(),
-            widget_name: WidgetName(ScrollBoxProps::default().get_name()),
+            widget_name: ScrollBoxProps::default().get_name(),
         }
     }
 }

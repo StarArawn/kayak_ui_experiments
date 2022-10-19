@@ -40,7 +40,7 @@ fn my_widget_1_update(
             let child_id = commands
                 .spawn()
                 .insert(my_child)
-                .insert(WidgetName(MyWidget2::default().get_name()))
+                .insert(MyWidget2::default().get_name())
                 .id();
             widget_context.add_widget(Some(entity), child_id);
 
@@ -63,7 +63,8 @@ fn startup(mut commands: Commands) {
     let entity = commands
         .spawn()
         .insert(MyWidget { foo: 0 })
-        .insert(WidgetName(MyWidget::default().get_name()))
+        .insert(kayak_ui::prelude::Style::default())
+        .insert(MyWidget::default().get_name())
         .id();
     context.add_widget(None, entity);
     commands.insert_resource(context);

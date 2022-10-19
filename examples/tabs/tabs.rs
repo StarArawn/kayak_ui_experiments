@@ -50,10 +50,10 @@ fn startup(
                         <TabButtonBundle tab_button={TabButton { index: 1, title: "Tab 2".into() }} />
                     </ElementBundle>
                     <TabBundle tab={Tab { index: 0 }}>
-                        <TextBundle text={Text { content: "Tab 1".into(), ..Default::default() }} />
+                        <TextWidgetBundle text={TextProps { content: "Tab 1".into(), ..Default::default() }} />
                     </TabBundle>
                     <TabBundle tab={Tab { index: 1 }}>
-                        <TextBundle text={Text { content: "Tab 2".into(), ..Default::default() }} />
+                        <TextWidgetBundle text={TextProps { content: "Tab 2".into(), ..Default::default() }} />
                     </TabBundle>
                 </TabContextProviderBundle>
             </WindowBundle>

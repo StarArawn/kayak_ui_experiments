@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Component)]
-pub struct Text {
+pub struct TextProps {
     /// The string to display
     pub content: String,
     /// The name of the font to use
@@ -30,7 +30,7 @@ pub struct Text {
     pub alignment: Alignment,
 }
 
-impl Default for Text {
+impl Default for TextProps {
     fn default() -> Self {
         Self {
             content: String::new(),
@@ -43,28 +43,28 @@ impl Default for Text {
     }
 }
 
-impl Widget for Text {}
+impl Widget for TextProps {}
 
 #[derive(Bundle)]
-pub struct TextBundle {
-    pub text: Text,
+pub struct TextWidgetBundle {
+    pub text: TextProps,
     pub styles: Style,
     pub widget_name: WidgetName,
 }
 
-impl Default for TextBundle {
+impl Default for TextWidgetBundle {
     fn default() -> Self {
         Self {
             text: Default::default(),
             styles: Default::default(),
-            widget_name: WidgetName(Text::default().get_name()),
+            widget_name: TextProps::default().get_name(),
         }
     }
 }
 
 pub fn text_update(
     In((_, entity)): In<(WidgetContext, Entity)>,
-    mut query: Query<(&mut Style, &Text), Or<(Changed<Text>, With<Mounted>)>>,
+    mut query: Query<(&mut Style, &TextProps), Or<(Changed<TextProps>, With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, text)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Text {

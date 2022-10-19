@@ -1,6 +1,9 @@
-use bevy::utils::HashMap;
+use bevy::{utils::HashMap, prelude::Component};
 
 use crate::{node::WrappedIndex, prelude::Tree};
+
+#[derive(Component, Default, Clone, Copy)]
+pub struct Focusable;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct FocusTree {

@@ -48,8 +48,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras sed tellus neque. 
                 styles={nine_patch_styles}
             >
                 <ClipBundle>
-                    <TextBundle
-                        text={Text {
+                    <TextWidgetBundle
+                        text={TextProps {
                             content: lorem_ipsum,
                             size: 14.0,
                             ..Default::default()

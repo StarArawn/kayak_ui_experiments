@@ -28,7 +28,7 @@ impl Default for TabBundle {
         Self {
             tab: Default::default(),
             children: Default::default(),
-            widget_name: WidgetName(Tab::default().get_name()),
+            widget_name: Tab::default().get_name(),
         }
     }
 }

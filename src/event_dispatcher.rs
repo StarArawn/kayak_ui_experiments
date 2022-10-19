@@ -13,6 +13,7 @@ use crate::{
     layout::Rect,
     node::WrappedIndex,
     on_event::OnEvent,
+    prelude::WidgetContext,
     styles::{RenderCommand, Style},
     Focusable,
 };
@@ -207,7 +208,7 @@ impl EventDispatcher {
                 // (e.g., changing the event type, removing the target, etc.)
                 let mut node_event = Event {
                     current_target: index.0,
-                    ..event
+                    ..event.clone()
                 };
 
                 // --- Update State --- //
@@ -224,6 +225,15 @@ impl EventDispatcher {
                             on_event.try_call(event_dispatcher_context, index.0, node_event, world);
                         world.entity_mut(index.0).insert(on_event);
                         event_dispatcher_context.merge(self);
+
+                        // Sometimes events will require systems to be called.
+                        // IE OnChange
+                        let widget_context = WidgetContext::new(
+                            context.tree.clone(),
+                            context.context_entities.clone(),
+                            context.layout_cache.clone(),
+                        );
+                        node_event.run_on_change(world, widget_context);
                     }
                 }
 
@@ -400,64 +410,67 @@ impl EventDispatcher {
                 }
             }
 
-            // === Keyboard Events === //
-            for input_event in input_events {
-                // Keyboard events only care about the currently focused widget so we don't need to run this over every node in the tree
-                let events =
-                    self.process_keyboard_events(input_event, &mut states, &context.focus_tree);
-                event_stream.extend(events);
-            }
+            if let Ok(mut focus_tree) = context.focus_tree.try_write() {
+                // === Keyboard Events === //
+                for input_event in input_events {
+                    // Keyboard events only care about the currently focused widget so we don't need to run this over every node in the tree
+                    let events =
+                        self.process_keyboard_events(input_event, &mut states, &focus_tree);
+                    event_stream.extend(events);
+                }
 
-            // === Additional Events === //
-            let mut had_focus_event = false;
+                // === Additional Events === //
+                let mut had_focus_event = false;
 
-            // These events are ones that require a specific target and need the tree to be evaluated before selecting the best match
-            for (event_type, state) in states {
-                if let Some(node) = state.best_match {
-                    event_stream.push(Event::new(node.0, event_type));
+                // These events are ones that require a specific target and need the tree to be evaluated before selecting the best match
+                for (event_type, state) in states {
+                    if let Some(node) = state.best_match {
+                        event_stream.push(Event::new(node.0, event_type));
 
-                    match event_type {
-                        EventType::Focus => {
-                            had_focus_event = true;
-                            if let Some(current_focus) = context.focus_tree.current() {
-                                if current_focus != node {
-                                    event_stream.push(Event::new(current_focus.0, EventType::Blur));
+                        match event_type {
+                            EventType::Focus => {
+                                had_focus_event = true;
+                                if let Some(current_focus) = focus_tree.current() {
+                                    if current_focus != node {
+                                        event_stream
+                                            .push(Event::new(current_focus.0, EventType::Blur));
+                                    }
                                 }
+                                focus_tree.focus(node);
                             }
-                            context.focus_tree.focus(node);
+                            EventType::Hover(..) => {
+                                self.hovered = Some(node);
+                            }
+                            _ => {}
                         }
-                        EventType::Hover(..) => {
-                            self.hovered = Some(node);
-                        }
-                        _ => {}
                     }
                 }
-            }
 
-            // --- Blur Event --- //
-            if !had_focus_event && input_events.contains(&InputEvent::MouseLeftPress) {
-                // A mouse press didn't contain a focus event -> blur
-                if let Some(current_focus) = context.focus_tree.current() {
-                    event_stream.push(Event::new(current_focus.0, EventType::Blur));
-                    context.focus_tree.blur();
+                // --- Blur Event --- //
+                if !had_focus_event && input_events.contains(&InputEvent::MouseLeftPress) {
+                    // A mouse press didn't contain a focus event -> blur
+                    if let Some(current_focus) = focus_tree.current() {
+                        event_stream.push(Event::new(current_focus.0, EventType::Blur));
+                        focus_tree.blur();
+                    }
                 }
-            }
 
-            // === Process Cursor States === //
-            self.current_mouse_position = self.next_mouse_position;
-            self.is_mouse_pressed = self.next_mouse_pressed;
+                // === Process Cursor States === //
+                self.current_mouse_position = self.next_mouse_position;
+                self.is_mouse_pressed = self.next_mouse_pressed;
 
-            if self.hovered.is_none() {
-                // No change -> revert
-                self.hovered = old_hovered;
-            }
-            if self.contains_cursor.is_none() {
-                // No change -> revert
-                self.contains_cursor = old_contains_cursor;
-            }
-            if self.wants_cursor.is_none() {
-                // No change -> revert
-                self.wants_cursor = old_wants_cursor;
+                if self.hovered.is_none() {
+                    // No change -> revert
+                    self.hovered = old_hovered;
+                }
+                if self.contains_cursor.is_none() {
+                    // No change -> revert
+                    self.contains_cursor = old_contains_cursor;
+                }
+                if self.wants_cursor.is_none() {
+                    // No change -> revert
+                    self.wants_cursor = old_wants_cursor;
+                }
             }
         }
 
@@ -724,13 +737,19 @@ impl EventDispatcher {
         match event.event_type {
             EventType::KeyDown(evt) => match evt.key() {
                 KeyCode::Tab => {
-                    let current_focus = context.focus_tree.current();
+                    let (index, current_focus) =
+                        if let Ok(mut focus_tree) = context.focus_tree.try_write() {
+                            let current_focus = focus_tree.current();
 
-                    let index = if evt.is_shift_pressed() {
-                        context.focus_tree.prev()
-                    } else {
-                        context.focus_tree.next()
-                    };
+                            let index = if evt.is_shift_pressed() {
+                                focus_tree.prev()
+                            } else {
+                                focus_tree.next()
+                            };
+                            (index, current_focus)
+                        } else {
+                            (None, None)
+                        };
 
                     if let Some(index) = index {
                         let mut events = vec![Event::new(index.0, EventType::Focus)];
@@ -739,7 +758,9 @@ impl EventDispatcher {
                                 events.push(Event::new(current_focus.0, EventType::Blur));
                             }
                         }
-                        context.focus_tree.focus(index);
+                        if let Ok(mut focus_tree) = context.focus_tree.try_write() {
+                            focus_tree.focus(index);
+                        }
                         self.dispatch_events(events, context, world);
                     }
                 }

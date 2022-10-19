@@ -54,6 +54,15 @@ impl WidgetContext {
         &self,
         current_entity: Entity,
     ) -> Option<Entity> {
+        // Check self first..
+        if let Some(entity) = self
+            .context_entities
+            .get_context_entity::<T>(current_entity)
+        {
+            return Some(entity);
+        }
+
+        // Check parents
         if let Ok(tree) = self.old_tree.read() {
             let mut parent = tree.get_parent(WrappedIndex(current_entity));
             while parent.is_some() {

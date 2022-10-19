@@ -15,6 +15,7 @@ impl Widget for CurrentCount {}
 #[derive(Bundle)]
 struct CurrentCountBundle {
     count: CurrentCount,
+    styles: Style,
     widget_name: WidgetName,
 }
 
@@ -22,7 +23,8 @@ impl Default for CurrentCountBundle {
     fn default() -> Self {
         Self {
             count: CurrentCount::default(),
-            widget_name: WidgetName(CurrentCount::default().get_name()),
+            styles: Style::default(),
+            widget_name: CurrentCount::default().get_name(),
         }
     }
 }
@@ -35,9 +37,9 @@ fn current_count_update(
     if let Ok(current_count) = query.get(entity) {
         let parent_id = Some(entity);
         rsx! {
-            <TextBundle
+            <TextWidgetBundle
                 text={
-                    Text {
+                    TextProps {
                         content: format!("Current Count: {}", current_count.0).into(),
                         size: 16.0,
                         line_height: Some(40.0),
@@ -95,8 +97,8 @@ fn startup(
                         },
                     )}
                 >
-                    <TextBundle
-                        text={kayak_ui::prelude::widgets::Text {
+                    <TextWidgetBundle
+                        text={TextProps {
                             content: "Click me!".into(),
                             size: 16.0,
                             alignment: Alignment::Start,

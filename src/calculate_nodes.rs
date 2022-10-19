@@ -37,98 +37,96 @@ pub fn calculate_nodes(
     // if query.is_empty() {
     //     return;
     // }
-
     if let Ok(tree) = context.tree.clone().read() {
         for dirty_entity in query.iter() {
             let dirty_entity = WrappedIndex(dirty_entity);
-            if let Ok(styles) = all_styles_query.get(dirty_entity.0) {
-                // Get the parent styles. Will be one of the following:
-                // 1. Already-resolved node styles (best)
-                // 2. Unresolved widget prop styles
-                // 3. Unresolved default styles
-                let parent_styles = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity)
-                {
-                    if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
-                        parent_node.resolved_styles.clone()
-                    } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
-                        parent_node.0.resolved_styles.clone()
-                    } else if let Ok(parent_styles) = all_styles_query.get(parent_widget_id.0) {
-                        parent_styles.clone()
-                    } else {
-                        default_styles.clone()
-                    }
+            let styles = all_styles_query.get(dirty_entity.0).unwrap_or(&default_styles);
+            // Get the parent styles. Will be one of the following:
+            // 1. Already-resolved node styles (best)
+            // 2. Unresolved widget prop styles
+            // 3. Unresolved default styles
+            let parent_styles = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity)
+            {
+                if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
+                    parent_node.resolved_styles.clone()
+                } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
+                    parent_node.0.resolved_styles.clone()
+                } else if let Ok(parent_styles) = all_styles_query.get(parent_widget_id.0) {
+                    parent_styles.clone()
                 } else {
                     default_styles.clone()
-                };
+                }
+            } else {
+                default_styles.clone()
+            };
 
-                let parent_z = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity) {
-                    if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
-                        parent_node.z
-                    } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
-                        parent_node.0.z
-                    } else {
-                        -1.0
-                    }
+            let parent_z = if let Some(parent_widget_id) = tree.parents.get(&dirty_entity) {
+                if let Ok((_, parent_node)) = node_query.get(parent_widget_id.0) {
+                    parent_node.z
+                } else if let Some(parent_node) = new_nodes.get(&parent_widget_id.0) {
+                    parent_node.0.z
                 } else {
                     -1.0
-                };
-
-                let current_z = {
-                    if parent_z > -1.0 {
-                        parent_z + 1.0
-                    } else {
-                        let z = context.current_z;
-                        context.current_z += 1.0;
-                        z
-                    }
-                };
-
-                let raw_styles = styles.clone();
-                let mut styles = raw_styles.clone();
-                // Fill in all `initial` values for any unset property
-                styles.apply(&initial_styles);
-                // Fill in all `inherited` values for any `inherit` property
-                styles.inherit(&parent_styles);
-
-                let (primitive, needs_layout) = create_primitive(
-                    &mut commands,
-                    &context,
-                    &fonts,
-                    &font_mapping,
-                    // &node_query,
-                    dirty_entity,
-                    &mut styles,
-                );
-
-                let children = tree.children.get(&dirty_entity).cloned().unwrap_or(vec![]);
-
-                let width = styles.width.resolve().value_or(0.0, 0.0);
-                let height = styles.height.resolve().value_or(0.0, 0.0);
-
-                let mut node = NodeBuilder::empty()
-                    .with_id(dirty_entity)
-                    .with_styles(styles, Some(raw_styles))
-                    .with_children(children)
-                    .with_primitive(primitive)
-                    .build();
-
-                if dirty_entity == tree.root_node.unwrap() {
-                    if let Ok(mut cache) = context.layout_cache.try_write() {
-                        cache.rect.insert(
-                            dirty_entity,
-                            Rect {
-                                posx: 0.0,
-                                posy: 0.0,
-                                width,
-                                height,
-                                z_index: 0.0,
-                            },
-                        );
-                    }
                 }
-                node.z = current_z;
-                new_nodes.insert(dirty_entity.0, (node, needs_layout));
+            } else {
+                -1.0
+            };
+
+            let current_z = {
+                if parent_z > -1.0 {
+                    parent_z + 1.0
+                } else {
+                    let z = context.current_z;
+                    context.current_z += 1.0;
+                    z
+                }
+            };
+
+            let raw_styles = styles.clone();
+            let mut styles = raw_styles.clone();
+            // Fill in all `initial` values for any unset property
+            styles.apply(&initial_styles);
+            // Fill in all `inherited` values for any `inherit` property
+            styles.inherit(&parent_styles);
+
+            let (primitive, needs_layout) = create_primitive(
+                &mut commands,
+                &context,
+                &fonts,
+                &font_mapping,
+                // &node_query,
+                dirty_entity,
+                &mut styles,
+            );
+
+            let children = tree.children.get(&dirty_entity).cloned().unwrap_or(vec![]);
+
+            let width = styles.width.resolve().value_or(0.0, 0.0);
+            let height = styles.height.resolve().value_or(0.0, 0.0);
+
+            let mut node = NodeBuilder::empty()
+                .with_id(dirty_entity)
+                .with_styles(styles, Some(raw_styles))
+                .with_children(children)
+                .with_primitive(primitive)
+                .build();
+
+            if dirty_entity == tree.root_node.unwrap() {
+                if let Ok(mut cache) = context.layout_cache.try_write() {
+                    cache.rect.insert(
+                        dirty_entity,
+                        Rect {
+                            posx: 0.0,
+                            posy: 0.0,
+                            width,
+                            height,
+                            z_index: 0.0,
+                        },
+                    );
+                }
             }
+            node.z = current_z;
+            new_nodes.insert(dirty_entity.0, (node, needs_layout));
         }
 
         // let has_new_nodes = new_nodes.len() > 0;

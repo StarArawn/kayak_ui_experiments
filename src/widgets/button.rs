@@ -27,7 +27,7 @@ impl Default for ButtonBundle {
             styles: Default::default(),
             on_event: Default::default(),
             children: Children::default(),
-            widget_name: WidgetName(Button::default().get_name()),
+            widget_name: Button::default().get_name(),
         }
     }
 }
