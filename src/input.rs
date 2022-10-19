@@ -112,7 +112,7 @@ pub(crate) fn process_events(world: &mut World) {
     });
 }
 
-fn query_world<T: bevy::ecs::system::SystemParam, F, R>(mut f: F, world: &mut World) -> R
+fn query_world<T: bevy::ecs::system::SystemParam + 'static, F, R>(mut f: F, world: &mut World) -> R
 where
     F: FnMut(<T::Fetch as bevy::ecs::system::SystemParamFetch<'_, '_>>::Item) -> R,
 {

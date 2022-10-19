@@ -48,8 +48,7 @@ fn update_text_box_example(
         let state_entity = widget_context.get_context_entity::<TextBoxExampleState>(entity);
         if state_entity.is_none() {
             let state_entity = commands
-                .spawn()
-                .insert(TextBoxExampleState {
+                .spawn(TextBoxExampleState {
                     value1: "Hello World".into(),
                     value2: "Hello World2".into(),
                 })
@@ -112,7 +111,7 @@ fn startup(
 ) {
     font_mapping.set_default(asset_server.load("roboto.kayak_font"));
 
-    commands.spawn().insert_bundle(UICameraBundle::new());
+    commands.spawn(UICameraBundle::new());
 
     let mut widget_context = Context::new();
     widget_context.add_widget_system(

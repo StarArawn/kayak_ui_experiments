@@ -40,8 +40,7 @@ pub fn tab_context_update(
 ) -> bool {
     if let Ok((children, tab_context_provider)) = query.get(entity) {
         let context_entity = commands
-            .spawn()
-            .insert(TabContext {
+            .spawn(TabContext {
                 current_index: tab_context_provider.initial_index,
             })
             .id();

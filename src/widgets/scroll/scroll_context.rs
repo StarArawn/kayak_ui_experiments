@@ -173,7 +173,7 @@ pub fn update_scroll_context(
     >,
 ) -> bool {
     if let Ok((context_provider, children)) = query.get_mut(entity) {
-        let context_entity = commands.spawn().insert(context_provider.initial_value).id();
+        let context_entity = commands.spawn(context_provider.initial_value).id();
         widget_context.set_context_entity::<ScrollContext>(Some(entity), context_entity);
         children.process(&widget_context, Some(entity));
         return true;

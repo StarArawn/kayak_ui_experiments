@@ -11,7 +11,7 @@ fn startup(
 ) {
     font_mapping.set_default(asset_server.load("roboto.kayak_font"));
 
-    commands.spawn().insert_bundle(UICameraBundle::new());
+    commands.spawn(UICameraBundle::new());
 
     let image_handle = asset_server.load("texture_atlas.png");
 
@@ -24,6 +24,8 @@ fn startup(
         bevy::prelude::Vec2::splat(tile_size as f32),
         columns,
         rows,
+        None,
+        None,
     );
 
     //The sign in the top right of the image would be index 16

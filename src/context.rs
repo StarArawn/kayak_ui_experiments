@@ -431,19 +431,19 @@ impl Plugin for ContextPlugin {
             .register_type::<Node>()
             .add_startup_system_to_stage(
                 StartupStage::PostStartup,
-                init_systems.exclusive_system().at_end(),
+                init_systems.at_end(),
             )
             .add_system_to_stage(
                 CoreStage::Update,
-                crate::input::process_events.exclusive_system(),
+                crate::input::process_events,
             )
             .add_system_to_stage(
                 CoreStage::PostUpdate,
-                update_widgets_sys.exclusive_system().at_start(),
+                update_widgets_sys.at_start(),
             )
             .add_system_to_stage(
                 CoreStage::PostUpdate,
-                calculate_ui.exclusive_system().at_end(),
+                calculate_ui.at_end(),
             )
             .add_system(crate::window_size::update_window_size);
     }

@@ -94,8 +94,7 @@ pub fn window_update(
             let mut title_children = Children::new();
             // Spawn title children
             let title_entity = commands
-                .spawn()
-                .insert_bundle(TextWidgetBundle {
+                .spawn(TextWidgetBundle {
                     text: TextProps {
                         content: title.clone(),
                         size: 16.0,
@@ -112,8 +111,7 @@ pub fn window_update(
             title_children.add(title_entity);
 
             let title_background_entity = commands
-                .spawn()
-                .insert_bundle(BackgroundBundle {
+                .spawn(BackgroundBundle {
                     styles: Style {
                         render_command: StyleProp::Value(RenderCommand::Quad),
                         background_color: StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0)),
@@ -143,6 +141,7 @@ pub fn window_update(
                             Entity,
                         )>,
                               mut query: Query<&mut Window>| {
+                                dbg!("GOT HERE!");
                             if let Ok(mut window) = query.get_mut(window_entity) {
                                 match event.event_type {
                                     EventType::MouseDown(data) => {
@@ -183,7 +182,7 @@ pub fn window_update(
             };
             clip_bundle.styles.padding = StyleProp::Value(Edge::all(Units::Pixels(10.0)));
 
-            let clip_entity = commands.spawn().insert_bundle(clip_bundle).id();
+            let clip_entity = commands.spawn(clip_bundle).id();
             widget_context.add_widget(Some(window_entity), clip_entity);
             // let children = widget_context.get_children(window_entity);
         }

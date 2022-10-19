@@ -203,7 +203,7 @@ impl Widget {
                 commands.entity(entity).despawn_recursive();
                 commands.get_or_spawn(entity).id()
             } else {
-                commands.spawn().id()
+                commands.spawn_empty().id()
             };
             let mut #prop_ident = #name {
                 #assigned_attrs
@@ -220,7 +220,7 @@ impl Widget {
         };
 
         let constructor = quote! {
-            commands.entity(#entity_id).insert_bundle(#prop_ident);
+            commands.entity(#entity_id).insert(#prop_ident);
             #add_widget
         };
 

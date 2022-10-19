@@ -233,7 +233,7 @@ fn update_theme_demo(
 
                     if theme_demo.is_root {
                         if theme_demo.context_entity.is_none() {
-                            let theme_entity = commands.spawn().insert(Theme::vector()).id();
+                            let theme_entity = commands.spawn(Theme::vector()).id();
                             theme_demo.context_entity = Some(theme_entity);
                         }
                     }
@@ -346,7 +346,7 @@ fn startup(
 ) {
     font_mapping.set_default(asset_server.load("roboto.kayak_font"));
 
-    commands.spawn().insert_bundle(UICameraBundle::new());
+    commands.spawn(UICameraBundle::new());
 
     let mut widget_context = Context::new();
     widget_context.add_widget_system(ThemeDemo::default().get_name(), update_theme_demo);
@@ -356,7 +356,7 @@ fn startup(
     rsx! {
         <KayakAppBundle>
             {
-                let theme_entity = commands.spawn().insert(Theme::vampire()).id();
+                let theme_entity = commands.spawn(Theme::vampire()).id();
                 widget_context.set_context_entity::<Theme>(parent_id, theme_entity);
             }
             <WindowBundle

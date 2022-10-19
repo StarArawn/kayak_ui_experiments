@@ -17,4 +17,4 @@ proc-macro-crate = "1.1"
 [dev-dependencies]
 kayak_ui = { path = "../", version = "0.1.0" }
 pretty_assertions = "1.2.1"
-bevy = { git = "https://github.com/bevyengine/bevy", rev="092bb71bcf00fa278b828df0115c144451233983" }
+bevy = { git = "https://github.com/bevyengine/bevy", rev="6ae46f6403d115784d51a5d96b6b0619a9b3c93f" }

@@ -93,7 +93,7 @@ pub fn update_text_box(
         if let Ok((mut styles, text_box, mut on_event, on_change)) = query.p1().get_mut(entity) {
             let state_entity = widget_context.get_context_entity::<TextBoxState>(entity);
             if state_entity.is_none() {
-                let state_entity = commands.spawn().insert(TextBoxState::default()).id();
+                let state_entity = commands.spawn(TextBoxState::default()).id();
                 widget_context.set_context_entity::<TextBoxState>(Some(entity), state_entity);
                 return false;
             }
