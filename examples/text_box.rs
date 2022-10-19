@@ -38,13 +38,13 @@ impl Default for TextBoxExampleBundle {
 fn update_text_box_example(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
-    query: Query<&TextBoxExample, Or<(Changed<TextBoxExample>, Changed<Style>, With<Mounted>)>>,
+    props_query: Query<&TextBoxExample, Or<(Changed<TextBoxExample>, Changed<Style>, With<Mounted>)>>,
     mut state_query: ParamSet<(
         Query<Entity, Or<(Added<TextBoxExampleState>, Changed<TextBoxExampleState>)>>,
         Query<&TextBoxExampleState>,
     )>,
 ) -> bool {
-    if !query.is_empty() || !state_query.p0().is_empty() {
+    if !props_query.is_empty() || !state_query.p0().is_empty() {
         let state_entity = widget_context.get_context_entity::<TextBoxExampleState>(entity);
         if state_entity.is_none() {
             let state_entity = commands
@@ -65,8 +65,8 @@ fn update_text_box_example(
 
         let on_change = OnChange::new(
             move |In((_widget_context, _, value)): In<(WidgetContext, Entity, String)>,
-                    mut query: Query<&mut TextBoxExampleState>| {
-                if let Ok(mut state) = query.get_mut(state_entity) {
+                    mut state_query: Query<&mut TextBoxExampleState>| {
+                if let Ok(mut state) = state_query.get_mut(state_entity) {
                     state.value1 = value;
                 }
             },
@@ -74,8 +74,8 @@ fn update_text_box_example(
 
         let on_change2 = OnChange::new(
             move |In((_widget_context, _, value)): In<(WidgetContext, Entity, String)>,
-                    mut query: Query<&mut TextBoxExampleState>| {
-                if let Ok(mut state) = query.get_mut(state_entity) {
+                    mut state_query: Query<&mut TextBoxExampleState>| {
+                if let Ok(mut state) = state_query.get_mut(state_entity) {
                     state.value2 = value;
                 }
             },
