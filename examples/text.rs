@@ -5,7 +5,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 
 #[derive(Component, Default)]
 pub struct MyWidgetProps {
@@ -15,7 +15,7 @@ pub struct MyWidgetProps {
 fn my_widget_1_update(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     my_resource: Res<MyResource>,
-    mut query: Query<(&mut MyWidgetProps, &mut Style)>,
+    mut query: Query<(&mut MyWidgetProps, &mut KStyle)>,
 ) -> bool {
     if my_resource.is_changed() || my_resource.is_added() {
         if let Ok((mut my_widget, mut style)) = query.get_mut(entity) {
@@ -37,7 +37,7 @@ impl Widget for MyWidgetProps {}
 #[derive(Bundle)]
 pub struct MyWidgetBundle {
     props: MyWidgetProps,
-    styles: Style,
+    styles: KStyle,
     widget_name: WidgetName,
 }
 

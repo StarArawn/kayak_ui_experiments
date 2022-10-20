@@ -5,10 +5,10 @@ use bevy::{
 use morphorm::Units;
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     prelude::WidgetContext,
-    styles::{RenderCommand, Style, StyleProp},
+    styles::{KStyle, RenderCommand, StyleProp},
     widget::Widget,
 };
 
@@ -20,8 +20,8 @@ impl Widget for KayakApp {}
 #[derive(Bundle)]
 pub struct KayakAppBundle {
     pub app: KayakApp,
-    pub styles: Style,
-    pub children: Children,
+    pub styles: KStyle,
+    pub children: KChildren,
     pub widget_name: WidgetName,
 }
 
@@ -41,7 +41,7 @@ pub fn app_update(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
     windows: Res<Windows>,
-    mut query: Query<(&mut Style, &Children), Or<(With<KayakApp>, With<Mounted>)>>,
+    mut query: Query<(&mut KStyle, &KChildren), Or<(With<KayakApp>, With<Mounted>)>>,
 ) -> bool {
     let mut has_changed = false;
     let primary_window = windows.get_primary().unwrap();

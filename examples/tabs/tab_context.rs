@@ -1,5 +1,5 @@
 use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Query};
-use kayak_ui::prelude::{Children, Widget, WidgetContext, WidgetName};
+use kayak_ui::prelude::{KChildren, Widget, WidgetContext, WidgetName};
 
 #[derive(Component, Default)]
 pub struct TabContext {
@@ -16,7 +16,7 @@ impl Widget for TabContextProvider {}
 #[derive(Bundle)]
 pub struct TabContextProviderBundle {
     pub tab_provider: TabContextProvider,
-    pub children: Children,
+    pub children: KChildren,
     pub widget_name: WidgetName,
 }
 
@@ -34,8 +34,8 @@ pub fn tab_context_update(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     query: Query<
-        (&Children, &TabContextProvider),
-        (Changed<Children>, Changed<TabContextProvider>),
+        (&KChildren, &TabContextProvider),
+        (Changed<KChildren>, Changed<TabContextProvider>),
     >,
 ) -> bool {
     if let Ok((children, tab_context_provider)) = query.get(entity) {

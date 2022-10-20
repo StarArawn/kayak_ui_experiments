@@ -6,7 +6,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 use morphorm::{PositionType, Units};
 
 #[derive(Component, Default)]
@@ -18,7 +18,7 @@ pub struct MyQuad {
 
 fn my_quad_update(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
-    mut query: Query<(&MyQuad, &mut Style), Changed<MyQuad>>,
+    mut query: Query<(&MyQuad, &mut KStyle), Changed<MyQuad>>,
 ) -> bool {
     if let Ok((quad, mut style)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Quad);
@@ -39,7 +39,7 @@ impl Widget for MyQuad {}
 #[derive(Bundle)]
 pub struct MyQuadBundle {
     my_quad: MyQuad,
-    styles: Style,
+    styles: KStyle,
     widget_name: WidgetName,
 }
 
@@ -47,7 +47,7 @@ impl Default for MyQuadBundle {
     fn default() -> Self {
         Self {
             my_quad: Default::default(),
-            styles: Style::default(),
+            styles: KStyle::default(),
             widget_name: MyQuad::default().get_name(),
         }
     }

@@ -21,7 +21,7 @@ impl Widget for TextBoxExample {}
 #[derive(Bundle)]
 struct TextBoxExampleBundle {
     text_box_example: TextBoxExample,
-    styles: Style,
+    styles: KStyle,
     widget_name: WidgetName,
 }
 
@@ -40,7 +40,7 @@ fn update_text_box_example(
     mut commands: Commands,
     props_query: Query<
         &TextBoxExample,
-        Or<(Changed<TextBoxExample>, Changed<Style>, With<Mounted>)>,
+        Or<(Changed<TextBoxExample>, Changed<KStyle>, With<Mounted>)>,
     >,
     mut state_query: ParamSet<(
         Query<Entity, Or<(Added<TextBoxExampleState>, Changed<TextBoxExampleState>)>>,
@@ -86,7 +86,7 @@ fn update_text_box_example(
         rsx! {
             <ElementBundle>
                 <TextBoxBundle
-                    styles={Style {
+                    styles={KStyle {
                         bottom: StyleProp::Value(Units::Pixels(10.0)),
                         ..Default::default()
                     }}
@@ -124,12 +124,12 @@ fn startup(
     rsx! {
         <KayakAppBundle>
             <WindowBundle
-                window={Window {
+                window={KWindow {
                     title: "Hello text box".into(),
                     draggable: true,
                     position: Vec2::new(10.0, 10.0),
                     size: Vec2::new(300.0, 250.0),
-                    ..Window::default()
+                    ..KWindow::default()
                 }}
             >
                 <TextBoxExampleBundle />

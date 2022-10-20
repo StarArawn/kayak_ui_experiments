@@ -9,8 +9,8 @@ use crate::{
     event_dispatcher::EventDispatcherContext,
     on_event::OnEvent,
     on_layout::OnLayout,
-    prelude::{Children, OnChange, WidgetContext},
-    styles::{Corner, RenderCommand, Style, StyleProp, Units},
+    prelude::{KChildren, OnChange, WidgetContext},
+    styles::{Corner, KStyle, RenderCommand, StyleProp, Units},
     widget::Widget,
     widgets::{
         text::{TextProps, TextWidgetBundle},
@@ -58,7 +58,7 @@ impl Widget for TextBoxProps {}
 #[derive(Bundle)]
 pub struct TextBoxBundle {
     pub text_box: TextBoxProps,
-    pub styles: Style,
+    pub styles: KStyle,
     pub on_event: OnEvent,
     pub on_layout: OnLayout,
     pub on_change: OnChange,
@@ -84,8 +84,8 @@ pub fn update_text_box(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: ParamSet<(
-        Query<Entity, Or<(Changed<TextBoxProps>, Changed<Style>, With<Mounted>)>>,
-        Query<(&mut Style, &TextBoxProps, &mut OnEvent, &OnChange)>,
+        Query<Entity, Or<(Changed<TextBoxProps>, Changed<KStyle>, With<Mounted>)>>,
+        Query<(&mut KStyle, &TextBoxProps, &mut OnEvent, &OnChange)>,
     )>,
     mut context_query: ParamSet<(Query<Entity, Changed<TextBoxState>>, Query<&TextBoxState>)>,
 ) -> bool {
@@ -100,16 +100,16 @@ pub fn update_text_box(
 
             let state_entity = state_entity.unwrap();
 
-            *styles = Style::default()
+            *styles = KStyle::default()
                 // Required styles
-                .with_style(Style {
+                .with_style(KStyle {
                     render_command: RenderCommand::Layout.into(),
                     ..Default::default()
                 })
                 // Apply any prop-given styles
                 .with_style(&*styles)
                 // If not set by props, apply these styles
-                .with_style(Style {
+                .with_style(KStyle {
                     top: Units::Pixels(0.0).into(),
                     bottom: Units::Pixels(0.0).into(),
                     height: Units::Pixels(26.0).into(),
@@ -117,7 +117,7 @@ pub fn update_text_box(
                     ..Default::default()
                 });
 
-            let background_styles = Style {
+            let background_styles = KStyle {
                 background_color: StyleProp::Value(Color::rgba(0.176, 0.196, 0.215, 1.0)),
                 border_radius: Corner::all(5.0).into(),
                 height: Units::Pixels(26.0).into(),
@@ -176,7 +176,7 @@ pub fn update_text_box(
             let parent_id = Some(entity);
             rsx! {
                 <BackgroundBundle styles={background_styles}>
-                    <ClipBundle styles={Style {
+                    <ClipBundle styles={KStyle {
                         height: Units::Pixels(26.0).into(),
                         padding_left: StyleProp::Value(Units::Stretch(0.0)),
                         padding_right: StyleProp::Value(Units::Stretch(0.0)),

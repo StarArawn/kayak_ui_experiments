@@ -1,52 +1,52 @@
-use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Or, Query, With};
+use bevy::{prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Or, Query, With}, window::CursorIcon};
 
 use crate::{
     context::{Mounted, WidgetName},
     on_event::OnEvent,
-    prelude::{Children, Units, WidgetContext},
-    styles::{Corner, RenderCommand, Style, StyleProp},
+    prelude::{KChildren, Units, WidgetContext},
+    styles::{Corner, KStyle, RenderCommand, StyleProp, KCursorIcon},
     widget::Widget,
 };
 
 #[derive(Component, Default)]
-pub struct Button;
+pub struct KButton;
 
 #[derive(Bundle)]
-pub struct ButtonBundle {
-    pub button: Button,
-    pub styles: Style,
+pub struct KButtonBundle {
+    pub button: KButton,
+    pub styles: KStyle,
     pub on_event: OnEvent,
-    pub children: Children,
+    pub children: KChildren,
     pub widget_name: WidgetName,
 }
 
-impl Default for ButtonBundle {
+impl Default for KButtonBundle {
     fn default() -> Self {
         Self {
             button: Default::default(),
             styles: Default::default(),
             on_event: Default::default(),
-            children: Children::default(),
-            widget_name: Button::default().get_name(),
+            children: KChildren::default(),
+            widget_name: KButton::default().get_name(),
         }
     }
 }
 
-impl Widget for Button {}
+impl Widget for KButton {}
 
 pub fn button_update(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
-    mut query: Query<(&mut Style, &Children), Or<(Changed<Button>, With<Mounted>)>>,
+    mut query: Query<(&mut KStyle, &KChildren), Or<(Changed<KButton>, With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, children)) = query.get_mut(entity) {
-        *style = Style::default()
-            .with_style(Style {
+        *style = KStyle::default()
+            .with_style(KStyle {
                 render_command: StyleProp::Value(RenderCommand::Quad),
                 ..Default::default()
             })
             .with_style(style.clone())
-            .with_style(Style {
+            .with_style(KStyle {
                 render_command: StyleProp::Value(RenderCommand::Quad),
                 background_color: StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0)),
                 border_radius: StyleProp::Value(Corner::all(5.0)),
@@ -55,9 +55,9 @@ pub fn button_update(
                 padding_right: StyleProp::Value(Units::Stretch(1.0)),
                 padding_bottom: StyleProp::Value(Units::Stretch(1.0)),
                 padding_top: StyleProp::Value(Units::Stretch(1.0)),
+                cursor: StyleProp::Value(KCursorIcon(CursorIcon::Hand)),
                 ..Default::default()
             });
-        // style.cursor = CursorIcon::Hand.into();/
 
         children.process(&widget_context, Some(entity));
 

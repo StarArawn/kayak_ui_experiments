@@ -61,7 +61,7 @@ fn startup(mut commands: Commands) {
     let entity = commands
         .spawn((
             MyWidget { foo: 0 },
-            kayak_ui::prelude::Style::default(),
+            kayak_ui::prelude::KStyle::default(),
             MyWidget::default().get_name(),
         ))
         .id();

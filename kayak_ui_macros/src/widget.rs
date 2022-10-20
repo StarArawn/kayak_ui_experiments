@@ -166,7 +166,7 @@ impl Widget {
                 quote! {
                     let parent_id_old = parent_id;
                     let parent_id = Some(#entity_id);
-                    let mut children = Children::new();
+                    let mut children = KChildren::new();
                 }
             } else {
                 quote! {}

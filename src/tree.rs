@@ -569,7 +569,9 @@ impl Tree {
             match change.as_slice() {
                 [Change::Deleted] => {
                     // self.parents.remove(node);
-                    children_a[*id] = WrappedIndex(Entity::from_raw(0));
+                    if children_a.get(*id).is_some() {
+                        children_a[*id] = WrappedIndex(Entity::from_raw(0));
+                    }
                     self.remove(*node);
                 }
                 [Change::Inserted] => {
@@ -588,8 +590,10 @@ impl Tree {
         }
 
         for (id, _node, _parent_node, _change) in changes.changes.iter() {
-            if children_a[*id].0.id() == 0 {
-                children_a.remove(*id);
+            if let Some(child) = children_a.get(*id) {
+                if child.0.id() == 0 {
+                    children_a.remove(*id);
+                }
             }
         }
 

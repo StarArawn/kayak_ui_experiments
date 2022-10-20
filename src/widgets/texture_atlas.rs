@@ -3,7 +3,7 @@ use bevy::prelude::{Bundle, Changed, Component, Entity, Handle, Image, In, Or, Q
 use crate::{
     context::{Mounted, WidgetName},
     prelude::WidgetContext,
-    styles::{RenderCommand, Style, StyleProp},
+    styles::{KStyle, RenderCommand, StyleProp},
     widget::Widget,
 };
 
@@ -37,7 +37,7 @@ impl Widget for TextureAtlas {}
 #[derive(Bundle)]
 pub struct TextureAtlasBundle {
     pub atlas: TextureAtlas,
-    pub styles: Style,
+    pub styles: KStyle,
     pub widget_name: WidgetName,
 }
 
@@ -54,12 +54,12 @@ impl Default for TextureAtlasBundle {
 pub fn update_texture_atlas(
     In((_widget_context, entity)): In<(WidgetContext, Entity)>,
     mut query: Query<
-        (&mut Style, &TextureAtlas),
-        Or<(Changed<TextureAtlas>, Changed<Style>, With<Mounted>)>,
+        (&mut KStyle, &TextureAtlas),
+        Or<(Changed<TextureAtlas>, Changed<KStyle>, With<Mounted>)>,
     >,
 ) -> bool {
     if let Ok((mut styles, texture_atlas)) = query.get_mut(entity) {
-        *styles = Style {
+        *styles = KStyle {
             render_command: StyleProp::Value(RenderCommand::TextureAtlas {
                 position: texture_atlas.position,
                 size: texture_atlas.tile_size,

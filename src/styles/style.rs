@@ -4,6 +4,7 @@ use std::ops::Add;
 
 use bevy::prelude::Color;
 use bevy::prelude::Component;
+use bevy::window::CursorIcon;
 pub use morphorm::{LayoutType, PositionType, Units};
 
 use crate::cursor::PointerEvents;
@@ -12,6 +13,16 @@ use super::AsRefOption;
 pub use super::Corner;
 pub use super::Edge;
 use super::RenderCommand;
+
+/// Just a wrapper around bevy's CursorIcon so we can define a default.
+#[derive(Debug, Clone, PartialEq)]
+pub struct KCursorIcon(pub CursorIcon);
+
+impl Default for KCursorIcon {
+    fn default() -> Self {
+        Self(CursorIcon::Default)
+    }
+}
 
 /// The base container of all style properties
 ///
@@ -170,7 +181,7 @@ macro_rules! define_styles {
             /// Applies a `Style` over this one
             ///
             /// Values from `other` are applied to any field in this one that is marked as [`StyleProp::Unset`]
-            pub fn apply<T: AsRefOption<Style>>(&mut self, other: T) {
+            pub fn apply<T: AsRefOption<KStyle>>(&mut self, other: T) {
                  if let Some(other) = other.as_ref_option() {
                      $(
                          if matches!(self.$field, StyleProp::Unset) {
@@ -183,7 +194,7 @@ macro_rules! define_styles {
             /// Applies the given style and returns the updated style
             ///
             /// This is simply a builder-like wrapper around the [`Style::apply`] method.
-            pub fn with_style<T: AsRefOption<Style>>(mut self, other: T) -> Self {
+            pub fn with_style<T: AsRefOption<KStyle>>(mut self, other: T) -> Self {
                 self.apply(other);
                 self
             }
@@ -229,7 +240,7 @@ define_styles! {
     ///   .with_style(&style_b);
     /// ```
     #[derive(Component, Debug, Default, Clone, PartialEq)]
-    pub struct Style {
+    pub struct KStyle {
         /// The background color of this widget
         ///
         /// Only applies to widgets marked [`RenderCommand::Quad`]
@@ -264,7 +275,7 @@ define_styles! {
         /// The spacing between child widgets along the horizontal axis
         pub col_between: StyleProp<Units>,
         /// The cursor icon to display when hovering this widget
-        // pub cursor: StyleProp<CursorIcon>,
+        pub cursor: StyleProp<KCursorIcon>,
         /// The font name for this widget
         ///
         /// Only applies to [`RenderCommand::Text`]
@@ -353,7 +364,7 @@ define_styles! {
     }
 }
 
-impl Style {
+impl KStyle {
     /// Returns a `Style` object where all fields are set to their own initial values
     ///
     /// This is the actual "default" to apply over any field marked as [`StyleProp::Unset`] before
@@ -366,7 +377,7 @@ impl Style {
             border_radius: StyleProp::Default,
             bottom: StyleProp::Default,
             color: StyleProp::Inherit,
-            // cursor: StyleProp::Inherit,
+            cursor: StyleProp::Inherit,
             col_between: StyleProp::Default,
             font: StyleProp::Inherit,
             font_size: StyleProp::Inherit,
@@ -395,26 +406,26 @@ impl Style {
     }
 }
 
-impl Add for Style {
-    type Output = Style;
+impl Add for KStyle {
+    type Output = KStyle;
 
     /// Defines the `+` operator for [`Style`]. This is a convenience wrapper of the `self.with_style()` method and useful for concatenating many small `Style` variables.
     /// Similar to `with_style()` In a `StyleA + StyleB` operation, values from `StyleB` are applied to any field of StyleA that are marked as [`StyleProp::Unset`].
     ///
     /// Note: since the changes are applied only to unset fields, addition is *not* commutative. This means StyleA + StyleB != StyleB + StyleA for most cases.
-    fn add(self, other: Style) -> Style {
+    fn add(self, other: KStyle) -> KStyle {
         self.with_style(other)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Edge, Style, StyleProp, Units};
+    use super::{Edge, KStyle, StyleProp, Units};
 
     #[test]
     fn styles_should_equal() {
-        let mut a = Style::default();
-        let mut b = Style::default();
+        let mut a = KStyle::default();
+        let mut b = KStyle::default();
         assert_eq!(a, b);
 
         a.height = StyleProp::Default;
@@ -426,11 +437,11 @@ mod tests {
     fn style_should_inherit_property() {
         let border = Edge::new(1.0, 2.0, 3.0, 4.0);
 
-        let parent = Style {
+        let parent = KStyle {
             border: StyleProp::Value(border),
             ..Default::default()
         };
-        let mut child = Style {
+        let mut child = KStyle {
             border: StyleProp::Inherit,
             ..Default::default()
         };
@@ -443,7 +454,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn style_should_panic_on_resolve_inherit_property() {
-        let style = Style {
+        let style = KStyle {
             color: StyleProp::Inherit,
             ..Default::default()
         };
@@ -453,8 +464,8 @@ mod tests {
 
     #[test]
     fn style_should_apply_styles_on_unset_property() {
-        let mut base_style = Style::default();
-        let other_style = Style {
+        let mut base_style = KStyle::default();
+        let other_style = KStyle {
             width: StyleProp::Value(Units::Pixels(123.0)),
             ..Default::default()
         };
@@ -468,11 +479,11 @@ mod tests {
 
     #[test]
     fn style_should_not_apply_styles_on_non_unset_property() {
-        let mut base_style = Style {
+        let mut base_style = KStyle {
             width: StyleProp::Default,
             ..Default::default()
         };
-        let other_style = Style {
+        let other_style = KStyle {
             width: StyleProp::Value(Units::Pixels(123.0)),
             ..Default::default()
         };
@@ -486,8 +497,8 @@ mod tests {
 
     #[test]
     fn style_should_apply_option_style() {
-        let mut base_style = Style::default();
-        let other_style = Some(Style {
+        let mut base_style = KStyle::default();
+        let other_style = Some(KStyle {
             width: StyleProp::Value(Units::Pixels(123.0)),
             ..Default::default()
         });
@@ -505,7 +516,7 @@ mod tests {
 
     #[test]
     fn style_should_not_apply_none() {
-        let expected = Style::default();
+        let expected = KStyle::default();
         let mut base_style = expected.clone();
 
         assert_eq!(expected, base_style);
@@ -519,26 +530,26 @@ mod tests {
         let expected_width = StyleProp::Value(Units::Stretch(1.0));
         let expected_height = StyleProp::Inherit;
 
-        let expected = Style {
+        let expected = KStyle {
             left: expected_left.clone(),
             width: expected_width.clone(),
             height: expected_height.clone(),
             ..Default::default()
         };
 
-        let style = Style::default()
+        let style = KStyle::default()
             // Pass ownership
-            .with_style(Style {
+            .with_style(KStyle {
                 height: expected_height,
                 ..Default::default()
             })
             // Pass ownership of option
-            .with_style(Some(Style {
+            .with_style(Some(KStyle {
                 left: expected_left,
                 ..Default::default()
             }))
             // Pass reference
-            .with_style(&Style {
+            .with_style(&KStyle {
                 width: expected_width,
                 ..Default::default()
             });
@@ -552,23 +563,23 @@ mod tests {
         let expected_width = StyleProp::Value(Units::Stretch(1.0));
         let expected_height = StyleProp::Inherit;
 
-        let expected = Style {
+        let expected = KStyle {
             left: expected_left.clone(),
             width: expected_width.clone(),
             height: expected_height.clone(),
             ..Default::default()
         };
 
-        let style_a = Style::default();
-        let style_b = Style {
+        let style_a = KStyle::default();
+        let style_b = KStyle {
             height: expected_height,
             ..Default::default()
         };
-        let style_c = Style {
+        let style_c = KStyle {
             left: expected_left,
             ..Default::default()
         };
-        let style_d = Style {
+        let style_d = KStyle {
             width: expected_width,
             ..Default::default()
         };

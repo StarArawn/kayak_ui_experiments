@@ -2,7 +2,7 @@ use bevy::prelude::{Component, Entity, Query};
 
 use crate::{
     render_primitive::RenderPrimitive,
-    styles::{Style, StyleProp},
+    styles::{KStyle, StyleProp},
 };
 
 #[derive(Component, Debug, Clone, Copy)]
@@ -16,9 +16,9 @@ pub struct Node {
     /// The ID of this node's widget
     pub id: WrappedIndex,
     /// The fully resolved styles for this node
-    pub resolved_styles: Style,
+    pub resolved_styles: KStyle,
     /// The raw styles for this node, before style resolution
-    pub raw_styles: Option<Style>,
+    pub raw_styles: Option<KStyle>,
     /// The generated [`RenderPrimitive`] of this node
     pub primitive: RenderPrimitive,
     /// The z-index of this node, used for controlling layering
@@ -50,7 +50,7 @@ impl NodeBuilder {
             node: Node {
                 children: Vec::new(),
                 id: WrappedIndex(Entity::from_raw(0)),
-                resolved_styles: Style::default(),
+                resolved_styles: KStyle::default(),
                 raw_styles: None,
                 primitive: RenderPrimitive::Empty,
                 z: 0.0,
@@ -59,7 +59,7 @@ impl NodeBuilder {
     }
 
     /// Defines a node with the given id and styles
-    pub fn new(id: WrappedIndex, styles: Style) -> Self {
+    pub fn new(id: WrappedIndex, styles: KStyle) -> Self {
         Self {
             node: Node {
                 children: Vec::new(),
@@ -85,7 +85,7 @@ impl NodeBuilder {
     }
 
     /// Sets the resolved and raw styles, respectively, of the node being built
-    pub fn with_styles(mut self, resolved_styles: Style, raw_styles: Option<Style>) -> Self {
+    pub fn with_styles(mut self, resolved_styles: KStyle, raw_styles: Option<KStyle>) -> Self {
         self.node.resolved_styles = resolved_styles;
         self.node.raw_styles = raw_styles;
         self

@@ -4,7 +4,7 @@ use kayak_font::Alignment;
 use crate::{
     context::{Mounted, WidgetName},
     prelude::WidgetContext,
-    styles::{RenderCommand, Style, StyleProp},
+    styles::{KStyle, RenderCommand, StyleProp},
     widget::Widget,
 };
 
@@ -48,7 +48,7 @@ impl Widget for TextProps {}
 #[derive(Bundle)]
 pub struct TextWidgetBundle {
     pub text: TextProps,
-    pub styles: Style,
+    pub styles: KStyle,
     pub widget_name: WidgetName,
 }
 
@@ -64,7 +64,7 @@ impl Default for TextWidgetBundle {
 
 pub fn text_update(
     In((_, entity)): In<(WidgetContext, Entity)>,
-    mut query: Query<(&mut Style, &TextProps), Or<(Changed<TextProps>, With<Mounted>)>>,
+    mut query: Query<(&mut KStyle, &TextProps), Or<(Changed<TextProps>, With<Mounted>)>>,
 ) -> bool {
     if let Ok((mut style, text)) = query.get_mut(entity) {
         style.render_command = StyleProp::Value(RenderCommand::Text {

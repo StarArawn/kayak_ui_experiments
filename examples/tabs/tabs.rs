@@ -29,17 +29,17 @@ fn startup(
     rsx! {
         <KayakAppBundle>
             <WindowBundle
-                window={Window {
+                window={KWindow {
                     title: "Tabs".into(),
                     draggable: true,
                     position: Vec2::new(10.0, 10.0),
                     size: Vec2::new(300.0, 250.0),
-                    ..Window::default()
+                    ..KWindow::default()
                 }}
             >
                 <TabContextProviderBundle tab_provider={TabContextProvider { initial_index: 0 }}>
                     <ElementBundle
-                        styles={Style {
+                        styles={KStyle {
                             layout_type: StyleProp::Value(LayoutType::Row),
                             height: StyleProp::Value(Units::Auto),
                             width: StyleProp::Value(Units::Stretch(1.0)),

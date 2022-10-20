@@ -15,7 +15,7 @@ impl Widget for CurrentCount {}
 #[derive(Bundle)]
 struct CurrentCountBundle {
     count: CurrentCount,
-    styles: Style,
+    styles: KStyle,
     widget_name: WidgetName,
 }
 
@@ -23,7 +23,7 @@ impl Default for CurrentCountBundle {
     fn default() -> Self {
         Self {
             count: CurrentCount::default(),
-            styles: Style::default(),
+            styles: KStyle::default(),
             widget_name: CurrentCount::default().get_name(),
         }
     }
@@ -70,16 +70,16 @@ fn startup(
     rsx! {
         <KayakAppBundle>
             <WindowBundle
-                window={Window {
+                window={KWindow {
                     title: "State Example Window".into(),
                     draggable: true,
                     position: Vec2::new(10.0, 10.0),
                     size: Vec2::new(300.0, 250.0),
-                    ..Window::default()
+                    ..KWindow::default()
                 }}
             >
                 <CurrentCountBundle id={"current_count_entity"} />
-                <ButtonBundle
+                <KButtonBundle
                     on_event={OnEvent::new(
                         move |In((event_dispatcher_context, event, _entity)): In<(EventDispatcherContext, Event, Entity)>,
                             mut query: Query<&mut CurrentCount>| {
@@ -105,7 +105,7 @@ fn startup(
                             ..Default::default()
                         }}
                     />
-                </ButtonBundle>
+                </KButtonBundle>
             </WindowBundle>
         </KayakAppBundle>
     }

@@ -14,7 +14,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 
 /// The color theme struct we will be using across our demo widgets
 #[derive(Component, Debug, Default, Clone, PartialEq)]
@@ -86,7 +86,7 @@ fn update_theme_button(
                 widget_context.get_context_entity::<Theme>(theme_button_entity)
             {
                 if let Ok(theme) = context_query.p0().get_mut(theme_context_entity) {
-                    let mut box_style = Style {
+                    let mut box_style = KStyle {
                         width: StyleProp::Value(Units::Pixels(30.0)),
                         height: StyleProp::Value(Units::Pixels(30.0)),
                         background_color: StyleProp::Value(theme_button.theme.primary),
@@ -165,7 +165,7 @@ fn update_theme_selector(
     query: Query<&ThemeSelector, Changed<ThemeSelector>>,
 ) -> bool {
     if let Ok(_) = query.get(entity) {
-        let button_container_style = Style {
+        let button_container_style = KStyle {
             layout_type: StyleProp::Value(LayoutType::Row),
             width: StyleProp::Value(Units::Stretch(1.0)),
             height: StyleProp::Value(Units::Auto),
@@ -243,12 +243,12 @@ fn update_theme_demo(
                     } else {
                         Entity::from_raw(1000000)
                     };
-                    let text_styles = Style {
+                    let text_styles = KStyle {
                         color: StyleProp::Value(theme.primary),
                         height: StyleProp::Value(Units::Pixels(28.0)),
                         ..Default::default()
                     };
-                    let btn_style = Style {
+                    let btn_style = KStyle {
                         background_color: StyleProp::Value(theme.secondary),
                         width: StyleProp::Value(Units::Stretch(0.75)),
                         height: StyleProp::Value(Units::Pixels(32.0)),
@@ -259,7 +259,7 @@ fn update_theme_demo(
                     };
 
                     let parent_id = Some(entity);
-                    let mut children = kayak_ui::prelude::Children::new();
+                    let mut children = kayak_ui::prelude::KChildren::new();
                     rsx! {
                         <>
                             <TextWidgetBundle
@@ -269,14 +269,14 @@ fn update_theme_demo(
                                     line_height: Some(28.0),
                                     ..Default::default()
                                 }}
-                                styles={Style {
+                                styles={KStyle {
                                     height: StyleProp::Value(Units::Pixels(28.0)),
                                     ..Default::default()
                                 }}
                             />
                             <ThemeSelectorBundle />
                             <BackgroundBundle
-                                styles={Style {
+                                styles={KStyle {
                                     background_color: StyleProp::Value(theme.background),
                                     top: StyleProp::Value(Units::Pixels(15.0)),
                                     width: StyleProp::Value(Units::Stretch(1.0)),
@@ -292,7 +292,7 @@ fn update_theme_demo(
                                     }}
                                     styles={text_styles.clone()}
                                 />
-                                <ButtonBundle
+                                <KButtonBundle
                                     styles={btn_style.clone()}
                                 >
                                     <TextWidgetBundle
@@ -302,7 +302,7 @@ fn update_theme_demo(
                                             ..Default::default()
                                         }}
                                     />
-                                </ButtonBundle>
+                                </KButtonBundle>
                                 {
                                     if theme_demo.is_root {
                                         widget_context.set_context_entity::<Theme>(
@@ -311,7 +311,7 @@ fn update_theme_demo(
                                         );
                                         constructor! {
                                             <ElementBundle
-                                                styles={Style {
+                                                styles={KStyle {
                                                     top: StyleProp::Value(Units::Pixels(10.0)),
                                                     left: StyleProp::Value(Units::Pixels(10.0)),
                                                     bottom: StyleProp::Value(Units::Pixels(10.0)),
@@ -360,7 +360,7 @@ fn startup(
                 widget_context.set_context_entity::<Theme>(parent_id, theme_entity);
             }
             <WindowBundle
-                window={Window {
+                window={KWindow {
                     title: "Context Example".into(),
                     draggable: true,
                     position: Vec2::ZERO,

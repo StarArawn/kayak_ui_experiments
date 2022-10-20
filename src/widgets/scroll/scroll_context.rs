@@ -1,10 +1,10 @@
 use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Or, Query, Vec2, With};
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     prelude::WidgetContext,
-    styles::Style,
+    styles::KStyle,
     widget::Widget,
 };
 
@@ -144,8 +144,8 @@ impl Widget for ScrollContextProvider {}
 #[derive(Bundle)]
 pub struct ScrollContextProviderBundle {
     pub scroll_context_provider: ScrollContextProvider,
-    pub children: Children,
-    pub styles: Style,
+    pub children: KChildren,
+    pub styles: KStyle,
     pub widget_name: WidgetName,
 }
 
@@ -153,7 +153,7 @@ impl Default for ScrollContextProviderBundle {
     fn default() -> Self {
         Self {
             scroll_context_provider: Default::default(),
-            children: Children::default(),
+            children: KChildren::default(),
             styles: Default::default(),
             widget_name: ScrollContextProvider::default().get_name(),
         }
@@ -164,10 +164,10 @@ pub fn update_scroll_context(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: Query<
-        (&ScrollContextProvider, &Children),
+        (&ScrollContextProvider, &KChildren),
         Or<(
             Changed<ScrollContextProvider>,
-            Changed<Children>,
+            Changed<KChildren>,
             With<Mounted>,
         )>,
     >,

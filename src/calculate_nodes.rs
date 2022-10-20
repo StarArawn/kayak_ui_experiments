@@ -7,7 +7,7 @@ use kayak_font::KayakFont;
 use crate::{
     layout::{DataCache, Rect},
     node::{DirtyNode, Node, NodeBuilder, WrappedIndex},
-    prelude::{Context, Style},
+    prelude::{Context, KStyle},
     render::font::FontMapping,
     render_primitive::RenderPrimitive,
     styles::{StyleProp, Units},
@@ -19,7 +19,7 @@ pub fn calculate_nodes(
     fonts: Res<Assets<KayakFont>>,
     font_mapping: Res<FontMapping>,
     query: Query<Entity, With<DirtyNode>>,
-    all_styles_query: Query<&Style>,
+    all_styles_query: Query<&KStyle>,
     node_query: Query<(Entity, &Node)>,
     nodes_no_entity_query: Query<&'static Node>,
 ) {
@@ -30,8 +30,8 @@ pub fn calculate_nodes(
 
     context.current_z = 0.0;
 
-    let initial_styles = Style::initial();
-    let default_styles = Style::new_default();
+    let initial_styles = KStyle::initial();
+    let default_styles = KStyle::new_default();
 
     // Jump out early.
     // if query.is_empty() {
@@ -178,7 +178,7 @@ fn create_primitive(
     font_mapping: &FontMapping,
     // query: &Query<(Entity, &Node)>,
     id: WrappedIndex,
-    styles: &mut Style,
+    styles: &mut KStyle,
 ) -> (RenderPrimitive, bool) {
     let mut render_primitive = RenderPrimitive::from(&styles.clone());
     let mut needs_layout = false;

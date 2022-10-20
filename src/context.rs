@@ -35,6 +35,7 @@ pub struct Context {
     systems: HashMap<String, Box<dyn System<In = (WidgetContext, Entity), Out = bool>>>,
     pub(crate) current_z: f32,
     pub(crate) context_entities: ContextEntities,
+    pub(crate) current_cursor: CursorIcon,
 }
 
 impl Context {
@@ -46,6 +47,7 @@ impl Context {
             systems: HashMap::default(),
             current_z: 0.0,
             context_entities: ContextEntities::new(),
+            current_cursor: CursorIcon::Default,
         }
     }
 
@@ -451,6 +453,30 @@ fn calculate_ui(world: &mut World) {
             LayoutEventDispatcher::dispatch(&mut context, world);
         });
     }
+
+    world.resource_scope::<Context, _>(|world, mut context| {
+        world.resource_scope::<EventDispatcher, _>(|world, event_dispatcher| {
+            if event_dispatcher.hovered.is_none() {
+                context.current_cursor = CursorIcon::Default;
+                return;
+            }
+
+            let hovered = event_dispatcher.hovered.unwrap();
+            if let Some(entity) = world.get_entity(hovered.0) {
+                if let Some(node) = entity.get::<crate::node::Node>() {
+                    let icon = node.resolved_styles.cursor.resolve();
+                    context.current_cursor = icon.0;
+                }
+            }
+        });
+
+        if let Some(ref mut windows) = world.get_resource_mut::<Windows>() {
+            if let Some(window) = windows.get_primary_mut() {
+                window.set_cursor_icon(context.current_cursor);
+            }
+        }
+    });
+
 
     // dbg!("Finished calculating nodes!");
 

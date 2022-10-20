@@ -14,7 +14,7 @@ use crate::{
     node::WrappedIndex,
     on_event::OnEvent,
     prelude::WidgetContext,
-    styles::{RenderCommand, Style},
+    styles::{KStyle, RenderCommand},
     Focusable,
 };
 
@@ -515,7 +515,7 @@ impl EventDispatcher {
                         }
                     }
                     if self.contains_cursor.is_none() || !self.contains_cursor.unwrap_or_default() {
-                        if let Some(styles) = world.get::<Style>(node.0) {
+                        if let Some(styles) = world.get::<KStyle>(node.0) {
                             // Check if the cursor moved onto a widget that qualifies as one that can contain it
                             if ignore_layout || Self::can_contain_cursor(styles) {
                                 self.contains_cursor = Some(is_contained);
@@ -553,7 +553,7 @@ impl EventDispatcher {
                         }
 
                         if self.has_cursor.is_none() {
-                            if let Some(styles) = world.get::<Style>(node.0) {
+                            if let Some(styles) = world.get::<KStyle>(node.0) {
                                 // Check if the cursor moved onto a widget that qualifies as one that can contain it
                                 if Self::can_contain_cursor(styles) {
                                     self.has_cursor = Some(node);
@@ -612,7 +612,7 @@ impl EventDispatcher {
 
     fn resolve_pointer_events(index: WrappedIndex, world: &mut World) -> PointerEvents {
         let mut pointer_events = PointerEvents::default();
-        if let Some(styles) = world.get::<Style>(index.0) {
+        if let Some(styles) = world.get::<KStyle>(index.0) {
             pointer_events = styles.pointer_events.resolve();
         }
         pointer_events
@@ -724,7 +724,7 @@ impl EventDispatcher {
     ///
     /// Currently a valid widget is defined as one where:
     /// * RenderCommands is neither `Empty` nor `Layout` nor `Clip`
-    fn can_contain_cursor(widget_styles: &Style) -> bool {
+    fn can_contain_cursor(widget_styles: &KStyle) -> bool {
         let cmds = widget_styles.render_command.resolve();
         !matches!(
             cmds,

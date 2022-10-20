@@ -2,7 +2,7 @@ use bevy::{
     prelude::{App as BevyApp, AssetServer, Commands, ImageSettings, Res, ResMut},
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 
 fn startup(
     mut commands: Commands,
@@ -36,11 +36,11 @@ fn startup(
     let mut widget_context = Context::new();
     let parent_id = None;
 
-    let atlas_styles = Style {
+    let atlas_styles = KStyle {
         position_type: StyleProp::Value(PositionType::ParentDirected),
         width: StyleProp::Value(Units::Pixels(200.0)),
         height: StyleProp::Value(Units::Pixels(200.0)),
-        ..Style::default()
+        ..KStyle::default()
     };
 
     let rect = atlas.textures[sign_index];

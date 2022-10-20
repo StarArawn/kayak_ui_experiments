@@ -2,7 +2,7 @@ use bevy::{
     prelude::{App, AssetServer, Commands, ImageSettings, Res, ResMut},
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 
 fn startup(
     mut commands: Commands,
@@ -18,12 +18,12 @@ fn startup(
     let mut widget_context = Context::new();
     let parent_id = None;
 
-    let nine_patch_styles = Style {
+    let nine_patch_styles = KStyle {
         width: StyleProp::Value(Units::Pixels(512.0)),
         height: StyleProp::Value(Units::Pixels(512.0)),
         offset: StyleProp::Value(Edge::all(Units::Stretch(1.0))),
         padding: StyleProp::Value(Edge::all(Units::Pixels(25.0))),
-        ..Style::default()
+        ..KStyle::default()
     };
 
     let lorem_ipsum = r#"

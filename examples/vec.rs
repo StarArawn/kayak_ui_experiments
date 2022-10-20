@@ -1,15 +1,14 @@
 use bevy::{
     prelude::{
-        App as BevyApp, AssetServer, Bundle, Commands, Component, Entity, In,
-        Query, Res, ResMut, Changed, With, Or,
+        App as BevyApp, AssetServer, Bundle, Changed, Commands, Component, Entity, In, Or, Query,
+        Res, ResMut, With,
     },
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 
 #[derive(Component, Default)]
-pub struct MyWidgetProps {
-}
+pub struct MyWidgetProps {}
 
 fn my_widget_1_update(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
@@ -47,7 +46,7 @@ impl Widget for MyWidgetProps {}
 #[derive(Bundle)]
 pub struct MyWidgetBundle {
     props: MyWidgetProps,
-    styles: Style,
+    styles: KStyle,
     widget_name: WidgetName,
 }
 

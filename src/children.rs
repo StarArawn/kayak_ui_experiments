@@ -4,11 +4,11 @@ use crate::prelude::WidgetContext;
 
 /// Defers widgets being added to the widget tree.
 #[derive(Component, Debug, Default, Clone)]
-pub struct Children {
+pub struct KChildren {
     inner: Vec<Entity>,
 }
 
-impl Children {
+impl KChildren {
     pub fn new() -> Self {
         Self { inner: Vec::new() }
     }

@@ -8,8 +8,8 @@ use crate::{
     event::{Event, EventType},
     event_dispatcher::EventDispatcherContext,
     on_event::OnEvent,
-    prelude::{Children, WidgetContext},
-    styles::{Corner, Edge, PositionType, RenderCommand, Style, Units},
+    prelude::{KChildren, WidgetContext},
+    styles::{Corner, Edge, KStyle, PositionType, RenderCommand, Units},
     widget::Widget,
     widgets::{BackgroundBundle, ClipBundle},
 };
@@ -28,11 +28,11 @@ pub struct ScrollBarProps {
     /// The color of the scrollbar thumb
     pub thumb_color: Option<Color>,
     /// The styles of the scrollbar thumb
-    pub thumb_styles: Option<Style>,
+    pub thumb_styles: Option<KStyle>,
     /// The color of the scrollbar track
     pub track_color: Option<Color>,
     /// The styles of the scrollbar track
-    pub track_styles: Option<Style>,
+    pub track_styles: Option<KStyle>,
 }
 
 impl Widget for ScrollBarProps {}
@@ -40,7 +40,7 @@ impl Widget for ScrollBarProps {}
 #[derive(Bundle)]
 pub struct ScrollBarBundle {
     pub scrollbar_props: ScrollBarProps,
-    pub styles: Style,
+    pub styles: KStyle,
     pub widget_name: WidgetName,
 }
 
@@ -59,7 +59,7 @@ pub fn update_scroll_bar(
     mut commands: Commands,
     mut query: ParamSet<(
         Query<Entity, Or<(Changed<ScrollBarProps>, With<Mounted>)>>,
-        Query<(&ScrollBarProps, &mut Style)>,
+        Query<(&ScrollBarProps, &mut KStyle)>,
     )>,
     mut context_query: ParamSet<(Query<Entity, Changed<ScrollContext>>, Query<&ScrollContext>)>,
 ) -> bool {
@@ -118,7 +118,7 @@ pub fn update_scroll_bar(
                     );
 
                     // === Styles === //
-                    *styles = Style::default().with_style(Style {
+                    *styles = KStyle::default().with_style(KStyle {
                         render_command: RenderCommand::Layout.into(),
                         width: if horizontal {
                             Units::Stretch(1.0)
@@ -136,9 +136,9 @@ pub fn update_scroll_bar(
                     });
 
                     let mut track_style =
-                        Style::default()
+                        KStyle::default()
                             .with_style(&track_styles)
-                            .with_style(Style {
+                            .with_style(KStyle {
                                 background_color: track_color.into(),
                                 border_radius: Corner::all(thickness / 2.0).into(),
                                 ..Default::default()
@@ -160,13 +160,13 @@ pub fn update_scroll_bar(
                         _ => {}
                     }
 
-                    let mut thumb_style = Style::default()
-                        .with_style(Style {
+                    let mut thumb_style = KStyle::default()
+                        .with_style(KStyle {
                             position_type: PositionType::SelfDirected.into(),
                             ..Default::default()
                         })
                         .with_style(&thumb_styles)
-                        .with_style(Style {
+                        .with_style(KStyle {
                             background_color: thumb_color.into(),
                             border_radius: Corner::all(thickness / 2.0).into(),
                             border: Edge::all(1.0).into(),
@@ -175,12 +175,12 @@ pub fn update_scroll_bar(
                         });
 
                     if scrollbar.horizontal {
-                        track_style.apply(Style {
+                        track_style.apply(KStyle {
                             height: Units::Pixels(thickness).into(),
                             width: Units::Stretch(1.0).into(),
                             ..Default::default()
                         });
-                        thumb_style.apply(Style {
+                        thumb_style.apply(KStyle {
                             height: Units::Pixels(thickness).into(),
                             width: Units::Percentage(thumb_size_percent * 100.0).into(),
                             top: Units::Pixels(0.0).into(),
@@ -188,12 +188,12 @@ pub fn update_scroll_bar(
                             ..Default::default()
                         });
                     } else {
-                        track_style.apply(Style {
+                        track_style.apply(KStyle {
                             width: Units::Pixels(thickness).into(),
                             height: Units::Stretch(1.0).into(),
                             ..Default::default()
                         });
-                        thumb_style.apply(Style {
+                        thumb_style.apply(KStyle {
                             width: Units::Pixels(thickness).into(),
                             height: Units::Percentage(thumb_size_percent * 100.0).into(),
                             top: Units::Percentage(-thumb_offset).into(),

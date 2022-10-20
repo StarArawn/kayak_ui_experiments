@@ -1,13 +1,13 @@
 use bevy::prelude::{Bundle, Changed, Component, Entity, In, Or, ParamSet, Query, With};
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     layout::GeometryChanged,
     layout::LayoutEvent,
     on_layout::OnLayout,
     prelude::WidgetContext,
-    styles::{LayoutType, RenderCommand, Style, Units},
+    styles::{KStyle, LayoutType, RenderCommand, Units},
     widget::Widget,
 };
 
@@ -21,8 +21,8 @@ impl Widget for ScrollContentProps {}
 #[derive(Bundle)]
 pub struct ScrollContentBundle {
     pub scroll_content_props: ScrollContentProps,
-    pub styles: Style,
-    pub children: Children,
+    pub styles: KStyle,
+    pub children: KChildren,
     pub on_layout: OnLayout,
     pub widget_name: WidgetName,
 }
@@ -46,11 +46,11 @@ pub fn update_scroll_content(
             Entity,
             Or<(
                 Changed<ScrollContentProps>,
-                Changed<Children>,
+                Changed<KChildren>,
                 With<Mounted>,
             )>,
         >,
-        Query<(&mut Style, &Children, &mut OnLayout), With<ScrollContentProps>>,
+        Query<(&mut KStyle, &KChildren, &mut OnLayout), With<ScrollContentProps>>,
     )>,
     mut context_query: ParamSet<(Query<Entity, Changed<ScrollContext>>, Query<&ScrollContext>)>,
 ) -> bool {
@@ -77,8 +77,8 @@ pub fn update_scroll_content(
                     );
 
                     // === Styles === //
-                    *styles = Style::default()
-                        .with_style(Style {
+                    *styles = KStyle::default()
+                        .with_style(KStyle {
                             render_command: RenderCommand::Layout.into(),
                             layout_type: LayoutType::Column.into(),
                             min_width: Units::Pixels(

@@ -36,7 +36,7 @@ pub const DEFAULT_FONT: &str = "Kayak-Default";
 
 pub mod prelude {
     pub use crate::camera::UICameraBundle;
-    pub use crate::children::Children;
+    pub use crate::children::KChildren;
     pub use crate::context::*;
     pub use crate::render::font::FontMapping;
     pub use crate::tree::*;

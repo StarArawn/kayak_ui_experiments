@@ -3,13 +3,13 @@ use bevy::prelude::{
 };
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     event::{Event, EventType},
     event_dispatcher::EventDispatcherContext,
     on_event::OnEvent,
     prelude::WidgetContext,
-    styles::{Corner, Edge, PositionType, RenderCommand, Style, StyleProp, Units},
+    styles::{Corner, Edge, KStyle, PositionType, RenderCommand, StyleProp, Units},
     widget::Widget,
 };
 
@@ -20,7 +20,7 @@ use super::{
 };
 
 #[derive(Component, Debug, Default)]
-pub struct Window {
+pub struct KWindow {
     /// If true, allows the window to be draggable by its title bar
     pub draggable: bool,
     /// The position at which to display the window in pixels
@@ -36,13 +36,13 @@ pub struct Window {
     // pub children: Vec<Entity>,
 }
 
-impl Widget for Window {}
+impl Widget for KWindow {}
 
 #[derive(Bundle)]
 pub struct WindowBundle {
-    pub window: Window,
-    pub styles: Style,
-    pub children: Children,
+    pub window: KWindow,
+    pub styles: KStyle,
+    pub children: KChildren,
     pub widget_name: WidgetName,
 }
 
@@ -52,7 +52,7 @@ impl Default for WindowBundle {
             window: Default::default(),
             styles: Default::default(),
             children: Default::default(),
-            widget_name: Window::default().get_name(),
+            widget_name: KWindow::default().get_name(),
         }
     }
 }
@@ -61,18 +61,18 @@ pub fn window_update(
     In((widget_context, window_entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: Query<
-        (&mut Style, &Children, &mut Window),
+        (&mut KStyle, &KChildren, &mut KWindow),
         Or<(
-            Changed<Window>,
-            Changed<Style>,
-            Changed<Children>,
+            Changed<KWindow>,
+            Changed<KStyle>,
+            Changed<KChildren>,
             With<Mounted>,
         )>,
     >,
 ) -> bool {
     let mut has_changed = false;
     if let Ok((mut window_style, children, mut window)) = query.get_mut(window_entity) {
-        *window_style = Style {
+        *window_style = KStyle {
             background_color: StyleProp::Value(Color::rgba(0.125, 0.125, 0.125, 1.0)),
             border_color: StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0)),
             border: StyleProp::Value(Edge::all(4.0)),
@@ -91,7 +91,7 @@ pub fn window_update(
         if window.title_bar_entity.is_none() {
             let title = window.title.clone();
 
-            let mut title_children = Children::new();
+            let mut title_children = KChildren::new();
             // Spawn title children
             let title_entity = commands
                 .spawn(TextWidgetBundle {
@@ -101,9 +101,9 @@ pub fn window_update(
                         line_height: Some(25.0),
                         ..Default::default()
                     },
-                    styles: Style {
+                    styles: KStyle {
                         height: StyleProp::Value(Units::Pixels(25.0)),
-                        ..Style::default()
+                        ..KStyle::default()
                     },
                     ..Default::default()
                 })
@@ -112,7 +112,7 @@ pub fn window_update(
 
             let title_background_entity = commands
                 .spawn(BackgroundBundle {
-                    styles: Style {
+                    styles: KStyle {
                         render_command: StyleProp::Value(RenderCommand::Quad),
                         background_color: StyleProp::Value(Color::rgba(0.0781, 0.0898, 0.101, 1.0)),
                         border_radius: StyleProp::Value(Corner::all(5.0)),
@@ -123,7 +123,7 @@ pub fn window_update(
                         top: StyleProp::Value(Units::Pixels(0.0)),
                         bottom: StyleProp::Value(Units::Pixels(0.0)),
                         padding_left: StyleProp::Value(Units::Pixels(5.0)),
-                        ..Style::default()
+                        ..KStyle::default()
                     },
                     children: title_children,
                     ..BackgroundBundle::default()
@@ -140,7 +140,7 @@ pub fn window_update(
                             Event,
                             Entity,
                         )>,
-                              mut query: Query<&mut Window>| {
+                              mut query: Query<&mut KWindow>| {
                             if let Ok(mut window) = query.get_mut(window_entity) {
                                 match event.event_type {
                                     EventType::MouseDown(data) => {
@@ -184,9 +184,8 @@ pub fn window_update(
             let clip_entity = commands.spawn(clip_bundle).id();
             widget_context.add_widget(Some(window_entity), clip_entity);
             // let children = widget_context.get_children(window_entity);
+            has_changed = true;
         }
-
-        has_changed = true;
     }
 
     has_changed

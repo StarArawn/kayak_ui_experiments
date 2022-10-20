@@ -2,7 +2,7 @@ use bevy::{
     prelude::{App as BevyApp, AssetServer, Commands, ImageSettings, Res, ResMut},
     DefaultPlugins,
 };
-use kayak_ui::prelude::{widgets::*, Style, *};
+use kayak_ui::prelude::{widgets::*, KStyle, *};
 
 fn startup(
     mut commands: Commands,
@@ -21,7 +21,7 @@ fn startup(
         <KayakAppBundle>
             <ImageBundle
                 image={Image(image.clone())}
-                style={Style {
+                style={KStyle {
                     position_type: StyleProp::Value(PositionType::SelfDirected),
                     left: StyleProp::Value(Units::Pixels(10.0)),
                     top: StyleProp::Value(Units::Pixels(10.0)),

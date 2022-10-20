@@ -3,7 +3,7 @@ use bevy::prelude::{
 };
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     cursor::ScrollUnit,
     event::{Event, EventType},
@@ -12,7 +12,7 @@ use crate::{
     on_event::OnEvent,
     on_layout::OnLayout,
     prelude::{constructor, rsx, WidgetContext},
-    styles::{LayoutType, PositionType, RenderCommand, Style, Units},
+    styles::{KStyle, LayoutType, PositionType, RenderCommand, Units},
     widget::Widget,
     widgets::{
         scroll::{
@@ -47,11 +47,11 @@ pub struct ScrollBoxProps {
     /// The color of the scrollbar thumb
     pub thumb_color: Option<Color>,
     /// The styles of the scrollbar thumb
-    pub thumb_styles: Option<Style>,
+    pub thumb_styles: Option<KStyle>,
     /// The color of the scrollbar track
     pub track_color: Option<Color>,
     /// The styles of the scrollbar track
-    pub track_styles: Option<Style>,
+    pub track_styles: Option<KStyle>,
 }
 
 impl Widget for ScrollBoxProps {}
@@ -59,8 +59,8 @@ impl Widget for ScrollBoxProps {}
 #[derive(Bundle)]
 pub struct ScrollBoxBundle {
     pub scroll_box_props: ScrollBoxProps,
-    pub styles: Style,
-    pub children: Children,
+    pub styles: KStyle,
+    pub children: KChildren,
     pub on_layout: OnLayout,
     pub widget_name: WidgetName,
 }
@@ -81,8 +81,8 @@ pub fn update_scroll_box(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     mut commands: Commands,
     mut query: ParamSet<(
-        Query<Entity, Or<(Changed<ScrollBoxProps>, Changed<Children>, With<Mounted>)>>,
-        Query<(&ScrollBoxProps, &mut Style, &Children, &mut OnLayout)>,
+        Query<Entity, Or<(Changed<ScrollBoxProps>, Changed<KChildren>, With<Mounted>)>>,
+        Query<(&ScrollBoxProps, &mut KStyle, &KChildren, &mut OnLayout)>,
     )>,
     mut context_query: ParamSet<(
         Query<Entity, Changed<ScrollContext>>,
@@ -152,32 +152,32 @@ pub fn update_scroll_box(
                     );
 
                     // === Styles === //
-                    *styles = Style::default()
-                        .with_style(Style {
+                    *styles = KStyle::default()
+                        .with_style(KStyle {
                             render_command: RenderCommand::Layout.into(),
                             ..Default::default()
                         })
                         .with_style(styles.clone())
-                        .with_style(Style {
+                        .with_style(KStyle {
                             width: Units::Stretch(1.0).into(),
                             height: Units::Stretch(1.0).into(),
                             ..Default::default()
                         });
 
-                    let hbox_styles = Style::default().with_style(Style {
+                    let hbox_styles = KStyle::default().with_style(KStyle {
                         render_command: RenderCommand::Layout.into(),
                         layout_type: LayoutType::Row.into(),
                         width: Units::Stretch(1.0).into(),
                         ..Default::default()
                     });
-                    let vbox_styles = Style::default().with_style(Style {
+                    let vbox_styles = KStyle::default().with_style(KStyle {
                         render_command: RenderCommand::Layout.into(),
                         layout_type: LayoutType::Column.into(),
                         width: Units::Stretch(1.0).into(),
                         ..Default::default()
                     });
 
-                    let content_styles = Style::default().with_style(Style {
+                    let content_styles = KStyle::default().with_style(KStyle {
                         position_type: PositionType::SelfDirected.into(),
                         top: Units::Pixels(scroll_y).into(),
                         left: Units::Pixels(scroll_x).into(),

@@ -3,10 +3,10 @@ use bevy::prelude::{
 };
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     prelude::WidgetContext,
-    styles::{Edge, RenderCommand, Style, StyleProp},
+    styles::{Edge, KStyle, RenderCommand, StyleProp},
     widget::Widget,
 };
 
@@ -23,8 +23,8 @@ impl Widget for NinePatch {}
 #[derive(Bundle)]
 pub struct NinePatchBundle {
     pub nine_patch: NinePatch,
-    pub styles: Style,
-    pub children: Children,
+    pub styles: KStyle,
+    pub children: KChildren,
     pub widget_name: WidgetName,
 }
 
@@ -33,7 +33,7 @@ impl Default for NinePatchBundle {
         Self {
             nine_patch: Default::default(),
             styles: Default::default(),
-            children: Children::default(),
+            children: KChildren::default(),
             widget_name: NinePatch::default().get_name(),
         }
     }
@@ -43,8 +43,8 @@ pub fn update_nine_patch(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
     mut query: Query<
-        (&mut Style, &NinePatch, &Children),
-        Or<((Changed<NinePatch>, Changed<Style>), With<Mounted>)>,
+        (&mut KStyle, &NinePatch, &KChildren),
+        Or<((Changed<NinePatch>, Changed<KStyle>), With<Mounted>)>,
     >,
 ) -> bool {
     if let Ok((mut style, nine_patch, children)) = query.get_mut(entity) {

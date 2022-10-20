@@ -24,7 +24,7 @@ const INSTRUCTIONS: &str =
 struct Instructions;
 
 fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
 
     let font_handle: Handle<KayakFont> = asset_server.load("roboto.kayak_font");
 

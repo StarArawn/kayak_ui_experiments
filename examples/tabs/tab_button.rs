@@ -1,8 +1,8 @@
 use bevy::prelude::{Bundle, Changed, Color, Commands, Component, Entity, In, Query};
 use kayak_ui::prelude::{
     rsx,
-    widgets::{ButtonBundle, TextProps, TextWidgetBundle},
-    Children, Event, EventDispatcherContext, EventType, OnEvent, Style, StyleProp, Units, Widget,
+    widgets::{KButtonBundle, TextProps, TextWidgetBundle},
+    Event, EventDispatcherContext, EventType, KChildren, KStyle, OnEvent, StyleProp, Units, Widget,
     WidgetContext, WidgetName,
 };
 
@@ -19,7 +19,7 @@ impl Widget for TabButton {}
 #[derive(Bundle)]
 pub struct TabButtonBundle {
     pub tab_button: TabButton,
-    pub styles: Style,
+    pub styles: KStyle,
     pub widget_name: WidgetName,
 }
 
@@ -73,15 +73,15 @@ pub fn tab_button_update(
                 );
 
                 rsx! {
-                    <ButtonBundle
+                    <KButtonBundle
                         on_event={on_event}
-                        styles={Style {
+                        styles={KStyle {
                             background_color: StyleProp::Value(background_color),
                             height: StyleProp::Value(Units::Pixels(25.0)),
                             ..Default::default()
                         }}>
                         <TextWidgetBundle text={TextProps { content: tab_button.title.clone(), ..Default::default() }} />
-                    </ButtonBundle>
+                    </KButtonBundle>
                 }
                 return true;
             }

@@ -1,6 +1,6 @@
 use crate::{
     layout::Rect,
-    styles::{Corner, Edge, RenderCommand, Style},
+    styles::{Corner, Edge, KStyle, RenderCommand},
 };
 use bevy::prelude::{Color, Handle, Image, Vec2};
 use kayak_font::{TextLayout, TextProperties};
@@ -58,8 +58,8 @@ impl RenderPrimitive {
     }
 }
 
-impl From<&Style> for RenderPrimitive {
-    fn from(style: &Style) -> Self {
+impl From<&KStyle> for RenderPrimitive {
+    fn from(style: &KStyle) -> Self {
         let render_command = style.render_command.resolve();
 
         let background_color = style

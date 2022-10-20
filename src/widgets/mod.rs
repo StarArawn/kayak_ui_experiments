@@ -15,7 +15,7 @@ mod window;
 
 pub use app::{KayakApp, KayakAppBundle};
 pub use background::{Background, BackgroundBundle};
-pub use button::{Button, ButtonBundle};
+pub use button::{KButton, KButtonBundle};
 pub use clip::{Clip, ClipBundle};
 pub use element::{Element, ElementBundle};
 pub use image::{Image, ImageBundle};
@@ -31,7 +31,7 @@ pub use scroll::{
 pub use text::{TextProps, TextWidgetBundle};
 pub use text_box::{TextBoxBundle, TextBoxProps};
 pub use texture_atlas::{TextureAtlas, TextureAtlasBundle};
-pub use window::{Window, WindowBundle};
+pub use window::{KWindow, WindowBundle};
 
 use app::app_update;
 use background::update_background;
@@ -61,9 +61,9 @@ impl Plugin for KayakWidgets {
 
 fn add_widget_systems(mut context: ResMut<Context>) {
     context.add_widget_system(KayakApp::default().get_name(), app_update);
-    context.add_widget_system(Button::default().get_name(), button_update);
+    context.add_widget_system(KButton::default().get_name(), button_update);
     context.add_widget_system(TextProps::default().get_name(), text_update);
-    context.add_widget_system(Window::default().get_name(), window_update);
+    context.add_widget_system(KWindow::default().get_name(), window_update);
     context.add_widget_system(Background::default().get_name(), update_background);
     context.add_widget_system(Clip::default().get_name(), update_clip);
     context.add_widget_system(Image::default().get_name(), update_image);

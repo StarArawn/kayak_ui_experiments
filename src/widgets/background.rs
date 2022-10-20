@@ -1,11 +1,11 @@
 use bevy::prelude::{Bundle, Changed, Commands, Component, Entity, In, Or, Query, With};
 
 use crate::{
-    children::Children,
+    children::KChildren,
     context::{Mounted, WidgetName},
     on_event::OnEvent,
     prelude::WidgetContext,
-    styles::{RenderCommand, Style, StyleProp},
+    styles::{KStyle, RenderCommand, StyleProp},
     widget::Widget,
 };
 
@@ -17,8 +17,8 @@ impl Widget for Background {}
 #[derive(Bundle)]
 pub struct BackgroundBundle {
     pub background: Background,
-    pub styles: Style,
-    pub children: Children,
+    pub styles: KStyle,
+    pub children: KChildren,
     pub on_event: OnEvent,
     pub widget_name: WidgetName,
 }
@@ -39,9 +39,9 @@ pub fn update_background(
     In((widget_context, entity)): In<(WidgetContext, Entity)>,
     _: Commands,
     mut query: Query<
-        (&mut Style, &Children),
+        (&mut KStyle, &KChildren),
         Or<(
-            (Changed<Style>, Changed<Children>, With<Background>),
+            (Changed<KStyle>, Changed<KChildren>, With<Background>),
             With<Mounted>,
         )>,
     >,
